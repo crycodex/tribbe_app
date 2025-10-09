@@ -8,6 +8,8 @@ import 'package:tribbe_app/features/home/views/pages/home_page.dart';
 import 'package:tribbe_app/features/onboarding/views/pages/onboarding_page.dart';
 import 'package:tribbe_app/features/onboarding/views/pages/welcome_page.dart';
 import 'package:tribbe_app/shared/controllers/settings_controller.dart';
+import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
+import 'package:tribbe_app/shared/services/firestore_service.dart';
 import 'package:tribbe_app/shared/services/storage_service.dart';
 
 /// Configuración de rutas de la aplicación usando GetX
@@ -73,6 +75,10 @@ class AppRouter {
     // Servicios globales (singleton permanente)
     final storageService = Get.put(StorageService(), permanent: true);
     await storageService.init();
+
+    // Servicios de Firebase (singleton permanente)
+    Get.put(FirebaseAuthService(), permanent: true);
+    Get.put(FirestoreService(), permanent: true);
 
     // Controllers globales
     Get.put(SettingsController(), permanent: true);

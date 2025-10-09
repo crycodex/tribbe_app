@@ -1,16 +1,22 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
-import 'package:tribbe_app/features/auth/models/auth_response_model.dart';
-import 'package:tribbe_app/features/auth/models/user_model.dart';
+import 'package:tribbe_app/features/auth/models/user_profile_model.dart';
+import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
+import 'package:tribbe_app/shared/services/firestore_service.dart';
 import 'package:tribbe_app/shared/services/storage_service.dart';
 
-/// Controlador de autenticación
+/// Controlador de autenticación con Firebase
 class AuthController extends GetxController {
   // Dependencias
   final StorageService _storageService = Get.find();
+  final FirebaseAuthService _authService = Get.find();
+  final FirestoreService _firestoreService = Get.find();
 
   // Observables
-  final Rx<UserModel?> currentUser = Rx<UserModel?>(null);
+  final Rx<User?> firebaseUser = Rx<User?>(null);
+  final Rx<UserProfileModel?> userProfile = Rx<UserProfileModel?>(null);
   final RxBool isLoading = false.obs;
   final RxBool isAuthenticated = false.obs;
   final RxString errorMessage = ''.obs;
@@ -24,127 +30,103 @@ class AuthController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _checkAuthStatus();
+    _listenToAuthChanges();
   }
 
-  /// Verifica si hay sesión activa
-  Future<void> _checkAuthStatus() async {
-    final token = await _storageService.getToken();
-    final userData = await _storageService.getUserData();
+  /// Escuchar cambios de autenticación
+  void _listenToAuthChanges() {
+    _authService.authStateChanges.listen((User? user) {
+      firebaseUser.value = user;
+      isAuthenticated.value = user != null;
 
-    if (token != null && userData != null) {
-      try {
-        currentUser.value = UserModel.fromJson(userData);
-        isAuthenticated.value = true;
-      } catch (e) {
-        await logout();
+      if (user != null) {
+        _loadUserProfile(user.uid);
+      } else {
+        userProfile.value = null;
       }
-    }
+    });
   }
 
-  /// Inicia sesión con email y contraseña
-  Future<void> loginWithEmail() async {
+  /// Cargar perfil del usuario desde Firestore
+  Future<void> _loadUserProfile(String uid) async {
     try {
-      isLoading.value = true;
-      errorMessage.value = '';
-
-      // TODO: Implementar llamada a API
-      // Simulación por ahora
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Simulación de respuesta exitosa
-      final mockUser = UserModel(
-        id: '1',
-        email: email.value,
-        username: email.value.split('@')[0],
-        displayName: 'Usuario Demo',
-        isEmailVerified: true,
-        createdAt: DateTime.now(),
-      );
-
-      final mockAuthResponse = AuthResponseModel(
-        user: mockUser,
-        token: 'mock_token_${DateTime.now().millisecondsSinceEpoch}',
-        expiresAt: DateTime.now().add(const Duration(days: 30)),
-      );
-
-      // Guardar en storage
-      await _storageService.saveToken(mockAuthResponse.token);
-      await _storageService.saveUserData(mockUser.toJson());
-
-      // Actualizar estado
-      currentUser.value = mockUser;
-      isAuthenticated.value = true;
-
-      // Navegar a home
-      Get.offAllNamed(RoutePaths.home);
-
-      // Mostrar mensaje de éxito
-      Get.snackbar(
-        'Bienvenido',
-        '¡Hola ${mockUser.displayName ?? mockUser.username}!',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 2),
-      );
+      final profile = await _firestoreService.getUserProfile(uid);
+      userProfile.value = profile;
     } catch (e) {
-      errorMessage.value = 'Error al iniciar sesión: ${e.toString()}';
       Get.snackbar(
         'Error',
-        errorMessage.value,
+        'Error al cargar perfil: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 3),
       );
-    } finally {
-      isLoading.value = false;
     }
   }
 
-  /// Registra un nuevo usuario
+  /// Registrar usuario con email y contraseña
   Future<void> registerWithEmail() async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
 
-      // TODO: Implementar llamada a API
-      // Simulación por ahora
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Simulación de respuesta exitosa
-      final mockUser = UserModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        email: email.value,
-        username: username.value,
-        displayName: username.value,
-        isEmailVerified: false,
-        createdAt: DateTime.now(),
+      // Registrar en Firebase Auth
+      final userCredential = await _authService.registerWithEmail(
+        email: email.value.trim(),
+        password: password.value,
       );
 
-      final mockAuthResponse = AuthResponseModel(
-        user: mockUser,
-        token: 'mock_token_${DateTime.now().millisecondsSinceEpoch}',
-        expiresAt: DateTime.now().add(const Duration(days: 30)),
+      final user = userCredential.user;
+      if (user == null) {
+        throw Exception('Error al crear usuario');
+      }
+
+      // Crear perfil en Firestore con preferencias iniciales
+      await _firestoreService.createUserProfile(
+        uid: user.uid,
+        email: email.value.trim(),
+        nombreUsuario: username.value.trim(),
       );
 
-      // Guardar en storage
-      await _storageService.saveToken(mockAuthResponse.token);
-      await _storageService.saveUserData(mockUser.toJson());
+      // Sincronizar preferencias de SharedPreferences a Firebase
+      final currentTheme = _storageService.getThemeMode().value;
+      final currentLanguage = _storageService.getLanguage().name;
+      final currentGender = _storageService.getGender()?.value ?? 'masculino';
 
-      // Actualizar estado
-      currentUser.value = mockUser;
-      isAuthenticated.value = true;
+      await _firestoreService.syncPreferenciasFromLocal(
+        uid: user.uid,
+        tema: currentTheme == 'dark' ? 'Noche' : 'Día',
+        idioma: currentLanguage == 'spanish' ? 'Español' : 'English',
+        genero: currentGender == 'masculino'
+            ? 'Masculino'
+            : currentGender == 'femenino'
+            ? 'Femenino'
+            : 'Otro',
+      );
 
-      // Navegar a home
-      Get.offAllNamed(RoutePaths.home);
+      // Enviar email de verificación
+      await _authService.sendEmailVerification();
+
+      // Guardar en storage local
+      await _storageService.saveAuthToken(await user.getIdToken() ?? '');
+      await _storageService.saveLoginState(true);
 
       // Mostrar mensaje de éxito
       Get.snackbar(
         'Registro Exitoso',
-        '¡Bienvenido a la tribu ${mockUser.username}!',
+        '¡Bienvenido a la tribu! Por favor verifica tu email.',
         snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 4),
       );
+
+      // Esperar un momento para que el usuario vea el mensaje
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Cerrar sesión y redirigir al login
+      await logout();
+      Get.offAllNamed(RoutePaths.login);
+
+      // Mostrar diálogo informativo
+      _showEmailVerificationDialog();
     } catch (e) {
-      errorMessage.value = 'Error al registrarse: ${e.toString()}';
+      errorMessage.value = e.toString();
       Get.snackbar(
         'Error',
         errorMessage.value,
@@ -156,7 +138,164 @@ class AuthController extends GetxController {
     }
   }
 
-  /// Inicia sesión con Facebook
+  /// Mostrar diálogo de verificación de email
+  void _showEmailVerificationDialog() {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Verifica tu Email'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.email_outlined,
+              size: 64,
+              color: Color(0xFF0047FF),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Te hemos enviado un email de verificación',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14),
+            ),
+            const Text(
+              'Por favor, verifica tu email antes de iniciar sesión.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Entendido'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  /// Iniciar sesión con email y contraseña
+  Future<void> loginWithEmail() async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      // Iniciar sesión en Firebase Auth
+      final userCredential = await _authService.loginWithEmail(
+        email: email.value.trim(),
+        password: password.value,
+      );
+
+      final user = userCredential.user;
+      if (user == null) {
+        throw Exception('Error al iniciar sesión');
+      }
+
+      // Verificar si el email está verificado
+      if (!user.emailVerified) {
+        Get.snackbar(
+          'Email No Verificado',
+          'Por favor verifica tu email antes de continuar.',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 4),
+        );
+
+        // Ofrecer reenviar email de verificación
+        _showResendVerificationDialog();
+
+        await logout();
+        return;
+      }
+
+      // Cargar perfil desde Firestore
+      await _loadUserProfile(user.uid);
+
+      // Guardar en storage local
+      await _storageService.saveAuthToken(await user.getIdToken() ?? '');
+      await _storageService.saveLoginState(true);
+
+      // Navegar a home
+      Get.offAllNamed(RoutePaths.home);
+
+      // Mostrar mensaje de bienvenida
+      Get.snackbar(
+        'Bienvenido',
+        '¡Hola ${userProfile.value?.datosPersonales?.nombreUsuario ?? email.value.split('@')[0]}!',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+      );
+    } catch (e) {
+      errorMessage.value = e.toString();
+      Get.snackbar(
+        'Error',
+        errorMessage.value,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Mostrar diálogo para reenviar email de verificación
+  void _showResendVerificationDialog() {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('¿Reenviar Email?'),
+        content: const Text(
+          '¿Deseas que te reenviemos el email de verificación?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Get.back();
+              await resendVerificationEmail();
+            },
+            child: const Text('Reenviar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Reenviar email de verificación
+  Future<void> resendVerificationEmail() async {
+    try {
+      isLoading.value = true;
+
+      // Primero necesitamos iniciar sesión temporalmente
+      await _authService.loginWithEmail(
+        email: email.value.trim(),
+        password: password.value,
+      );
+
+      await _authService.sendEmailVerification();
+
+      Get.snackbar(
+        'Email Enviado',
+        'Te hemos enviado un nuevo email de verificación',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+      );
+
+      await logout();
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Error al reenviar email: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Iniciar sesión con Facebook
   Future<void> loginWithFacebook() async {
     try {
       isLoading.value = true;
@@ -182,7 +321,7 @@ class AuthController extends GetxController {
     }
   }
 
-  /// Inicia sesión con Google
+  /// Iniciar sesión con Google
   Future<void> loginWithGoogle() async {
     try {
       isLoading.value = true;
@@ -208,7 +347,7 @@ class AuthController extends GetxController {
     }
   }
 
-  /// Inicia sesión con Apple
+  /// Iniciar sesión con Apple
   Future<void> loginWithApple() async {
     try {
       isLoading.value = true;
@@ -234,14 +373,13 @@ class AuthController extends GetxController {
     }
   }
 
-  /// Envía email para recuperar contraseña
+  /// Enviar email para recuperar contraseña
   Future<void> sendPasswordResetEmail() async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
 
-      // TODO: Implementar recuperación de contraseña
-      await Future.delayed(const Duration(seconds: 2));
+      await _authService.sendPasswordResetEmail(email.value.trim());
 
       Get.snackbar(
         'Email Enviado',
@@ -254,7 +392,7 @@ class AuthController extends GetxController {
       await Future.delayed(const Duration(seconds: 2));
       Get.back();
     } catch (e) {
-      errorMessage.value = 'Error al enviar email: ${e.toString()}';
+      errorMessage.value = e.toString();
       Get.snackbar(
         'Error',
         errorMessage.value,
@@ -265,16 +403,20 @@ class AuthController extends GetxController {
     }
   }
 
-  /// Cierra sesión
+  /// Cerrar sesión
   Future<void> logout() async {
     try {
       isLoading.value = true;
 
-      // Limpiar storage
-      await _storageService.clear();
+      // Cerrar sesión en Firebase
+      await _authService.logout();
+
+      // Limpiar storage local
+      await _storageService.clearSessionData();
 
       // Limpiar estado
-      currentUser.value = null;
+      firebaseUser.value = null;
+      userProfile.value = null;
       isAuthenticated.value = false;
       email.value = '';
       password.value = '';
@@ -292,4 +434,8 @@ class AuthController extends GetxController {
   void clearError() {
     errorMessage.value = '';
   }
+
+  /// Verificar si el usuario completó la personalización
+  bool get hasCompletedPersonalization =>
+      userProfile.value?.hasCompletedPersonalization ?? false;
 }

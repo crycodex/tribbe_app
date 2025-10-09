@@ -1,0 +1,140 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Función helper para verificar si el usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Función helper para verificar si el usuario es el dueño del documento
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Función helper para verificar si el email está verificado
+    function isEmailVerified() {
+      return isAuthenticated() && request.auth.token.email_verified == true;
+    }
+    
+    // === COLECCIÓN DE USUARIOS ===
+    match /users/{userId} {
+      // Permitir lectura si es el dueño del documento
+      allow read: if isOwner(userId);
+      
+      // Permitir creación si:
+      // - El usuario está autenticado Y
+      // - El UID del documento coincide con el UID del usuario autenticado Y
+      // - El email del documento coincide con el email del usuario autenticado
+      allow create: if isAuthenticated() 
+                    && request.auth.uid == userId
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.email == request.auth.token.email
+                    && request.resource.data.has_completed_personalization == false;
+      
+      // Permitir actualización si:
+      // - Es el dueño del documento Y
+      // - No se puede cambiar el UID ni el email
+      allow update: if isOwner(userId)
+                    && request.resource.data.uid == resource.data.uid
+                    && request.resource.data.email == resource.data.email;
+      
+      // Permitir eliminación solo si es el dueño
+      allow delete: if isOwner(userId);
+      
+      // === SUBCOLECCIONES ===
+      
+      // Subcolección de Preferencias
+      match /preferencias/{docId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+      }
+      
+      // Subcolección de Información Fitness
+      match /informacion/{docId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+      }
+      
+      // Subcolección de Personaje/Avatar
+      match /personaje/{docId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+      }
+      
+      // Subcolección de Medidas
+      match /medidas/{docId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+      }
+      
+      // Historial de medidas (para tracking a lo largo del tiempo)
+      match /historial_medidas/{measurementId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+                      && request.resource.data.uid == userId;
+        allow update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+      }
+    }
+    
+    // === COLECCIÓN DE GIMNASIOS (para el futuro) ===
+    match /gyms/{gymId} {
+      // Todos pueden leer los gimnasios públicos
+      allow read: if isAuthenticated();
+      
+      // Solo administradores pueden crear/actualizar/eliminar gimnasios
+      allow create, update, delete: if false; // Cambiar cuando implementes roles
+    }
+    
+    // === COLECCIÓN DE ENTRENAMIENTOS (para el futuro) ===
+    match /workouts/{workoutId} {
+      // Permitir lectura si el usuario está autenticado y es el dueño
+      allow read: if isAuthenticated() 
+                  && resource.data.user_id == request.auth.uid;
+      
+      // Permitir creación solo si es el dueño
+      allow create: if isAuthenticated() 
+                    && request.resource.data.user_id == request.auth.uid;
+      
+      // Permitir actualización y eliminación solo si es el dueño
+      allow update, delete: if isAuthenticated() 
+                            && resource.data.user_id == request.auth.uid;
+    }
+    
+    // === COLECCIÓN DE AMIGOS/SOCIAL (para el futuro) ===
+    match /friendships/{friendshipId} {
+      // Permitir lectura si el usuario es parte de la amistad
+      allow read: if isAuthenticated() 
+                  && (resource.data.user1_id == request.auth.uid 
+                      || resource.data.user2_id == request.auth.uid);
+      
+      // Permitir creación de solicitudes de amistad
+      allow create: if isAuthenticated() 
+                    && request.resource.data.user1_id == request.auth.uid;
+      
+      // Permitir actualización (aceptar/rechazar) si es el destinatario
+      allow update: if isAuthenticated() 
+                    && resource.data.user2_id == request.auth.uid;
+      
+      // Permitir eliminación si es parte de la amistad
+      allow delete: if isAuthenticated() 
+                    && (resource.data.user1_id == request.auth.uid 
+                        || resource.data.user2_id == request.auth.uid);
+    }
+    
+    // Denegar acceso a todo lo demás por defecto
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

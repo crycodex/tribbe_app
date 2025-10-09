@@ -33,16 +33,21 @@ class HomePage extends StatelessWidget {
               const SizedBox(height: 40),
 
               // Mensaje de bienvenida
-              Obx(
-                () => Text(
-                  '¡Bienvenido ${authController.currentUser.value?.displayName ?? authController.currentUser.value?.username ?? 'Usuario'}!',
+              Obx(() {
+                final profile = authController.userProfile.value;
+                final displayName =
+                    profile?.datosPersonales?.nombreUsuario ??
+                    authController.firebaseUser.value?.email?.split('@')[0] ??
+                    'Usuario';
+                return Text(
+                  '¡Bienvenido $displayName!',
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
                   ),
                   textAlign: TextAlign.center,
-                ),
-              ),
+                );
+              }),
 
               const SizedBox(height: 20),
 
@@ -55,11 +60,14 @@ class HomePage extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
 
-              const SizedBox(height: 60),
+              const SizedBox(height: 40),
 
               // Información del usuario
-              Obx(
-                () => Container(
+              Obx(() {
+                final user = authController.firebaseUser.value;
+                final profile = authController.userProfile.value;
+
+                return Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: theme.cardColor,
@@ -68,21 +76,27 @@ class HomePage extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
+                      _buildInfoRow(context, 'Email', user?.email ?? 'N/A'),
+                      const SizedBox(height: 12),
+                      _buildInfoRow(context, 'UID', user?.uid ?? 'N/A'),
+                      const SizedBox(height: 12),
                       _buildInfoRow(
                         context,
-                        'Email',
-                        authController.currentUser.value?.email ?? 'N/A',
+                        'Email Verificado',
+                        user?.emailVerified == true ? 'Sí' : 'No',
                       ),
                       const SizedBox(height: 12),
                       _buildInfoRow(
                         context,
-                        'Username',
-                        authController.currentUser.value?.username ?? 'N/A',
+                        'Personalización',
+                        profile?.hasCompletedPersonalization == true
+                            ? 'Completada'
+                            : 'Pendiente',
                       ),
                     ],
                   ),
-                ),
-              ),
+                );
+              }),
 
               const SizedBox(height: 40),
 
@@ -112,9 +126,13 @@ class HomePage extends StatelessWidget {
             color: Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        Flexible(
+          child: Text(
+            value,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            textAlign: TextAlign.right,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
     );
