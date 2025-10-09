@@ -21,15 +21,13 @@ class WelcomePage extends StatelessWidget {
       backgroundColor: colorScheme.primary,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10.0),
           child: Column(
             children: [
               _buildHeader(context, settingsController),
-              const Spacer(),
+              _buildTitle(textTheme),
               _buildIllustration(context),
               const Spacer(),
-              _buildTitle(textTheme),
-              const SizedBox(height: 24),
               _buildContinueButton(context, colorScheme, textTheme),
               const SizedBox(height: 16),
             ],
@@ -47,7 +45,7 @@ class WelcomePage extends StatelessWidget {
       alignment: Alignment.centerRight,
       child: Obx(
         () => CNPopupMenuButton.icon(
-          buttonIcon: CNSymbol('gearshape.fill', size: 24, color: Colors.white),
+          buttonIcon: CNSymbol('gearshape.fill', size: 18, color: Colors.white),
           tint: Colors.white,
           items: [
             // Tema
@@ -103,7 +101,7 @@ class WelcomePage extends StatelessWidget {
         errorBuilder: (context, error, stackTrace) {
           // Placeholder si no existe la imagen
           return Container(
-            height: 300,
+            height: 350,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
@@ -125,6 +123,7 @@ class WelcomePage extends StatelessWidget {
         color: Colors.white,
         fontWeight: FontWeight.bold,
         height: 1.2,
+        fontSize: 65,
       ),
     );
   }
