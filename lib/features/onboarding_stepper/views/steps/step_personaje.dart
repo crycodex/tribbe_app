@@ -9,6 +9,8 @@ class StepPersonaje extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<OnboardingStepperController>();
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -38,13 +40,33 @@ class StepPersonaje extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           TextFormField(
+            style: TextStyle(color: isDark ? Colors.white : Colors.black),
             decoration: InputDecoration(
               hintText: 'Ingresa tu nombre',
+              hintStyle: TextStyle(
+                color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+              ),
               filled: true,
-              fillColor: Colors.grey.shade100,
+              fillColor: isDark
+                  ? Colors.grey.shade800.withOpacity(0.5)
+                  : Colors.grey.shade100,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: isDark ? Colors.grey.shade700 : Colors.transparent,
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: theme.colorScheme.primary,
+                  width: 2,
+                ),
               ),
             ),
             onChanged: (value) => controller.nombreCompleto.value = value,
@@ -170,35 +192,39 @@ class StepPersonaje extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Obx(
-            () => Column(
+          Obx(() {
+            final esCm = controller.unidadMedida.value == 'cm';
+            final minAltura = esCm ? 100.0 : 39.4; // 100cm = 39.4in
+            final maxAltura = esCm ? 220.0 : 86.6; // 220cm = 86.6in
+
+            return Column(
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('1m'),
+                    Text(esCm ? '1m' : '3.2ft'),
                     Text(
-                      '${controller.alturaCm.value.toInt()} cm',
+                      controller.alturaConUnidad,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
                       ),
                     ),
-                    const Text('2m+'),
+                    Text(esCm ? '2.2m+' : '7.2ft+'),
                   ],
                 ),
                 Slider(
-                  value: controller.alturaCm.value,
-                  min: 100,
-                  max: 220,
-                  divisions: 120,
+                  value: controller.alturaCm.value.clamp(minAltura, maxAltura),
+                  min: minAltura,
+                  max: maxAltura,
+                  divisions: esCm ? 120 : 472,
                   onChanged: (value) {
                     controller.alturaCm.value = value;
                   },
                 ),
               ],
-            ),
-          ),
+            );
+          }),
           const SizedBox(height: 24),
 
           // Piel

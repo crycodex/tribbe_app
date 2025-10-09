@@ -202,74 +202,157 @@ class StepMedidas extends StatelessWidget {
     double min = 0,
     double max = 300,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            Obx(
-              () => Text(
-                '${value.value.toInt()} $unit',
+    final controller = Get.find<OnboardingStepperController>();
+
+    return Obx(() {
+      // Determinar la unidad actual
+      String currentUnit = unit;
+      double currentMin = min;
+      double currentMax = max;
+
+      if (unit == 'cm') {
+        currentUnit = controller.unidadMedida.value;
+        if (currentUnit == 'in') {
+          currentMin = min / 2.54;
+          currentMax = max / 2.54;
+        }
+      } else if (unit == 'kg') {
+        currentUnit = controller.unidadPeso.value;
+        if (currentUnit == 'lb') {
+          currentMin = min * 2.20462;
+          currentMax = max * 2.20462;
+        }
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                currentUnit == 'cm' || currentUnit == 'kg'
+                    ? '${value.value.toInt()} $currentUnit'
+                    : '${value.value.toStringAsFixed(1)} $currentUnit',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-          ],
-        ),
-        Obx(
-          () => Slider(
-            value: value.value,
-            min: min,
-            max: max,
-            divisions: (max - min).toInt(),
+            ],
+          ),
+          Slider(
+            value: value.value.clamp(currentMin, currentMax),
+            min: currentMin,
+            max: currentMax,
+            divisions: (currentMax - currentMin).toInt(),
             onChanged: (newValue) => value.value = newValue,
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    });
   }
 
   Widget _buildMeasureInput(String label, RxDouble value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        const SizedBox(height: 4),
-        Obx(
-          () => TextFormField(
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              hintText: 'Number',
-              filled: true,
-              fillColor: Colors.grey.shade100,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide.none,
+    final controller = Get.find<OnboardingStepperController>();
+
+    return Obx(() {
+      final unit = controller.unidadMedida.value;
+      final displayValue = value.value > 0
+          ? (unit == 'cm'
+                ? value.value.toInt().toString()
+                : value.value.toStringAsFixed(1))
+          : '';
+
+      return Builder(
+        builder: (context) {
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark
+                          ? Colors.grey.shade400
+                          : Colors.grey.shade700,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '($unit)',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isDark
+                          ? Colors.grey.shade500
+                          : Colors.grey.shade600,
+                    ),
+                  ),
+                ],
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 12,
+              const SizedBox(height: 4),
+              TextFormField(
+                keyboardType: TextInputType.number,
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black,
+                  fontSize: 14,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Number',
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+                  ),
+                  filled: true,
+                  fillColor: isDark
+                      ? Colors.grey.shade800.withOpacity(0.5)
+                      : Colors.grey.shade100,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey.shade700 : Colors.transparent,
+                      width: 1,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(
+                      color: theme.colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                ),
+                controller: TextEditingController(text: displayValue),
+                onChanged: (text) {
+                  final number = double.tryParse(text);
+                  if (number != null && number >= 0) {
+                    value.value = number;
+                  }
+                },
               ),
-            ),
-            controller: TextEditingController(
-              text: value.value > 0 ? value.value.toInt().toString() : '',
-            ),
-            onChanged: (text) {
-              final number = double.tryParse(text);
-              if (number != null && number >= 0) {
-                value.value = number;
-              }
-            },
-          ),
-        ),
-      ],
-    );
+            ],
+          );
+        },
+      );
+    });
   }
 }

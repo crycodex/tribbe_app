@@ -10,6 +10,7 @@ class StepInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<OnboardingStepperController>();
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -24,15 +25,38 @@ class StepInfo extends StatelessWidget {
           Obx(
             () => TextFormField(
               readOnly: true,
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
               decoration: InputDecoration(
                 hintText: 'mm/dd/yyyy',
+                hintStyle: TextStyle(
+                  color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+                ),
                 filled: true,
-                fillColor: Colors.grey.shade100,
+                fillColor: isDark
+                    ? Colors.grey.shade800.withOpacity(0.5)
+                    : Colors.grey.shade100,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide.none,
                 ),
-                suffixIcon: const Icon(Icons.calendar_today),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.grey.shade700 : Colors.transparent,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: theme.colorScheme.primary,
+                    width: 2,
+                  ),
+                ),
+                suffixIcon: Icon(
+                  Icons.calendar_today,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                ),
               ),
               controller: TextEditingController(
                 text: controller.fechaNacimiento.value != null
@@ -63,13 +87,36 @@ class StepInfo extends StatelessWidget {
           TextFormField(
             maxLines: 3,
             maxLength: 250,
+            style: TextStyle(color: isDark ? Colors.white : Colors.black),
             decoration: InputDecoration(
               hintText: 'Preséntate (250)',
+              hintStyle: TextStyle(
+                color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+              ),
               filled: true,
-              fillColor: Colors.grey.shade100,
+              fillColor: isDark
+                  ? Colors.grey.shade800.withOpacity(0.5)
+                  : Colors.grey.shade100,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: isDark ? Colors.grey.shade700 : Colors.transparent,
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: theme.colorScheme.primary,
+                  width: 2,
+                ),
+              ),
+              counterStyle: TextStyle(
+                color: isDark ? Colors.grey.shade500 : Colors.grey.shade600,
               ),
             ),
             onChanged: (value) => controller.bio.value = value,
@@ -85,12 +132,30 @@ class StepInfo extends StatelessWidget {
           Obx(
             () => DropdownButtonFormField<String>(
               value: controller.metaFitness.value,
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+              dropdownColor: isDark ? Colors.grey.shade800 : Colors.white,
               decoration: InputDecoration(
                 filled: true,
-                fillColor: Colors.grey.shade100,
+                fillColor: isDark
+                    ? Colors.grey.shade800.withOpacity(0.5)
+                    : Colors.grey.shade100,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.grey.shade700 : Colors.transparent,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: theme.colorScheme.primary,
+                    width: 2,
+                  ),
                 ),
               ),
               items: controller.metasFitness.map((meta) {
@@ -166,15 +231,38 @@ class StepInfo extends StatelessWidget {
           const SizedBox(height: 12),
           TextFormField(
             initialValue: controller.pais.value,
+            style: TextStyle(color: isDark ? Colors.white : Colors.black),
             decoration: InputDecoration(
               hintText: 'Ecuador, Imbabura, Ibarra',
+              hintStyle: TextStyle(
+                color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+              ),
               filled: true,
-              fillColor: Colors.grey.shade100,
+              fillColor: isDark
+                  ? Colors.grey.shade800.withOpacity(0.5)
+                  : Colors.grey.shade100,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide.none,
               ),
-              prefixIcon: const Icon(Icons.search),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: isDark ? Colors.grey.shade700 : Colors.transparent,
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: theme.colorScheme.primary,
+                  width: 2,
+                ),
+              ),
+              prefixIcon: Icon(
+                Icons.search,
+                color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+              ),
             ),
             onChanged: (value) {
               // Parse location (simple implementation)

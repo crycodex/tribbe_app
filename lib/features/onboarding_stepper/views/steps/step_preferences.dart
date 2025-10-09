@@ -1,3 +1,5 @@
+import 'package:cupertino_native/cupertino_native.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/onboarding_stepper/controllers/onboarding_stepper_controller.dart';
@@ -21,11 +23,11 @@ class StepPreferences extends StatelessWidget {
             context,
             'Tema',
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Claro'),
-                const SizedBox(width: 16),
                 Obx(
-                  () => Switch(
+                  () => CNSwitch(
                     value: controller.tema.value == 'Noche',
                     onChanged: (value) {
                       final nuevoTema = value ? 'Noche' : 'Día';
@@ -33,7 +35,6 @@ class StepPreferences extends StatelessWidget {
                     },
                   ),
                 ),
-                const SizedBox(width: 16),
                 const Text('Oscuro'),
               ],
             ),
@@ -42,36 +43,42 @@ class StepPreferences extends StatelessWidget {
           // Peso
           _buildSection(
             context,
-            'Peso',
-            Obx(
-              () => DropdownButton<String>(
-                value: controller.unidadPeso.value,
-                isExpanded: true,
-                items: ['kg', 'lb'].map((unit) {
-                  return DropdownMenuItem(value: unit, child: Text(unit));
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) controller.unidadPeso.value = value;
-                },
-              ),
+            'Unidad de Peso',
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Kg'),
+                Obx(
+                  () => CNSwitch(
+                    value: controller.unidadPeso.value == 'lb',
+                    onChanged: (value) {
+                      controller.updateUnidadPeso(value ? 'lb' : 'kg');
+                    },
+                  ),
+                ),
+                const Text('Lb'),
+              ],
             ),
           ),
 
           // Medidas
           _buildSection(
             context,
-            'Medidas',
-            Obx(
-              () => DropdownButton<String>(
-                value: controller.unidadMedida.value,
-                isExpanded: true,
-                items: ['cm', 'in'].map((unit) {
-                  return DropdownMenuItem(value: unit, child: Text(unit));
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) controller.unidadMedida.value = value;
-                },
-              ),
+            'Unidad de Medida',
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('cm'),
+                Obx(
+                  () => CNSwitch(
+                    value: controller.unidadMedida.value == 'in',
+                    onChanged: (value) {
+                      controller.updateUnidadMedida(value ? 'in' : 'cm');
+                    },
+                  ),
+                ),
+                const Text('in'),
+              ],
             ),
           ),
 
@@ -80,15 +87,58 @@ class StepPreferences extends StatelessWidget {
             context,
             'Idioma',
             Obx(
-              () => DropdownButton<String>(
-                value: controller.idioma.value,
-                isExpanded: true,
-                items: ['Español', 'English'].map((lang) {
-                  return DropdownMenuItem(value: lang, child: Text(lang));
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) controller.updateIdioma(value);
-                },
+              () => GestureDetector(
+                onTap: () => _showLanguageActionSheet(context, controller),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade800.withOpacity(0.5)
+                        : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey.shade700
+                          : Colors.grey.shade300,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            _getLanguageFlag(controller.idioma.value),
+                            style: const TextStyle(fontSize: 24),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            controller.idioma.value,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade600,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -98,15 +148,53 @@ class StepPreferences extends StatelessWidget {
             context,
             'Género',
             Obx(
-              () => DropdownButton<String>(
-                value: controller.genero.value,
-                isExpanded: true,
-                items: ['Masculino', 'Femenino'].map((genero) {
-                  return DropdownMenuItem(value: genero, child: Text(genero));
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) controller.updateGenero(value);
-                },
+              () => GestureDetector(
+                onTap: () => _showGenderActionSheet(context, controller),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade800.withOpacity(0.5)
+                        : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey.shade700
+                          : Colors.grey.shade300,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            controller.genero.value,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade600,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -128,6 +216,202 @@ class StepPreferences extends StatelessWidget {
           const SizedBox(height: 12),
           content,
         ],
+      ),
+    );
+  }
+
+  /// Mostrar CupertinoActionSheet para seleccionar idioma
+  void _showLanguageActionSheet(
+    BuildContext context,
+    OnboardingStepperController controller,
+  ) {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+        title: const Text(
+          'Selecciona tu idioma',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        message: const Text(
+          'Elige el idioma de la aplicación',
+          style: TextStyle(fontSize: 13),
+        ),
+        actions: <CupertinoActionSheetAction>[
+          CupertinoActionSheetAction(
+            onPressed: () {
+              controller.updateIdioma('Español');
+              Navigator.pop(context);
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('🇪🇸', style: TextStyle(fontSize: 24)),
+                const SizedBox(width: 12),
+                Text(
+                  'Español',
+                  style: TextStyle(
+                    fontSize: 17,
+                    color: controller.idioma.value == 'Español'
+                        ? CupertinoColors.activeBlue
+                        : null,
+                    fontWeight: controller.idioma.value == 'Español'
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+                if (controller.idioma.value == 'Español') ...[
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.check_circle,
+                    color: CupertinoColors.activeBlue,
+                    size: 20,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          isDestructiveAction: true,
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text('Cancelar'),
+        ),
+      ),
+    );
+  }
+
+  /// Obtener emoji de bandera según idioma
+  String _getLanguageFlag(String idioma) {
+    switch (idioma) {
+      case 'Español':
+        return '🇪🇸';
+      case 'English':
+        return '🇺🇸';
+      default:
+        return '🌍';
+    }
+  }
+
+  /// Mostrar CupertinoActionSheet para seleccionar género
+  void _showGenderActionSheet(
+    BuildContext context,
+    OnboardingStepperController controller,
+  ) {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+        title: const Text(
+          'Selecciona tu género',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        message: const Text(
+          'Elige la opción que mejor te represente',
+          style: TextStyle(fontSize: 13),
+        ),
+        actions: <CupertinoActionSheetAction>[
+          CupertinoActionSheetAction(
+            onPressed: () {
+              controller.updateGenero('Masculino');
+              Navigator.pop(context);
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Masculino',
+                  style: TextStyle(
+                    fontSize: 17,
+                    color: controller.genero.value == 'Masculino'
+                        ? CupertinoColors.activeBlue
+                        : null,
+                    fontWeight: controller.genero.value == 'Masculino'
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+                if (controller.genero.value == 'Masculino') ...[
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.check_circle,
+                    color: CupertinoColors.activeBlue,
+                    size: 20,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              controller.updateGenero('Femenino');
+              Navigator.pop(context);
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Femenino',
+                  style: TextStyle(
+                    fontSize: 17,
+                    color: controller.genero.value == 'Femenino'
+                        ? CupertinoColors.activeBlue
+                        : null,
+                    fontWeight: controller.genero.value == 'Femenino'
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+                if (controller.genero.value == 'Femenino') ...[
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.check_circle,
+                    color: CupertinoColors.activeBlue,
+                    size: 20,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              controller.updateGenero('Otro');
+              Navigator.pop(context);
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Otro',
+                  style: TextStyle(
+                    fontSize: 17,
+                    color: controller.genero.value == 'Otro'
+                        ? CupertinoColors.activeBlue
+                        : null,
+                    fontWeight: controller.genero.value == 'Otro'
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+                if (controller.genero.value == 'Otro') ...[
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.check_circle,
+                    color: CupertinoColors.activeBlue,
+                    size: 20,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          isDestructiveAction: true,
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text('Cancelar'),
+        ),
       ),
     );
   }

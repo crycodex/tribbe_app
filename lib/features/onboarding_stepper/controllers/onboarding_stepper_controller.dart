@@ -137,10 +137,89 @@ class OnboardingStepperController extends GetxController {
   /// Actualizar género en tiempo real
   Future<void> updateGenero(String nuevoGenero) async {
     genero.value = nuevoGenero;
-    final gender = nuevoGenero == 'Masculino'
-        ? UserGender.male
-        : UserGender.female;
-    await _settingsController.setGender(gender);
+
+    // Solo guardamos en settings si es Masculino o Femenino
+    // "Otro" no tiene correspondencia en el enum UserGender
+    if (nuevoGenero == 'Masculino') {
+      await _settingsController.setGender(UserGender.male);
+    } else if (nuevoGenero == 'Femenino') {
+      await _settingsController.setGender(UserGender.female);
+    }
+    // Para "Otro" solo actualizamos el valor local, se guardará en Firestore al finalizar
+  }
+
+  /// Actualizar unidad de peso
+  void updateUnidadPeso(String nuevaUnidad) {
+    if (unidadPeso.value == nuevaUnidad) return;
+
+    // Convertir el peso actual
+    if (nuevaUnidad == 'lb' && unidadPeso.value == 'kg') {
+      // kg a lb
+      pesoKg.value = pesoKg.value * 2.20462;
+    } else if (nuevaUnidad == 'kg' && unidadPeso.value == 'lb') {
+      // lb a kg
+      pesoKg.value = pesoKg.value / 2.20462;
+    }
+
+    unidadPeso.value = nuevaUnidad;
+  }
+
+  /// Actualizar unidad de medida
+  void updateUnidadMedida(String nuevaUnidad) {
+    if (unidadMedida.value == nuevaUnidad) return;
+
+    // Convertir altura
+    if (nuevaUnidad == 'in' && unidadMedida.value == 'cm') {
+      // cm a in
+      alturaCm.value = alturaCm.value / 2.54;
+    } else if (nuevaUnidad == 'cm' && unidadMedida.value == 'in') {
+      // in a cm
+      alturaCm.value = alturaCm.value * 2.54;
+    }
+
+    // Convertir medidas específicas si están activadas
+    if (cuello.value > 0) {
+      _convertirMedidasEspecificas(nuevaUnidad);
+    }
+
+    unidadMedida.value = nuevaUnidad;
+  }
+
+  /// Convertir todas las medidas específicas
+  void _convertirMedidasEspecificas(String nuevaUnidad) {
+    final factor = nuevaUnidad == 'in' ? 1 / 2.54 : 2.54;
+
+    if (cuello.value > 0) cuello.value *= factor;
+    if (hombro.value > 0) hombro.value *= factor;
+    if (brazoIzquierdo.value > 0) brazoIzquierdo.value *= factor;
+    if (brazoDerecho.value > 0) brazoDerecho.value *= factor;
+    if (antebrazoIzquierdo.value > 0) antebrazoIzquierdo.value *= factor;
+    if (antebrazoDerecho.value > 0) antebrazoDerecho.value *= factor;
+    if (pecho.value > 0) pecho.value *= factor;
+    if (espalda.value > 0) espalda.value *= factor;
+    if (cintura.value > 0) cintura.value *= factor;
+    if (cuadricepIzquierdo.value > 0) cuadricepIzquierdo.value *= factor;
+    if (cuadricepDerecho.value > 0) cuadricepDerecho.value *= factor;
+    if (pantorrillaIzquierda.value > 0) pantorrillaIzquierda.value *= factor;
+    if (pantorrillaDerecha.value > 0) pantorrillaDerecha.value *= factor;
+  }
+
+  /// Obtener altura con unidad
+  String get alturaConUnidad {
+    if (unidadMedida.value == 'cm') {
+      return '${alturaCm.value.toInt()} cm';
+    } else {
+      return '${alturaCm.value.toStringAsFixed(1)} in';
+    }
+  }
+
+  /// Obtener peso con unidad
+  String get pesoConUnidad {
+    if (unidadPeso.value == 'kg') {
+      return '${pesoKg.value.toInt()} kg';
+    } else {
+      return '${pesoKg.value.toStringAsFixed(1)} lb';
+    }
   }
 
   /// Avanzar al siguiente paso
