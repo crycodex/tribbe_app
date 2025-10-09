@@ -304,13 +304,16 @@ class StepMedidas extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               TextFormField(
-                keyboardType: TextInputType.number,
+                key: ValueKey('${label}_$unit'),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 style: TextStyle(
                   color: isDark ? Colors.white : Colors.black,
                   fontSize: 14,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Number',
+                  hintText: '0.0',
                   hintStyle: TextStyle(
                     color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
                   ),
@@ -340,9 +343,18 @@ class StepMedidas extends StatelessWidget {
                     horizontal: 12,
                     vertical: 12,
                   ),
+                  suffixText: unit,
+                  suffixStyle: TextStyle(
+                    color: isDark ? Colors.grey.shade500 : Colors.grey.shade600,
+                    fontSize: 12,
+                  ),
                 ),
-                controller: TextEditingController(text: displayValue),
+                initialValue: displayValue,
                 onChanged: (text) {
+                  if (text.isEmpty) {
+                    value.value = 0;
+                    return;
+                  }
                   final number = double.tryParse(text);
                   if (number != null && number >= 0) {
                     value.value = number;

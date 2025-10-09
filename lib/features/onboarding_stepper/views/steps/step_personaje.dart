@@ -16,16 +16,25 @@ class StepPersonaje extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          // Avatar Placeholder
-          Container(
-            width: 200,
-            height: 250,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
+          const SizedBox(height: 20),
+          // Avatar del personaje
+          SizedBox(
+            height: 350,
+            child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
+              child: Image.asset(
+                'assets/images/character/stepper_person.png',
+                fit: BoxFit.contain,
+              ),
             ),
-            child: Center(
-              child: Icon(Icons.person, size: 100, color: Colors.grey.shade400),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '¡Este eres tú!',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
             ),
           ),
           const SizedBox(height: 24),
