@@ -53,9 +53,58 @@ class StorageService {
     return _prefs.getString(StorageKeys.authToken);
   }
 
+  /// Alias para getAuthToken
+  String? getToken() => getAuthToken();
+
   /// Guardar el token de autenticación
   Future<bool> saveAuthToken(String token) {
     return _prefs.setString(StorageKeys.authToken, token);
+  }
+
+  /// Alias para saveAuthToken
+  Future<bool> saveToken(String token) => saveAuthToken(token);
+
+  /// Obtener datos del usuario
+  Map<String, dynamic>? getUserData() {
+    final jsonString = _prefs.getString(StorageKeys.userData);
+    if (jsonString == null) return null;
+
+    try {
+      final Map<String, dynamic> data = {};
+      // SharedPreferences no soporta guardar Map directamente,
+      // así que guardamos como strings individuales con prefijo
+      final keys = _prefs.getKeys();
+      for (final key in keys) {
+        if (key.startsWith('user_')) {
+          final userKey = key.substring(5); // Remover prefijo 'user_'
+          data[userKey] = _prefs.get(key);
+        }
+      }
+      return data.isEmpty ? null : data;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Guardar datos del usuario
+  Future<void> saveUserData(Map<String, dynamic> userData) async {
+    // Guardar cada campo con prefijo 'user_'
+    for (final entry in userData.entries) {
+      final key = 'user_${entry.key}';
+      final value = entry.value;
+
+      if (value is String) {
+        await _prefs.setString(key, value);
+      } else if (value is int) {
+        await _prefs.setInt(key, value);
+      } else if (value is double) {
+        await _prefs.setDouble(key, value);
+      } else if (value is bool) {
+        await _prefs.setBool(key, value);
+      } else if (value != null) {
+        await _prefs.setString(key, value.toString());
+      }
+    }
   }
 
   /// Verificar si el usuario está logueado
@@ -109,10 +158,21 @@ class StorageService {
     return _prefs.clear();
   }
 
+  /// Alias para clearAll
+  Future<bool> clear() => clearAll();
+
   /// Limpiar solo datos de sesión (mantener configuraciones)
   Future<void> clearSessionData() async {
     await _prefs.remove(StorageKeys.authToken);
     await _prefs.remove(StorageKeys.userData);
     await _prefs.remove(StorageKeys.isLoggedIn);
+
+    // Limpiar todos los campos de usuario con prefijo 'user_'
+    final keys = _prefs.getKeys();
+    for (final key in keys) {
+      if (key.startsWith('user_')) {
+        await _prefs.remove(key);
+      }
+    }
   }
 }

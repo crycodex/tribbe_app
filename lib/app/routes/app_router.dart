@@ -1,5 +1,10 @@
 import 'package:get/get.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
+import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
+import 'package:tribbe_app/features/auth/views/pages/forgot_password_page.dart';
+import 'package:tribbe_app/features/auth/views/pages/login_page.dart';
+import 'package:tribbe_app/features/auth/views/pages/register_page.dart';
+import 'package:tribbe_app/features/home/views/pages/home_page.dart';
 import 'package:tribbe_app/features/onboarding/views/pages/onboarding_page.dart';
 import 'package:tribbe_app/features/onboarding/views/pages/welcome_page.dart';
 import 'package:tribbe_app/shared/controllers/settings_controller.dart';
@@ -25,21 +30,37 @@ class AppRouter {
       transitionDuration: const Duration(milliseconds: 300),
     ),
 
-    // TODO: Auth routes
-    // GetPage<dynamic>(
-    //   name: RoutePaths.login,
-    //   page: () => const LoginPage(),
-    //   binding: AuthBinding(),
-    //   transition: Transition.fade,
-    // ),
+    // Auth routes
+    GetPage<dynamic>(
+      name: RoutePaths.login,
+      page: () => LoginPage(),
+      binding: AuthBinding(),
+      transition: Transition.fade,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage<dynamic>(
+      name: RoutePaths.register,
+      page: () => RegisterPage(),
+      binding: AuthBinding(),
+      transition: Transition.rightToLeft,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage<dynamic>(
+      name: RoutePaths.forgotPassword,
+      page: () => ForgotPasswordPage(),
+      binding: AuthBinding(),
+      transition: Transition.rightToLeft,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
 
-    // TODO: Home routes
-    // GetPage<dynamic>(
-    //   name: RoutePaths.home,
-    //   page: () => const HomePage(),
-    //   binding: HomeBinding(),
-    //   transition: Transition.fadeIn,
-    // ),
+    // Home routes
+    GetPage<dynamic>(
+      name: RoutePaths.home,
+      page: () => const HomePage(),
+      binding: AuthBinding(),
+      transition: Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
 
     // TODO: Workout routes
     // TODO: Profile routes
@@ -57,7 +78,15 @@ class AppRouter {
     Get.put(SettingsController(), permanent: true);
 
     // TODO: Inicializar otros servicios
-    // Get.lazyPut<AuthService>(() => AuthService());
+    // Get.lazyPut<ApiService>(() => ApiService());
     // Get.lazyPut<WorkoutService>(() => WorkoutService());
+  }
+}
+
+/// Binding para autenticación
+class AuthBinding extends Bindings {
+  @override
+  void dependencies() {
+    Get.lazyPut<AuthController>(() => AuthController());
   }
 }

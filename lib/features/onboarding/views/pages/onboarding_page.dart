@@ -2,6 +2,7 @@ import 'package:cupertino_onboarding/cupertino_onboarding.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/core/constants/onboarding_constants.dart';
 
 /// Página de onboarding que muestra las características principales de Tribbe
@@ -125,43 +126,7 @@ class OnboardingPage extends StatelessWidget {
   }
 
   void _completeOnboarding(BuildContext context) {
-    // TODO: Navegar a la página de autenticación o home
-    // Por ahora, mostramos un diálogo de confirmación
-    Get.dialog<void>(
-      AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.check_circle,
-              size: 80,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              '¡Bienvenido a Tribbe!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'El onboarding se completó correctamente.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: () {
-                Get.back();
-                // TODO: Navegar a login o home
-                // Get.offAllNamed(RoutePaths.login);
-              },
-              child: const Text('Continuar'),
-            ),
-          ],
-        ),
-      ),
-      barrierDismissible: false,
-    );
+    // Navegar al login después de completar el onboarding
+    Get.offAllNamed(RoutePaths.login);
   }
 }
