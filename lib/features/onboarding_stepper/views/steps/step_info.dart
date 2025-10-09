@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/onboarding_stepper/controllers/onboarding_stepper_controller.dart';
@@ -23,57 +24,49 @@ class StepInfo extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Obx(
-            () => TextFormField(
-              readOnly: true,
-              style: TextStyle(color: isDark ? Colors.white : Colors.black),
-              decoration: InputDecoration(
-                hintText: 'mm/dd/yyyy',
-                hintStyle: TextStyle(
-                  color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+            () => GestureDetector(
+              onTap: () => _showDatePicker(context, controller),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
-                filled: true,
-                fillColor: isDark
-                    ? Colors.grey.shade800.withOpacity(0.5)
-                    : Colors.grey.shade100,
-                border: OutlineInputBorder(
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.grey.shade800.withOpacity(0.5)
+                      : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: isDark ? Colors.grey.shade700 : Colors.transparent,
+                  border: Border.all(
+                    color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
                     width: 1,
                   ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: theme.colorScheme.primary,
-                    width: 2,
-                  ),
-                ),
-                suffixIcon: Icon(
-                  Icons.calendar_today,
-                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      controller.fechaNacimiento.value != null
+                          ? '${controller.fechaNacimiento.value!.day}/${controller.fechaNacimiento.value!.month}/${controller.fechaNacimiento.value!.year}'
+                          : 'Selecciona tu fecha de nacimiento',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: controller.fechaNacimiento.value != null
+                            ? (isDark ? Colors.white : Colors.black)
+                            : (isDark
+                                  ? Colors.grey.shade600
+                                  : Colors.grey.shade400),
+                      ),
+                    ),
+                    Icon(
+                      Icons.calendar_today,
+                      size: 20,
+                      color: isDark
+                          ? Colors.grey.shade400
+                          : Colors.grey.shade600,
+                    ),
+                  ],
                 ),
               ),
-              controller: TextEditingController(
-                text: controller.fechaNacimiento.value != null
-                    ? '${controller.fechaNacimiento.value!.month}/${controller.fechaNacimiento.value!.day}/${controller.fechaNacimiento.value!.year}'
-                    : '',
-              ),
-              onTap: () async {
-                final date = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime(2000),
-                  firstDate: DateTime(1940),
-                  lastDate: DateTime.now(),
-                );
-                if (date != null) {
-                  controller.fechaNacimiento.value = date;
-                }
-              },
             ),
           ),
           const SizedBox(height: 24),
@@ -125,45 +118,48 @@ class StepInfo extends StatelessWidget {
 
           // Meta Fitness
           const Text(
-            'Meta fitnes',
+            'Meta fitness',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
           Obx(
-            () => DropdownButtonFormField<String>(
-              value: controller.metaFitness.value,
-              style: TextStyle(color: isDark ? Colors.white : Colors.black),
-              dropdownColor: isDark ? Colors.grey.shade800 : Colors.white,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: isDark
-                    ? Colors.grey.shade800.withOpacity(0.5)
-                    : Colors.grey.shade100,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
+            () => GestureDetector(
+              onTap: () => _showMetaFitnessActionSheet(context, controller),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
-                enabledBorder: OutlineInputBorder(
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.grey.shade800.withOpacity(0.5)
+                      : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: isDark ? Colors.grey.shade700 : Colors.transparent,
+                  border: Border.all(
+                    color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
                     width: 1,
                   ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(
-                    color: theme.colorScheme.primary,
-                    width: 2,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      controller.metaFitness.value,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: isDark
+                          ? Colors.grey.shade400
+                          : Colors.grey.shade600,
+                    ),
+                  ],
                 ),
               ),
-              items: controller.metasFitness.map((meta) {
-                return DropdownMenuItem(value: meta, child: Text(meta));
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) controller.metaFitness.value = value;
-              },
             ),
           ),
           const SizedBox(height: 24),
@@ -229,50 +225,166 @@ class StepInfo extends StatelessWidget {
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
-          TextFormField(
-            initialValue: controller.pais.value,
-            style: TextStyle(color: isDark ? Colors.white : Colors.black),
-            decoration: InputDecoration(
-              hintText: 'Ecuador, Imbabura, Ibarra',
-              hintStyle: TextStyle(
-                color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
-              ),
-              filled: true,
-              fillColor: isDark
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDark
                   ? Colors.grey.shade800.withOpacity(0.5)
                   : Colors.grey.shade100,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide.none,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                  color: isDark ? Colors.grey.shade700 : Colors.transparent,
-                  width: 1,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                  color: theme.colorScheme.primary,
-                  width: 2,
-                ),
-              ),
-              prefixIcon: Icon(
-                Icons.search,
-                color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+                width: 1,
               ),
             ),
-            onChanged: (value) {
-              // Parse location (simple implementation)
-              final parts = value.split(',').map((e) => e.trim()).toList();
-              if (parts.isNotEmpty) controller.pais.value = parts[0];
-              if (parts.length > 1) controller.provincia.value = parts[1];
-              if (parts.length > 2) controller.ciudad.value = parts[2];
-            },
+            child: Row(
+              children: [
+                Icon(
+                  Icons.location_on,
+                  size: 20,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Ecuador, Imbabura, Ibarra',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Mostrar CupertinoDatePicker para seleccionar fecha
+  void _showDatePicker(
+    BuildContext context,
+    OnboardingStepperController controller,
+  ) {
+    DateTime selectedDate = controller.fechaNacimiento.value ?? DateTime(2000);
+
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) => Container(
+        height: 300,
+        padding: const EdgeInsets.only(top: 6.0),
+        margin: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        color: CupertinoColors.systemBackground.resolveFrom(context),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              // Barra superior con botón Confirmar
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: CupertinoColors.separator.resolveFrom(context),
+                      width: 0.5,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: () {
+                        controller.fechaNacimiento.value = selectedDate;
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        'Confirmar',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 17,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Date Picker
+              Expanded(
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.date,
+                  initialDateTime: selectedDate,
+                  minimumDate: DateTime(1940),
+                  maximumDate: DateTime.now(),
+                  onDateTimeChanged: (DateTime newDate) {
+                    selectedDate = newDate;
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Mostrar CupertinoActionSheet para seleccionar meta fitness
+  void _showMetaFitnessActionSheet(
+    BuildContext context,
+    OnboardingStepperController controller,
+  ) {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+        title: const Text(
+          'Selecciona tu meta',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        message: const Text(
+          'Elige tu objetivo principal de entrenamiento',
+          style: TextStyle(fontSize: 13),
+        ),
+        actions: controller.metasFitness.map((meta) {
+          final isSelected = controller.metaFitness.value == meta;
+          return CupertinoActionSheetAction(
+            onPressed: () {
+              controller.metaFitness.value = meta;
+              Navigator.pop(context);
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  meta,
+                  style: TextStyle(
+                    fontSize: 17,
+                    color: isSelected ? CupertinoColors.activeBlue : null,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+                if (isSelected) ...[
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.check_circle,
+                    color: CupertinoColors.activeBlue,
+                    size: 20,
+                  ),
+                ],
+              ],
+            ),
+          );
+        }).toList(),
+        cancelButton: CupertinoActionSheetAction(
+          isDestructiveAction: true,
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text('Cancelar'),
+        ),
       ),
     );
   }

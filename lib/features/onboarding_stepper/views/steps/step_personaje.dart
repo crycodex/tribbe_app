@@ -161,12 +161,12 @@ class StepPersonaje extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('🔥 pésima'),
+                    const Text('Pésima'),
                     Text(
                       '${controller.condicionFisicaActual.value}',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    const Text('óptima 🔥'),
+                    const Text('Óptima'),
                   ],
                 ),
                 Slider(

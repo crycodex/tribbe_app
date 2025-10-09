@@ -31,8 +31,8 @@ class OnboardingStepperController extends GetxController {
   final RxString nivelExperiencia = 'Intermedio'.obs;
   final RxInt condicionFisicaActual = 50.obs;
   final RxString pais = 'Ecuador'.obs;
-  final RxString provincia = ''.obs;
-  final RxString ciudad = ''.obs;
+  final RxString provincia = 'Imbabura'.obs;
+  final RxString ciudad = 'Ibarra'.obs;
 
   // Step 3: Personaje/Avatar
   final RxString nombreCompleto = ''.obs;
