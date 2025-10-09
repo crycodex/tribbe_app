@@ -88,15 +88,15 @@ class AuthController extends GetxController {
       // Sincronizar preferencias de SharedPreferences a Firebase
       final currentTheme = _storageService.getThemeMode().value;
       final currentLanguage = _storageService.getLanguage().name;
-      final currentGender = _storageService.getGender()?.value ?? 'masculino';
+      final currentGender = _storageService.getGender()?.value ?? 'male';
 
       await _firestoreService.syncPreferenciasFromLocal(
         uid: user.uid,
         tema: currentTheme == 'dark' ? 'Noche' : 'Día',
         idioma: currentLanguage == 'spanish' ? 'Español' : 'English',
-        genero: currentGender == 'masculino'
+        genero: currentGender == 'male'
             ? 'Masculino'
-            : currentGender == 'femenino'
+            : currentGender == 'female'
             ? 'Femenino'
             : 'Otro',
       );
