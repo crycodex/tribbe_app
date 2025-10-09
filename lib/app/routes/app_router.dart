@@ -96,6 +96,50 @@ class AppRouter {
     // Get.lazyPut<ApiService>(() => ApiService());
     // Get.lazyPut<WorkoutService>(() => WorkoutService());
   }
+
+  /// Determina la ruta inicial basándose en el estado de autenticación
+  static Future<String> getInitialRoute() async {
+    try {
+      final authService = Get.put<FirebaseAuthService>(FirebaseAuthService());
+      final firestoreService = Get.put<FirestoreService>(FirestoreService());
+      final storageService = Get.put<StorageService>(StorageService());
+
+      // Verificar si hay un usuario autenticado
+      final currentUser = authService.currentUser;
+
+      if (currentUser == null) {
+        // No hay usuario autenticado
+        // Verificar si es primera vez (mostrar welcome/onboarding)
+        final hasSeenOnboarding = storageService.getAuthToken() != null;
+        return hasSeenOnboarding ? RoutePaths.login : RoutePaths.welcome;
+      }
+
+      // Verificar si el email está verificado
+      if (!currentUser.emailVerified) {
+        // Email no verificado, cerrar sesión y volver al login
+        await authService.logout();
+        return RoutePaths.login;
+      }
+
+      // Usuario autenticado y verificado, cargar perfil
+      final userProfile = await firestoreService.getUserProfile(
+        currentUser.uid,
+      );
+
+      // Verificar si completó la personalización
+      if (userProfile?.hasCompletedPersonalization ?? false) {
+        // Ya completó todo, ir al home
+        return RoutePaths.home;
+      } else {
+        // Aún falta completar personalización
+        return RoutePaths.onboardingStepper;
+      }
+    } catch (e) {
+      print('Error al determinar ruta inicial: $e');
+      // En caso de error, ir al welcome
+      return RoutePaths.welcome;
+    }
+  }
 }
 
 /// Binding para autenticación

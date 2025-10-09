@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/app/routes/app_router.dart';
@@ -28,17 +29,50 @@ class MyApp extends StatelessWidget {
       SettingsController(),
     );
 
-    return Obx(
-      () => GetMaterialApp(
-        title: 'Tribbe App',
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: settingsController.flutterThemeMode,
-        debugShowCheckedModeBanner: false,
-        initialRoute: RoutePaths.welcome,
-        getPages: AppRouter.routes,
-        defaultTransition: Transition.cupertino,
-      ),
+    return FutureBuilder<String>(
+      future: AppRouter.getInitialRoute(),
+      builder: (context, snapshot) {
+        // Mientras se determina la ruta, mostrar splash
+        if (!snapshot.hasData) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            home: Scaffold(
+              backgroundColor: settingsController.isDarkMode
+                  ? const Color(0xFF121212)
+                  : Colors.white,
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/icon/icon_ligth.png',
+                      width: 120,
+                      height: 120,
+                    ),
+                    const SizedBox(height: 24),
+                    const CupertinoActivityIndicator(),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
+        final initialRoute = snapshot.data ?? RoutePaths.welcome;
+
+        return Obx(
+          () => GetMaterialApp(
+            title: 'Tribbe App',
+            theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
+            themeMode: settingsController.flutterThemeMode,
+            debugShowCheckedModeBanner: false,
+            initialRoute: initialRoute,
+            getPages: AppRouter.routes,
+            defaultTransition: Transition.cupertino,
+          ),
+        );
+      },
     );
   }
 }
