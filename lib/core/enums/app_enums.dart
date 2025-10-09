@@ -19,7 +19,8 @@ enum AppThemeMode {
 
 /// Idiomas disponibles en la aplicación
 enum AppLanguage {
-  spanish('es', 'Español', '🇪🇸');
+  spanish('es', 'Español', '🇪🇸'),
+  english('en', 'English', '🇺🇸');
 
   const AppLanguage(this.code, this.label, this.flag);
 

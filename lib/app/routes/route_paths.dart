@@ -5,6 +5,7 @@ class RoutePaths {
   // Onboarding
   static const String welcome = '/';
   static const String onboarding = '/onboarding';
+  static const String onboardingStepper = '/onboarding-stepper';
 
   // Auth
   static const String login = '/login';

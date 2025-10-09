@@ -10,7 +10,6 @@ class RegisterPage extends StatelessWidget {
   RegisterPage({super.key});
 
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -55,19 +54,6 @@ class RegisterPage extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
-
-                // Campo de Username
-                CustomTextField(
-                  controller: _usernameController,
-                  hintText: 'Ingresa tu usuario/apodo',
-                  labelText: 'Username',
-                  keyboardType: TextInputType.text,
-                  textInputAction: TextInputAction.next,
-                  validator: Validators.username,
-                  onChanged: (value) => controller.username.value = value,
-                ),
-
-                const SizedBox(height: 16),
 
                 // Campo de Email
                 CustomTextField(

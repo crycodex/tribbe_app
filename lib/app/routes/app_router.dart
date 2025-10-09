@@ -7,6 +7,8 @@ import 'package:tribbe_app/features/auth/views/pages/register_page.dart';
 import 'package:tribbe_app/features/home/views/pages/home_page.dart';
 import 'package:tribbe_app/features/onboarding/views/pages/onboarding_page.dart';
 import 'package:tribbe_app/features/onboarding/views/pages/welcome_page.dart';
+import 'package:tribbe_app/features/onboarding_stepper/controllers/onboarding_stepper_controller.dart';
+import 'package:tribbe_app/features/onboarding_stepper/views/pages/onboarding_stepper_page.dart';
 import 'package:tribbe_app/shared/controllers/settings_controller.dart';
 import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
 import 'package:tribbe_app/shared/services/firestore_service.dart';
@@ -29,6 +31,13 @@ class AppRouter {
       name: RoutePaths.onboarding,
       page: () => const OnboardingPage(),
       transition: Transition.rightToLeft,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage<dynamic>(
+      name: RoutePaths.onboardingStepper,
+      page: () => const OnboardingStepperPage(),
+      binding: OnboardingStepperBinding(),
+      transition: Transition.fade,
       transitionDuration: const Duration(milliseconds: 300),
     ),
 
@@ -93,6 +102,16 @@ class AppRouter {
 class AuthBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<AuthController>(() => AuthController());
+    Get.put(AuthController());
+  }
+}
+
+/// Binding para el stepper de personalización
+class OnboardingStepperBinding extends Bindings {
+  @override
+  void dependencies() {
+    Get.lazyPut<OnboardingStepperController>(
+      () => OnboardingStepperController(),
+    );
   }
 }

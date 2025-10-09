@@ -24,7 +24,6 @@ class AuthController extends GetxController {
   // Form fields
   final RxString email = ''.obs;
   final RxString password = ''.obs;
-  final RxString username = ''.obs;
   final RxString confirmPasswordValue = ''.obs;
 
   @override
@@ -82,7 +81,7 @@ class AuthController extends GetxController {
       await _firestoreService.createUserProfile(
         uid: user.uid,
         email: email.value.trim(),
-        nombreUsuario: username.value.trim(),
+        nombreUsuario: null, // Ya no usamos username
       );
 
       // Sincronizar preferencias de SharedPreferences a Firebase
@@ -104,27 +103,15 @@ class AuthController extends GetxController {
       // Enviar email de verificación
       await _authService.sendEmailVerification();
 
-      // Guardar en storage local
-      await _storageService.saveAuthToken(await user.getIdToken() ?? '');
-      await _storageService.saveLoginState(true);
+      // Mostrar diálogo primero (mientras el usuario aún está autenticado)
+      _showEmailVerificationDialog();
 
-      // Mostrar mensaje de éxito
-      Get.snackbar(
-        'Registro Exitoso',
-        '¡Bienvenido a la tribu! Por favor verifica tu email.',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 4),
-      );
-
-      // Esperar un momento para que el usuario vea el mensaje
-      await Future.delayed(const Duration(seconds: 2));
+      // Esperar a que el usuario cierre el diálogo
+      await Future.delayed(const Duration(milliseconds: 500));
 
       // Cerrar sesión y redirigir al login
       await logout();
       Get.offAllNamed(RoutePaths.login);
-
-      // Mostrar diálogo informativo
-      _showEmailVerificationDialog();
     } catch (e) {
       errorMessage.value = e.toString();
       Get.snackbar(
@@ -153,12 +140,19 @@ class AuthController extends GetxController {
             ),
             const SizedBox(height: 16),
             Text(
-              'Te hemos enviado un email de verificación',
+              'Te hemos enviado un email de verificación a:',
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 14),
             ),
+            const SizedBox(height: 8),
+            Text(
+              email.value.trim(),
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
             const Text(
-              'Por favor, verifica tu email antes de iniciar sesión.',
+              'Por favor, revisa tu bandeja de entrada y spam. Verifica tu email antes de iniciar sesión.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
             ),
@@ -215,16 +209,34 @@ class AuthController extends GetxController {
       await _storageService.saveAuthToken(await user.getIdToken() ?? '');
       await _storageService.saveLoginState(true);
 
-      // Navegar a home
-      Get.offAllNamed(RoutePaths.home);
+      // Verificar si completó la personalización
+      final hasCompletedPersonalization =
+          userProfile.value?.hasCompletedPersonalization ?? false;
 
-      // Mostrar mensaje de bienvenida
-      Get.snackbar(
-        'Bienvenido',
-        '¡Hola ${userProfile.value?.datosPersonales?.nombreUsuario ?? email.value.split('@')[0]}!',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 2),
-      );
+      if (!hasCompletedPersonalization) {
+        // Primera vez: Ir al stepper de personalización
+        Get.offAllNamed(
+          RoutePaths.onboardingStepper,
+          arguments: {'userId': user.uid},
+        );
+
+        Get.snackbar(
+          'Completa tu Perfil',
+          '¡Bienvenido! Personaliza tu cuenta para empezar',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 3),
+        );
+      } else {
+        // Ya completó: Ir directamente al home
+        Get.offAllNamed(RoutePaths.home);
+
+        Get.snackbar(
+          'Bienvenido',
+          '¡Hola ${userProfile.value?.datosPersonales?.nombreUsuario ?? email.value.split('@')[0]}!',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 2),
+        );
+      }
     } catch (e) {
       errorMessage.value = e.toString();
       Get.snackbar(
@@ -420,7 +432,6 @@ class AuthController extends GetxController {
       isAuthenticated.value = false;
       email.value = '';
       password.value = '';
-      username.value = '';
       confirmPasswordValue.value = '';
 
       // Navegar a welcome
