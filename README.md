@@ -24,17 +24,16 @@
 
 ### Frontend
 - **Framework**: Flutter 3.16+ (Dart 3.2+)
-- **State Management**: Riverpod
-- **Inyección de Dependencias**: GetIt
-- **Routing**: AutoRoute
-- **UI Components**: Material Design 3 + Custom Components
+- **State Management**: GetX
+- **Routing**: GetX Navigation
+- **UI Components**: Material Design 3 + Cupertino + Custom Components
 - **Animaciones**: Lottie + Custom Animations + RIVE
-- **Networking**: Dio
 - **Local Storage**: SharedPreferences
-- **Freezed**: Para manejo de estados UI
+- **Fonts**: Google Fonts
 
 ### Backend & Cloud
 - **Backend**: Firebase (Authentication, Firestore, Cloud Functions)
+- **Auth Providers**: Email/Password + Google Sign-In v7.2.0
 - **Cloud Provider**: Google Cloud Platform
 - **Monitoring**: Firebase Crashlytics
 - **CI/CD**: GitHub Actions
@@ -68,7 +67,7 @@ lib/
 │   
 │   └── [cada feature contiene]
 │       ├── models/               # Modelos de datos
-│       ├── controllers/          # Lógica de negocio (Riverpod)
+│       ├── controllers/          # Lógica de negocio (GetX)
 │       └── views/                # UI (Pages y Widgets)
 │
 └── shared/                       # Componentes compartidos
@@ -79,9 +78,9 @@ lib/
 
 ### Principios de Arquitectura
 
-- ✅ **Clean Architecture**: Separación clara de responsabilidades
-- ✅ **Repository Pattern**: Para persistencia de datos
-- ✅ **Controller Pattern**: Lógica de negocio con Riverpod
+- ✅ **MVC Architecture**: Modelo-Vista-Controlador con GetX
+- ✅ **Repository Pattern**: Para persistencia de datos (Firebase)
+- ✅ **Controller Pattern**: Lógica de negocio con GetX Controllers
 - ✅ **SOLID Principles**: Código mantenible y escalable
 - ✅ **Composition over Inheritance**: Componentes reutilizables
 - ✅ **Widgets Flat Structure**: Evitar anidación excesiva
@@ -224,9 +223,38 @@ Para más detalles, consulta el archivo `analysis_options.yaml`.
 
 ## 📚 Documentación Adicional
 
+### 📖 **Documentación General:**
 - [📋 PRD (Product Requirements Document)](design/prd.md)
 - [🏗️ Arquitectura Detallada](design/prd.md#-arquitectura-de-flutter)
 - [🛠️ Stack Tecnológico Completo](design/prd.md#%EF%B8%8F-stack-tecnológico)
+
+### 🔐 **Autenticación y Release:**
+- [🔑 Google Sign-In Setup](GOOGLE_SIGNIN_SETUP.md) - Configuración completa de Google Sign-In
+- [📦 Release Setup Summary](RELEASE_SETUP_SUMMARY.md) - Resumen de configuración de producción
+- [✅ Implementation Complete](IMPLEMENTATION_COMPLETE.md) - Resumen de implementación
+- [🔒 Keystore Info](android/KEYSTORE_INFO.md) - Información del keystore (CONFIDENCIAL)
+- [📚 Setup Index](docs/SETUP_INDEX.md) - Índice de toda la documentación de configuración
+
+### 🚀 **Quick Start para Desarrollo:**
+```bash
+# 1. Instalar dependencias
+flutter pub get
+
+# 2. Configurar Firebase (si no lo has hecho)
+flutterfire configure
+
+# 3. Ejecutar en modo debug
+flutter run
+```
+
+### 🏭 **Build para Producción:**
+```bash
+# Compilar APK de release (firmado)
+flutter build apk --release
+
+# Compilar App Bundle para Play Store
+flutter build appbundle --release
+```
 
 ---
 

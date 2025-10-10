@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 /// Servicio para manejar autenticación con Firebase
 class FirebaseAuthService {
@@ -46,6 +49,38 @@ class FirebaseAuthService {
     }
   }
 
+  /// Iniciar sesión con Google
+  Future<UserCredential> loginWithGoogle() async {
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+
+      // Iniciar flujo de autenticación de Google
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+      if (googleUser == null) {
+        throw Exception('Inicio de sesión con Google cancelado');
+      }
+
+      // Obtener detalles de autenticación
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      // Crear credencial para Firebase
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Iniciar sesión en Firebase con la credencial
+      final userCredential = await _auth.signInWithCredential(credential);
+      return userCredential;
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw Exception('Error al iniciar sesión con Google: ${e.toString()}');
+    }
+  }
+
   /// Enviar email de verificación
   Future<void> sendEmailVerification() async {
     try {
@@ -87,6 +122,9 @@ class FirebaseAuthService {
   /// Cerrar sesión
   Future<void> logout() async {
     try {
+      // Cerrar sesión de Google
+      await GoogleSignIn().signOut();
+      // Cerrar sesión de Firebase
       await _auth.signOut();
     } catch (e) {
       throw Exception('Error al cerrar sesión: ${e.toString()}');
