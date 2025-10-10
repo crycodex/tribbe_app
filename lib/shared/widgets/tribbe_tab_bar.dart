@@ -24,7 +24,7 @@ class TribbeTabBar extends StatelessWidget {
           items: const [
             CNTabBarItem(label: 'Home', icon: CNSymbol('house.fill')),
             CNTabBarItem(label: 'Gimnasios', icon: CNSymbol('building.2.fill')),
-            CNTabBarItem(label: 'Entrenar', icon: CNSymbol('bolt.circle.fill')),
+            CNTabBarItem(label: 'Press', icon: CNSymbol('bolt.circle.fill')),
             CNTabBarItem(label: 'Store', icon: CNSymbol('bag.fill')),
             CNTabBarItem(label: 'Perfil', icon: CNSymbol('person.circle.fill')),
           ],
