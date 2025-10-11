@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 /// Servicio para manejar autenticación con Firebase
 class FirebaseAuthService {
@@ -81,6 +84,68 @@ class FirebaseAuthService {
     }
   }
 
+  /// Iniciar sesión con Apple
+  Future<UserCredential> loginWithApple() async {
+    try {
+      // Verificar si la plataforma soporta Sign in with Apple
+      if (!kIsWeb && !Platform.isIOS && !Platform.isMacOS) {
+        throw Exception(
+          'Sign in with Apple no está disponible en esta plataforma',
+        );
+      }
+
+      // Verificar disponibilidad de Sign in with Apple
+      final isAvailable = await SignInWithApple.isAvailable();
+      if (!isAvailable) {
+        throw Exception(
+          'Sign in with Apple no está disponible en este dispositivo',
+        );
+      }
+
+      // Iniciar flujo de autenticación de Apple
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      // Crear credencial OAuth para Firebase
+      final oAuthProvider = OAuthProvider('apple.com');
+      final credential = oAuthProvider.credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+
+      // Iniciar sesión en Firebase con la credencial
+      final userCredential = await _auth.signInWithCredential(credential);
+
+      // Si es la primera vez, actualizar el displayName con el nombre de Apple
+      if (userCredential.additionalUserInfo?.isNewUser == true) {
+        final user = userCredential.user;
+        if (user != null && appleCredential.givenName != null) {
+          final displayName =
+              '${appleCredential.givenName ?? ''} ${appleCredential.familyName ?? ''}'
+                  .trim();
+          if (displayName.isNotEmpty) {
+            await user.updateDisplayName(displayName);
+          }
+        }
+      }
+
+      return userCredential;
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) {
+        throw Exception('Inicio de sesión con Apple cancelado');
+      }
+      throw Exception('Error de autorización con Apple: ${e.message}');
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw Exception('Error al iniciar sesión con Apple: ${e.toString()}');
+    }
+  }
+
   /// Enviar email de verificación
   Future<void> sendEmailVerification() async {
     try {
@@ -126,6 +191,7 @@ class FirebaseAuthService {
       await GoogleSignIn().signOut();
       // Cerrar sesión de Firebase
       await _auth.signOut();
+      // Nota: Apple no requiere logout explícito
     } catch (e) {
       throw Exception('Error al cerrar sesión: ${e.toString()}');
     }

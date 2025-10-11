@@ -433,21 +433,89 @@ class AuthController extends GetxController {
       isLoading.value = true;
       errorMessage.value = '';
 
-      // TODO: Implementar Apple Login
-      await Future.delayed(const Duration(seconds: 1));
+      // Iniciar sesión con Apple
+      final userCredential = await _authService.loginWithApple();
 
-      Get.snackbar(
-        'Próximamente',
-        'Login con Apple estará disponible pronto',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      final user = userCredential.user;
+      if (user == null) {
+        throw Exception('Error al iniciar sesión con Apple');
+      }
+
+      // Verificar si ya existe un perfil en Firestore
+      final existingProfile = await _firestoreService.getUserProfile(user.uid);
+
+      if (existingProfile == null) {
+        // Primera vez con Apple: Crear perfil básico
+        await _firestoreService.createUserProfile(
+          uid: user.uid,
+          email: user.email ?? '',
+          nombreUsuario: user.displayName, // Usar nombre de Apple
+        );
+
+        // Sincronizar preferencias locales
+        final currentTheme = _storageService.getThemeMode().value;
+        final currentLanguage = _storageService.getLanguage().name;
+        final currentGender = _storageService.getGender()?.value ?? 'male';
+
+        await _firestoreService.syncPreferenciasFromLocal(
+          uid: user.uid,
+          tema: currentTheme == 'dark' ? 'Noche' : 'Día',
+          idioma: currentLanguage == 'spanish' ? 'Español' : 'English',
+          genero: currentGender == 'male'
+              ? 'Masculino'
+              : currentGender == 'female'
+              ? 'Femenino'
+              : 'Otro',
+        );
+      }
+
+      // Cargar perfil desde Firestore
+      await _loadUserProfile(user.uid);
+
+      // Guardar en storage local
+      await _storageService.saveAuthToken(await user.getIdToken() ?? '');
+      await _storageService.saveLoginState(true);
+
+      // Verificar si completó la personalización
+      final hasCompletedPersonalization =
+          userProfile.value?.hasCompletedPersonalization ?? false;
+
+      if (!hasCompletedPersonalization) {
+        // Primera vez: Ir al stepper de personalización
+        Get.offAllNamed(
+          RoutePaths.onboardingStepper,
+          arguments: {'userId': user.uid},
+        );
+
+        Get.snackbar(
+          'Completa tu Perfil',
+          '¡Bienvenido! Personaliza tu cuenta para empezar',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 3),
+        );
+      } else {
+        // Ya completó: Ir directamente al home
+        Get.offAllNamed(RoutePaths.home);
+
+        Get.snackbar(
+          'Bienvenido',
+          '¡Hola ${userProfile.value?.datosPersonales?.nombreUsuario ?? user.displayName ?? 'Usuario'}!',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 2),
+        );
+      }
     } catch (e) {
-      errorMessage.value = 'Error al iniciar sesión con Apple';
-      Get.snackbar(
-        'Error',
-        errorMessage.value,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      errorMessage.value = e.toString();
+
+      // No mostrar error si el usuario canceló
+      if (!e.toString().contains('cancelado')) {
+        Get.snackbar(
+          'Error',
+          errorMessage.value,
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 3),
+        );
+      }
     } finally {
       isLoading.value = false;
     }
