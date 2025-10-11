@@ -6,7 +6,6 @@ import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
 import 'package:tribbe_app/shared/widgets/custom_button.dart';
 import 'package:tribbe_app/shared/widgets/custom_text_field.dart';
 import 'package:tribbe_app/shared/widgets/oauth_button.dart';
-
 /// Página de inicio de sesión
 class LoginPage extends StatelessWidget {
   LoginPage({super.key});
@@ -59,7 +58,6 @@ class LoginPage extends StatelessWidget {
 
                 // Botones de OAuth
                 OAuthButtonsRow(
-                  onFacebookPressed: controller.loginWithFacebook,
                   onGooglePressed: controller.loginWithGoogle,
                   onApplePressed: controller.loginWithApple,
                   isLoading: controller.isLoading.value,
