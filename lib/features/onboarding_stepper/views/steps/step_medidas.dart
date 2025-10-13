@@ -1,3 +1,4 @@
+import 'package:cupertino_native/cupertino_native.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/onboarding_stepper/controllers/onboarding_stepper_controller.dart';
@@ -248,11 +249,11 @@ class StepMedidas extends StatelessWidget {
               ),
             ],
           ),
-          Slider(
+          const SizedBox(height: 8),
+          CNSlider(
             value: value.value.clamp(currentMin, currentMax),
             min: currentMin,
             max: currentMax,
-            divisions: (currentMax - currentMin).toInt(),
             onChanged: (newValue) => value.value = newValue,
           ),
         ],

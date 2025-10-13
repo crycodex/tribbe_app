@@ -222,10 +222,50 @@ class OnboardingStepperController extends GetxController {
     }
   }
 
+  /// Validar step actual antes de avanzar
+  bool validateCurrentStep() {
+    switch (currentStep.value) {
+      case 0: // Preferencias - siempre válido
+        return true;
+      case 1: // Info Personal - solo meta es obligatoria
+        return metaFitness.value.isNotEmpty;
+      case 2: // Personaje - nombre obligatorio
+        if (nombreCompleto.value.trim().isEmpty) {
+          Get.snackbar(
+            'Campo requerido',
+            'Por favor ingresa tu nombre',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.orange,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 2),
+          );
+          return false;
+        }
+        return true;
+      case 3: // Medidas - altura y peso obligatorios
+        if (alturaCm.value <= 0 || pesoKg.value <= 0) {
+          Get.snackbar(
+            'Datos incompletos',
+            'Por favor completa tu altura y peso',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.orange,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 2),
+          );
+          return false;
+        }
+        return true;
+      default:
+        return true;
+    }
+  }
+
   /// Avanzar al siguiente paso
   void nextStep() {
     if (currentStep.value < 3) {
-      currentStep.value++;
+      if (validateCurrentStep()) {
+        currentStep.value++;
+      }
     }
   }
 

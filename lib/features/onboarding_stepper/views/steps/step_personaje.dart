@@ -1,3 +1,4 @@
+import 'package:cupertino_native/cupertino_native.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/onboarding_stepper/controllers/onboarding_stepper_controller.dart';
@@ -173,16 +174,19 @@ class StepPersonaje extends StatelessWidget {
                     const Text('Pésima'),
                     Text(
                       '${controller.condicionFisicaActual.value}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
                     ),
                     const Text('Óptima'),
                   ],
                 ),
-                Slider(
+                const SizedBox(height: 8),
+                CNSlider(
                   value: controller.condicionFisicaActual.value.toDouble(),
                   min: 0,
                   max: 100,
-                  divisions: 100,
                   onChanged: (value) {
                     controller.condicionFisicaActual.value = value.toInt();
                   },
@@ -222,11 +226,11 @@ class StepPersonaje extends StatelessWidget {
                     Text(esCm ? '2.2m+' : '7.2ft+'),
                   ],
                 ),
-                Slider(
+                const SizedBox(height: 8),
+                CNSlider(
                   value: controller.alturaCm.value.clamp(minAltura, maxAltura),
                   min: minAltura,
                   max: maxAltura,
-                  divisions: esCm ? 120 : 472,
                   onChanged: (value) {
                     controller.alturaCm.value = value;
                   },
