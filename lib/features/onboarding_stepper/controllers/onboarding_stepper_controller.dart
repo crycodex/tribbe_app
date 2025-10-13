@@ -458,25 +458,15 @@ class OnboardingStepperController extends GetxController {
         isLoading.value = false;
         return;
       }
-
-      // Debug: Mostrar userId
-      print('🔍 DEBUG: userId = ${userId.value}');
-      print('🔍 DEBUG: FirebaseAuth UID = ${_auth.currentUser?.uid}');
-
-      // 0. Asegurar que el documento principal del usuario existe
-      print('🔍 DEBUG: Verificando existencia del documento del usuario...');
       final userExists = await _firestoreService.userProfileExists(
         userId.value,
       );
       if (!userExists) {
-        print('⚠️ DEBUG: Documento no existe, creándolo...');
         await _firestoreService.createUserProfile(
           uid: userId.value,
           email: _auth.currentUser!.email!,
         );
-        print('✅ DEBUG: Documento creado');
       } else {
-        print('✅ DEBUG: Documento ya existe');
       }
 
       // 1. Actualizar/Confirmar preferencias
@@ -487,12 +477,10 @@ class OnboardingStepperController extends GetxController {
         genero: genero.value,
       );
 
-      print('🔍 DEBUG: Actualizando preferencias...');
       await _firestoreService.updatePreferencias(
         uid: userId.value,
         preferencias: preferencias,
       );
-      print('✅ DEBUG: Preferencias actualizadas');
 
       // 2. Guardar información fitness
       final informacion = Informacion(
@@ -504,12 +492,10 @@ class OnboardingStepperController extends GetxController {
         nivelExperiencia: nivelExperiencia.value,
         condicionFisicaActual: condicionFisicaActual.value,
       );
-      print('🔍 DEBUG: Guardando información fitness...');
       await _firestoreService.updateInformacion(
         uid: userId.value,
         informacion: informacion,
       );
-      print('✅ DEBUG: Información guardada');
 
       // 3. Guardar personaje/avatar
       final personaje = Personaje(
@@ -517,12 +503,10 @@ class OnboardingStepperController extends GetxController {
         tonoPiel: tonoPiel.value.toString(), // Guardar como "1", "2", "3"
         avatarUrl: avatarUrl.value.isEmpty ? null : avatarUrl.value,
       );
-      print('🔍 DEBUG: Guardando personaje...');
       await _firestoreService.updatePersonaje(
         uid: userId.value,
         personaje: personaje,
       );
-      print('✅ DEBUG: Personaje guardado');
 
       // 4. Guardar medidas
       // Solo incluir medidas específicas si al menos una está activada
@@ -580,15 +564,12 @@ class OnboardingStepperController extends GetxController {
             : null,
       );
 
-      print('🔍 DEBUG: Guardando medidas...');
       await _firestoreService.updateMedidas(
         uid: userId.value,
         medidas: medidas,
       );
-      print('✅ DEBUG: Medidas guardadas');
 
       // 5. Actualizar datos personales con ubicación
-      print('🔍 DEBUG: Guardando datos personales...');
       final datosPersonales = DatosPersonales(
         nombreCompleto: nombreCompleto.value.isEmpty
             ? null
@@ -613,12 +594,9 @@ class OnboardingStepperController extends GetxController {
         uid: userId.value,
         datosPersonales: datosPersonales,
       );
-      print('✅ DEBUG: Datos personales guardados');
 
       // 6. Marcar personalización como completada
-      print('🔍 DEBUG: Marcando personalización como completada...');
       await _firestoreService.markPersonalizationComplete(userId.value);
-      print('✅ DEBUG: Personalización marcada como completada');
 
       // Mostrar mensaje de éxito
       Get.snackbar(

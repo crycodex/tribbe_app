@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
 import 'package:tribbe_app/features/auth/views/pages/forgot_password_page.dart';
@@ -136,7 +137,7 @@ class AppRouter {
         return RoutePaths.onboardingStepper;
       }
     } catch (e) {
-      print('Error al determinar ruta inicial: $e');
+      debugPrint('Error al determinar ruta inicial: $e');
       // En caso de error, ir al welcome
       return RoutePaths.welcome;
     }
