@@ -72,8 +72,12 @@ class StepMedidas extends StatelessWidget {
               ),
               const Spacer(),
               const Text(
-                'Medidas Específicas (cm)',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+                'Medidas Específicas (Opcionales)',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ],
           ),
@@ -202,8 +206,10 @@ class StepMedidas extends StatelessWidget {
     String unit, {
     double min = 0,
     double max = 300,
+    bool isRequired = true,
   }) {
     final controller = Get.find<OnboardingStepperController>();
+    final theme = Theme.of(context);
 
     return Obx(() {
       // Determinar la unidad actual
@@ -231,12 +237,27 @@ class StepMedidas extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+              Row(
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (isRequired) ...[
+                    const SizedBox(width: 4),
+                    Text(
+                      '*',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.error,
+                      ),
+                    ),
+                  ],
+                ],
               ),
               Text(
                 currentUnit == 'cm' || currentUnit == 'kg'

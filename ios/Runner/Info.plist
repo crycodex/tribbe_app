@@ -60,5 +60,9 @@
 	</array>
 	<key>GIDClientID</key>
 	<string>757582300195-iib5avs87rc1sd9jk93oat9hia3mbq6d.apps.googleusercontent.com</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Tribbe necesita acceso a tu ubicación para mostrarte gimnasios cercanos y conectarte con atletas de tu zona.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Tribbe necesita acceso a tu ubicación para mostrarte gimnasios cercanos y conectarte con atletas de tu zona.</string>
 </dict>
 </plist>

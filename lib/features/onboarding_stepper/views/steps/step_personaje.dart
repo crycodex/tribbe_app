@@ -41,11 +41,24 @@ class StepPersonaje extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Nombre
-          const Align(
+          Align(
             alignment: Alignment.centerLeft,
-            child: Text(
-              '¿Cómo te llamas?',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            child: Row(
+              children: [
+                const Text(
+                  '¿Cómo te llamas?',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '*',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 12),
@@ -255,20 +268,23 @@ class StepPersonaje extends StatelessWidget {
               children: [
                 _buildSkinToneOption(
                   context,
-                  '#ffd7ba',
-                  controller.tonoPiel.value == '#ffd7ba',
+                  1,
+                  const Color(0xFFFFD7BA),
+                  controller.tonoPiel.value == 1,
                 ),
                 const SizedBox(width: 16),
                 _buildSkinToneOption(
                   context,
-                  '#d4a87b',
-                  controller.tonoPiel.value == '#d4a87b',
+                  2,
+                  const Color(0xFFD4A87B),
+                  controller.tonoPiel.value == 2,
                 ),
                 const SizedBox(width: 16),
                 _buildSkinToneOption(
                   context,
-                  '#8b6f47',
-                  controller.tonoPiel.value == '#8b6f47',
+                  3,
+                  const Color(0xFF8B6F47),
+                  controller.tonoPiel.value == 3,
                 ),
               ],
             ),
@@ -342,17 +358,14 @@ class StepPersonaje extends StatelessWidget {
 
   Widget _buildSkinToneOption(
     BuildContext context,
-    String colorHex,
+    int option,
+    Color color,
     bool isSelected,
   ) {
-    final color = Color(
-      int.parse(colorHex.substring(1), radix: 16) + 0xFF000000,
-    );
-
     return InkWell(
       onTap: () {
         final controller = Get.find<OnboardingStepperController>();
-        controller.tonoPiel.value = colorHex;
+        controller.tonoPiel.value = option;
       },
       child: Container(
         width: 50,
@@ -367,6 +380,18 @@ class StepPersonaje extends StatelessWidget {
             width: isSelected ? 4 : 2,
           ),
         ),
+        child: isSelected
+            ? Center(
+                child: Icon(
+                  Icons.check,
+                  color: Colors.white,
+                  size: 24,
+                  shadows: [
+                    Shadow(color: Colors.black.withOpacity(0.3), blurRadius: 4),
+                  ],
+                ),
+              )
+            : null,
       ),
     );
   }

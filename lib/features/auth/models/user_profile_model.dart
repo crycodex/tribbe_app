@@ -139,22 +139,42 @@ class DatosPersonales {
 
 /// Ubicación del usuario
 class Ubicacion {
-  Ubicacion({this.pais, this.provincia, this.ciudad});
+  Ubicacion({
+    this.pais,
+    this.provincia,
+    this.ciudad,
+    this.latitud,
+    this.longitud,
+  });
 
   final String? pais;
   final String? provincia;
   final String? ciudad;
+  final double? latitud;
+  final double? longitud;
 
   factory Ubicacion.fromJson(Map<String, dynamic> json) {
     return Ubicacion(
       pais: json['pais'] as String?,
       provincia: json['provincia'] as String?,
       ciudad: json['ciudad'] as String?,
+      latitud: json['latitud'] != null
+          ? (json['latitud'] as num).toDouble()
+          : null,
+      longitud: json['longitud'] != null
+          ? (json['longitud'] as num).toDouble()
+          : null,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'pais': pais, 'provincia': provincia, 'ciudad': ciudad};
+    return {
+      'pais': pais,
+      'provincia': provincia,
+      'ciudad': ciudad,
+      'latitud': latitud,
+      'longitud': longitud,
+    };
   }
 }
 
@@ -179,7 +199,8 @@ class Preferencias {
   }
 
   Map<String, dynamic> toJson() {
-    return {'tema': tema,
+    return {
+      'tema': tema,
       'unidades': unidades?.toJson(),
       'idioma': idioma,
       'genero': genero,

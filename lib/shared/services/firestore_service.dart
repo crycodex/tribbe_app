@@ -166,7 +166,10 @@ class FirestoreService {
     try {
       data['updated_at'] = DateTime.now().toIso8601String();
 
-      await _firestore.collection(usersCollection).doc(uid).update(data);
+      await _firestore
+          .collection(usersCollection)
+          .doc(uid)
+          .set(data, SetOptions(merge: true));
     } catch (e) {
       throw Exception('Error al actualizar perfil de usuario: ${e.toString()}');
     }
@@ -283,9 +286,9 @@ class FirestoreService {
 
   /// Actualizar timestamp del documento principal
   Future<void> _updateMainDocumentTimestamp(String uid) async {
-    await _firestore.collection(usersCollection).doc(uid).update({
+    await _firestore.collection(usersCollection).doc(uid).set({
       'updated_at': DateTime.now().toIso8601String(),
-    });
+    }, SetOptions(merge: true));
   }
 
   /// Eliminar perfil del usuario
