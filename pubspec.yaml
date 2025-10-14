@@ -47,6 +47,9 @@ dependencies:
   #image picker
   image_picker: ^1.2.0
 
+  #body part selector
+  body_part_selector: ^0.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

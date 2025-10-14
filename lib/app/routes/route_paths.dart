@@ -17,6 +17,7 @@ class RoutePaths {
   static const String splash = '/splash';
 
   // Training
+  static const String muscleSelection = '/muscle-selection';
   static const String trainingMode = '/training-mode';
   static const String workoutHistory = '/workout-history';
   static const String workoutList = '/workouts';

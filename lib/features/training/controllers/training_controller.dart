@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:get/get.dart';
+import 'package:tribbe_app/features/training/data/exercises_data.dart';
+import 'package:tribbe_app/features/training/models/exercise_model.dart';
 import 'package:tribbe_app/features/training/models/workout_model.dart';
 import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
 import 'package:tribbe_app/shared/services/workout_service.dart';
@@ -26,6 +28,11 @@ class TrainingController extends GetxController {
   final currentExerciseName = ''.obs;
   final currentSets = <SetModel>[].obs;
 
+  // Filtros de ejercicios
+  String? selectedMuscleGroup;
+  List<String>? selectedEquipment;
+  final RxList<ExerciseTemplate> availableExercises = <ExerciseTemplate>[].obs;
+
   // Lista de enfoques disponibles
   final List<String> focusTypes = [
     'Fuerza',
@@ -39,9 +46,32 @@ class TrainingController extends GetxController {
   ];
 
   @override
+  void onInit() {
+    super.onInit();
+
+    // Obtener parámetros de navegación
+    final args = Get.arguments as Map<String, dynamic>?;
+    if (args != null) {
+      selectedMuscleGroup = args['muscleGroup'] as String?;
+      selectedEquipment = args['equipment'] as List<String>?;
+    }
+
+    // Cargar ejercicios filtrados
+    _loadAvailableExercises();
+  }
+
+  @override
   void onClose() {
     _timer?.cancel();
     super.onClose();
+  }
+
+  /// Cargar ejercicios disponibles según filtros
+  void _loadAvailableExercises() {
+    availableExercises.value = ExercisesData.getFiltered(
+      muscleGroup: selectedMuscleGroup,
+      equipment: selectedEquipment,
+    );
   }
 
   /// Iniciar entrenamiento

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tribbe_app/features/training/controllers/training_controller.dart';
+import 'package:tribbe_app/features/training/models/exercise_model.dart';
 import 'package:tribbe_app/features/training/models/workout_model.dart';
 
-/// Diálogo para agregar ejercicio
+/// Diálogo para agregar ejercicio (con lista de ejercicios)
 class AddExerciseDialog extends StatefulWidget {
   final TrainingController controller;
 
@@ -14,13 +15,35 @@ class AddExerciseDialog extends StatefulWidget {
 }
 
 class _AddExerciseDialogState extends State<AddExerciseDialog> {
-  final _nameController = TextEditingController();
+  final _searchController = TextEditingController();
   final List<SetData> _sets = [];
+  ExerciseTemplate? _selectedExercise;
+  List<ExerciseTemplate> _filteredExercises = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredExercises = widget.controller.availableExercises;
+    _searchController.addListener(_filterExercises);
+  }
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  void _filterExercises() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredExercises = widget.controller.availableExercises;
+      } else {
+        _filteredExercises = widget.controller.availableExercises
+            .where((ex) => ex.name.toLowerCase().contains(query))
+            .toList();
+      }
+    });
   }
 
   @override
@@ -44,16 +67,90 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
 
             const SizedBox(height: 24),
 
-            // Nombre del ejercicio
+            // Búsqueda de ejercicio
             TextField(
-              controller: _nameController,
+              controller: _searchController,
               decoration: const InputDecoration(
-                labelText: 'Nombre del ejercicio',
-                hintText: 'Ej: Press Banca',
+                labelText: 'Buscar ejercicio',
+                hintText: 'Escribe para buscar...',
+                prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
               ),
-              textCapitalization: TextCapitalization.words,
             ),
+
+            const SizedBox(height: 16),
+
+            // Lista de ejercicios o ejercicio seleccionado
+            if (_selectedExercise == null)
+              Container(
+                constraints: const BoxConstraints(maxHeight: 200),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _filteredExercises.length,
+                  itemBuilder: (context, index) {
+                    final exercise = _filteredExercises[index];
+                    return ListTile(
+                      dense: true,
+                      title: Text(exercise.name),
+                      subtitle: Text(
+                        '${exercise.muscleGroup} - ${exercise.equipment}',
+                        style: TextStyle(fontSize: 11, color: Colors.grey),
+                      ),
+                      onTap: () {
+                        setState(() {
+                          _selectedExercise = exercise;
+                          _searchController.text = exercise.name;
+                        });
+                      },
+                    );
+                  },
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  border: Border.all(color: Colors.green),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _selectedExercise!.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            '${_selectedExercise!.muscleGroup} - ${_selectedExercise!.equipment}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () {
+                        setState(() {
+                          _selectedExercise = null;
+                          _searchController.clear();
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
 
             const SizedBox(height: 24),
 
@@ -115,22 +212,11 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: _sets.isEmpty
+                  onPressed: _sets.isEmpty || _selectedExercise == null
                       ? null
                       : () {
-                          if (_nameController.text.trim().isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Ingresa el nombre del ejercicio',
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-
                           widget.controller.addExercise(
-                            name: _nameController.text.trim(),
+                            name: _selectedExercise!.name,
                             sets: _sets
                                 .map(
                                   (s) =>

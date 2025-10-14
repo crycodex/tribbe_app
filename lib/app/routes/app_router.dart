@@ -73,10 +73,16 @@ class AppRouter {
 
     // Training routes
     GetPage<dynamic>(
+      name: RoutePaths.muscleSelection,
+      page: () => const MuscleSelectionPage(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage<dynamic>(
       name: RoutePaths.trainingMode,
       page: () => const TrainingModePage(),
       binding: TrainingBinding(),
-      transition: Transition.cupertino,
+      transition: Transition.rightToLeft,
       transitionDuration: const Duration(milliseconds: 300),
     ),
     GetPage<dynamic>(

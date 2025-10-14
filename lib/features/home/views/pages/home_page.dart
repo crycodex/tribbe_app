@@ -55,8 +55,8 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  /// Abrir modo entrenamiento
+  /// Abrir selección de músculo
   void _openTrainingMode() {
-    Get.toNamed(RoutePaths.trainingMode);
+    Get.toNamed(RoutePaths.muscleSelection);
   }
 }
