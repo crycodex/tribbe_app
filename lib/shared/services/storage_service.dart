@@ -151,6 +151,38 @@ class StorageService {
     return _prefs.setBool(StorageKeys.soundEnabled, enabled);
   }
 
+  // ========== RACHAS DE ENTRENAMIENTO ==========
+
+  /// Obtener datos de racha almacenados
+  String? getStreakData() {
+    return _prefs.getString(StorageKeys.userStreak);
+  }
+
+  /// Guardar datos de racha
+  Future<bool> saveStreakData(String data) {
+    return _prefs.setString(StorageKeys.userStreak, data);
+  }
+
+  /// Obtener fecha de inicio de semana
+  String? getWeekStartDate() {
+    return _prefs.getString(StorageKeys.weekStartDate);
+  }
+
+  /// Guardar fecha de inicio de semana
+  Future<bool> saveWeekStartDate(String date) {
+    return _prefs.setString(StorageKeys.weekStartDate, date);
+  }
+
+  /// Eliminar datos de racha
+  Future<bool> removeStreakData() {
+    return _prefs.remove(StorageKeys.userStreak);
+  }
+
+  /// Eliminar fecha de inicio de semana
+  Future<bool> removeWeekStartDate() {
+    return _prefs.remove(StorageKeys.weekStartDate);
+  }
+
   // ========== UTILIDADES ==========
 
   /// Limpiar todos los datos almacenados

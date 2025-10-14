@@ -18,4 +18,8 @@ class StorageKeys {
   // Preferencias de usuario
   static const String notificationsEnabled = 'notifications_enabled';
   static const String soundEnabled = 'sound_enabled';
+
+  // Rachas de entrenamiento
+  static const String userStreak = 'user_streak';
+  static const String weekStartDate = 'week_start_date';
 }

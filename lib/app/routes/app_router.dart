@@ -86,6 +86,9 @@ class AppRouter {
     Get.put(FirebaseAuthService(), permanent: true);
     Get.put(FirestoreService(), permanent: true);
 
+    // Servicios de la aplicación
+    Get.put(StreakService(), permanent: true);
+
     // Controllers globales
     Get.put(SettingsController(), permanent: true);
 

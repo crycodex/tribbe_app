@@ -14,3 +14,4 @@ export 'package:tribbe_app/shared/controllers/settings_controller.dart';
 export 'package:tribbe_app/shared/services/firebase_auth_service.dart';
 export 'package:tribbe_app/shared/services/firestore_service.dart';
 export 'package:tribbe_app/shared/services/storage_service.dart';
+export 'package:tribbe_app/shared/services/streak_service.dart';
