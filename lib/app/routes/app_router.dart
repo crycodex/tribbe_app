@@ -62,8 +62,16 @@ class AppRouter {
       transitionDuration: const Duration(milliseconds: 300),
     ),
 
+    // Profile routes
+    GetPage<dynamic>(
+      name: RoutePaths.editProfile,
+      page: () => const EditProfilePage(),
+      binding: ProfileBinding(),
+      transition: Transition.rightToLeft,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+
     // TODO: Workout routes
-    // TODO: Profile routes
     // TODO: Social routes
     // TODO: Gym routes
   ];
@@ -155,5 +163,14 @@ class OnboardingStepperBinding extends Bindings {
     Get.lazyPut<OnboardingStepperController>(
       () => OnboardingStepperController(),
     );
+  }
+}
+
+/// Binding para el perfil
+class ProfileBinding extends Bindings {
+  @override
+  void dependencies() {
+    Get.lazyPut<ProfileController>(() => ProfileController());
+    Get.lazyPut<AuthController>(() => AuthController());
   }
 }

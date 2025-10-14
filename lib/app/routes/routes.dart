@@ -8,6 +8,8 @@ export 'package:tribbe_app/features/onboarding/views/pages/onboarding_page.dart'
 export 'package:tribbe_app/features/onboarding/views/pages/welcome_page.dart';
 export 'package:tribbe_app/features/onboarding_stepper/controllers/onboarding_stepper_controller.dart';
 export 'package:tribbe_app/features/onboarding_stepper/views/pages/onboarding_stepper_page.dart';
+export 'package:tribbe_app/features/profile/controllers/profile_controller.dart';
+export 'package:tribbe_app/features/profile/views/pages/edit_profile_page.dart';
 export 'package:tribbe_app/shared/controllers/settings_controller.dart';
 export 'package:tribbe_app/shared/services/firebase_auth_service.dart';
 export 'package:tribbe_app/shared/services/firestore_service.dart';

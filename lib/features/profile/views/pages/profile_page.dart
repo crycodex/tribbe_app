@@ -2,6 +2,7 @@ import 'package:cupertino_native/cupertino_native.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/core/enums/app_enums.dart';
 import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
 import 'package:tribbe_app/shared/controllers/settings_controller.dart';
@@ -42,20 +43,35 @@ class ProfilePage extends StatelessWidget {
               ),
               const SizedBox(height: 32),
 
-              // Avatar
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.person,
-                  size: 60,
-                  color: isDark ? Colors.grey.shade600 : Colors.grey.shade500,
-                ),
-              ),
+              // Avatar con foto de perfil
+              Obx(() {
+                final profile = authController.userProfile.value;
+                final photoUrl = profile?.personaje?.avatarUrl;
+
+                return Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+                    shape: BoxShape.circle,
+                    image: photoUrl != null && photoUrl.isNotEmpty
+                        ? DecorationImage(
+                            image: NetworkImage(photoUrl),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: photoUrl == null || photoUrl.isEmpty
+                      ? Icon(
+                          Icons.person,
+                          size: 60,
+                          color: isDark
+                              ? Colors.grey.shade600
+                              : Colors.grey.shade500,
+                        )
+                      : null,
+                );
+              }),
               const SizedBox(height: 16),
 
               // Nombre del usuario
@@ -74,7 +90,20 @@ class ProfilePage extends StatelessWidget {
                   ),
                 );
               }),
-              const SizedBox(height: 32),
+              const SizedBox(height: 8),
+
+              // Botón Editar Perfil
+              TextButton.icon(
+                onPressed: () {
+                  Get.toNamed(RoutePaths.editProfile);
+                },
+                icon: const Icon(Icons.edit, size: 18),
+                label: const Text(
+                  'Editar perfil',
+                  style: TextStyle(fontSize: 14),
+                ),
+              ),
+              const SizedBox(height: 24),
 
               // Card de estadísticas (placeholder)
               Container(
