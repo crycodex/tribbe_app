@@ -6,6 +6,7 @@ import 'package:tribbe_app/features/training/models/workout_model.dart';
 import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
 import 'package:tribbe_app/shared/services/workout_service.dart';
 import 'package:tribbe_app/shared/services/streak_service.dart';
+import 'package:tribbe_app/app/routes/route_paths.dart';
 
 /// Controlador para el modo entrenamiento
 class TrainingController extends GetxController {
@@ -157,7 +158,7 @@ class TrainingController extends GetxController {
       );
 
       // Volver atrás
-      Get.back();
+      Get.offAllNamed(RoutePaths.home);
     } catch (e) {
       Get.snackbar(
         'Error',

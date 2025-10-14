@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/dashboard/models/streak_model.dart';
 import 'package:tribbe_app/features/training/models/workout_post_model.dart';
@@ -17,6 +18,7 @@ class DashboardController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isFeedLoading = false.obs;
   final RxList<WorkoutPostModel> feedPosts = <WorkoutPostModel>[].obs;
+  StreamSubscription<List<WorkoutPostModel>>? _feedSubscription;
 
   // Getters
   bool get hasTrainedToday => streak.value.hasTrainedToday();
@@ -28,7 +30,13 @@ class DashboardController extends GetxController {
   void onInit() {
     super.onInit();
     loadStreak();
-    loadFeed();
+    _listenToFeedPosts(); // Usar el stream aquí
+  }
+
+  @override
+  void onClose() {
+    _feedSubscription?.cancel(); // Cancelar suscripción al cerrar
+    super.onClose();
   }
 
   /// Cargar la racha desde el almacenamiento
@@ -39,10 +47,50 @@ class DashboardController extends GetxController {
       streak.value = loadedStreak;
     } catch (e) {
       print('Error al cargar racha: $e');
-      _showError('No se pudo cargar tu racha');
+      // _showError('No se pudo cargar tu racha'); // Puedes descomentar esto si prefieres un snackbar
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Escuchar cambios en el feed de posts en tiempo real
+  void _listenToFeedPosts() {
+    _feedSubscription?.cancel(); // Cancelar suscripción anterior si existe
+    _feedSubscription = _workoutService
+        .getFeedPostsStream(limit: 20)
+        .listen(
+          (posts) {
+            feedPosts.value = posts;
+            isFeedLoading.value = false; // El stream ya indica que cargó
+          },
+          onError: (error) {
+            print('Error en el stream del feed: $error');
+            _showError('Error al cargar el feed en tiempo real');
+            isFeedLoading.value = false;
+          },
+          onDone: () => print('Stream del feed finalizado'),
+        );
+  }
+
+  /// Cargar feed de posts (solo para la primera carga o si se necesita forzar)
+  Future<void> loadFeed() async {
+    // La carga inicial se hará a través del stream en _listenToFeedPosts
+    // Este método puede ser útil si quieres una carga one-time por alguna razón,
+    // pero con el stream, el feed se mantiene actualizado automáticamente.
+    if (isFeedLoading.value == false) {
+      // Evitar múltiples cargas si ya está escuchando
+      isFeedLoading.value = true;
+    }
+    // No es necesario llamar a getFeedPosts aquí si el stream está activo.
+    // Si necesitas recargar manualmente el stream (ej. después de un error), podrías hacerlo aquí.
+    // Para este caso, el stream se encarga.
+  }
+
+  /// Refrescar feed (simplemente reinicia la escucha del stream si es necesario)
+  Future<void> refreshFeed() async {
+    isFeedLoading.value = true; // Indicar que se está refrescando
+    _listenToFeedPosts(); // Reiniciar la escucha del stream
+    // Firestore se encargará de entregar los datos más recientes.
   }
 
   /// Registrar un entrenamiento
@@ -81,25 +129,6 @@ class DashboardController extends GetxController {
   /// Actualizar manualmente la racha
   Future<void> refreshStreak() async {
     loadStreak();
-  }
-
-  /// Cargar feed de posts
-  Future<void> loadFeed() async {
-    try {
-      isFeedLoading.value = true;
-      final posts = await _workoutService.getFeedPosts(limit: 20);
-      feedPosts.value = posts;
-    } catch (e) {
-      print('Error al cargar feed: $e');
-      _showError('No se pudo cargar el feed');
-    } finally {
-      isFeedLoading.value = false;
-    }
-  }
-
-  /// Refrescar feed
-  Future<void> refreshFeed() async {
-    await loadFeed();
   }
 
   /// Dar/quitar like a un post
