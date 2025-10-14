@@ -291,12 +291,37 @@ class FirestoreService {
     }, SetOptions(merge: true));
   }
 
-  /// Eliminar perfil del usuario
+  /// Eliminar perfil del usuario y todas sus subcolecciones
   Future<void> deleteUserProfile(String uid) async {
     try {
+      // Eliminar subcolecciones primero
+      await _deleteSubcollection(uid, preferenciasCollection);
+      await _deleteSubcollection(uid, informacionCollection);
+      await _deleteSubcollection(uid, personajeCollection);
+      await _deleteSubcollection(uid, medidasCollection);
+
+      // Eliminar documento principal
       await _firestore.collection(usersCollection).doc(uid).delete();
     } catch (e) {
       throw Exception('Error al eliminar perfil de usuario: ${e.toString()}');
+    }
+  }
+
+  /// Eliminar una subcolección completa
+  Future<void> _deleteSubcollection(String uid, String subcollection) async {
+    try {
+      final snapshot = await _firestore
+          .collection(usersCollection)
+          .doc(uid)
+          .collection(subcollection)
+          .get();
+
+      for (final doc in snapshot.docs) {
+        await doc.reference.delete();
+      }
+    } catch (e) {
+      // No lanzar error si la subcolección no existe
+      print('Error al eliminar subcolección $subcollection: $e');
     }
   }
 

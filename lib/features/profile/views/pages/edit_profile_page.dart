@@ -457,6 +457,76 @@ class EditProfilePage extends StatelessWidget {
               initialValue: controller.porcentajeGrasa.value,
             ),
             const SizedBox(height: 32),
+
+            // Sección: Zona de Peligro
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.red.withOpacity(0.3),
+                  width: 1.5,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.warning_rounded, color: Colors.red, size: 24),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Zona de Peligro',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Esta acción es irreversible',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark
+                          ? Colors.grey.shade400
+                          : Colors.grey.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: controller.showDeleteAccountDialog,
+                      icon: const Icon(Icons.delete_forever),
+                      label: const Text('Eliminar mi cuenta'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Se eliminarán todos tus datos, fotos, entrenamientos y tu cuenta de forma permanente.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark
+                          ? Colors.grey.shade500
+                          : Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
           ],
         ),
       ),

@@ -4,15 +4,18 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
 import 'package:tribbe_app/features/auth/models/user_profile_model.dart';
 import 'package:tribbe_app/shared/services/firestore_service.dart';
+import 'package:tribbe_app/shared/services/storage_service.dart';
 
 /// Controlador de Perfil
 class ProfileController extends GetxController {
   // Dependencias
   final FirestoreService _firestoreService = Get.find();
   final AuthController _authController = Get.find();
+  final StorageService _storageService = Get.find();
   final ImagePicker _imagePicker = ImagePicker();
 
   // Observables
@@ -472,5 +475,145 @@ class ProfileController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Eliminar cuenta del usuario (Auth, Storage, Firestore)
+  Future<void> deleteUserAccount() async {
+    try {
+      isLoading.value = true;
+
+      final user = _authController.firebaseUser.value;
+      if (user == null) {
+        throw Exception('Usuario no autenticado');
+      }
+
+      final userId = user.uid;
+
+      // 1. Eliminar archivos de Firebase Storage (foto de perfil)
+      try {
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('users')
+            .child(userId);
+
+        // Eliminar toda la carpeta del usuario
+        final listResult = await storageRef.listAll();
+        for (final item in listResult.items) {
+          await item.delete();
+        }
+      } catch (e) {
+        print('Error al eliminar archivos de Storage: $e');
+        // Continuar aunque falle (puede que no haya archivos)
+      }
+
+      // 2. Eliminar datos de Firestore (perfil y subcolecciones)
+      await _firestoreService.deleteUserProfile(userId);
+
+      // 3. Limpiar datos locales (SharedPreferences)
+      await _storageService.clearAll();
+
+      // 4. Eliminar cuenta de Firebase Auth
+      await user.delete();
+
+      // 5. Limpiar estado del AuthController
+      _authController.firebaseUser.value = null;
+      _authController.userProfile.value = null;
+      _authController.isAuthenticated.value = false;
+
+      // 6. Mostrar mensaje de confirmación
+      Get.snackbar(
+        'Cuenta eliminada',
+        'Tu cuenta ha sido eliminada permanentemente',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+
+      // 7. Navegar a la página de bienvenida
+      await Future.delayed(const Duration(milliseconds: 500));
+      Get.offAllNamed(RoutePaths.welcome);
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Error al eliminar cuenta: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Mostrar diálogo de confirmación para eliminar cuenta
+  void showDeleteAccountDialog() {
+    Get.dialog(
+      AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.warning, color: Colors.red, size: 28),
+            SizedBox(width: 12),
+            Text('Eliminar Cuenta'),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '¿Estás seguro que deseas eliminar tu cuenta?',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Esta acción es irreversible y eliminará:',
+              style: TextStyle(fontSize: 14),
+            ),
+            SizedBox(height: 8),
+            Text(
+              '• Toda tu información personal',
+              style: TextStyle(fontSize: 14),
+            ),
+            Text('• Tus fotos y archivos', style: TextStyle(fontSize: 14)),
+            Text(
+              '• Tus entrenamientos y estadísticas',
+              style: TextStyle(fontSize: 14),
+            ),
+            Text(
+              '• Tu cuenta de autenticación',
+              style: TextStyle(fontSize: 14),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'No podrás recuperar esta información.',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              deleteUserAccount();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Eliminar Cuenta'),
+          ),
+        ],
+      ),
+    );
   }
 }
