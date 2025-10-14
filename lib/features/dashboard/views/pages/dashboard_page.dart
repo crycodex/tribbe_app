@@ -9,9 +9,10 @@ class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(DashboardController());
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Obx(
         () => controller.isLoading.value
             ? const Center(child: CircularProgressIndicator())
@@ -21,12 +22,12 @@ class DashboardPage extends StatelessWidget {
                   SliverAppBar(
                     pinned: true,
                     floating: false,
-                    backgroundColor: Colors.white,
+                    backgroundColor: theme.scaffoldBackgroundColor,
                     elevation: 0,
                     expandedHeight: 100,
                     flexibleSpace: FlexibleSpaceBar(
                       centerTitle: true,
-                      title: _buildHeader(),
+                      title: _buildHeader(context),
                       titlePadding: const EdgeInsets.only(bottom: 16),
                     ),
                   ),
@@ -45,7 +46,7 @@ class DashboardPage extends StatelessWidget {
                           const SizedBox(height: 40),
 
                           // Sistema de rachas semanales
-                          _buildWeeklyStreak(controller),
+                          _buildWeeklyStreak(controller, context),
 
                           const SizedBox(height: 40),
 
@@ -77,21 +78,23 @@ class DashboardPage extends StatelessWidget {
   }
 
   /// Header con logo de Tribbe
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
+        Text(
           'tribbe',
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: theme.textTheme.bodyLarge?.color,
             letterSpacing: -1,
           ),
         ),
         const SizedBox(width: 4),
-        Text(
+        const Text(
           '.',
           style: TextStyle(
             fontSize: 32,
@@ -113,9 +116,14 @@ class DashboardPage extends StatelessWidget {
   }
 
   /// Sistema de rachas semanales (7 días)
-  Widget _buildWeeklyStreak(DashboardController controller) {
+  Widget _buildWeeklyStreak(
+    DashboardController controller,
+    BuildContext context,
+  ) {
     final now = DateTime.now();
     final currentDayIndex = now.weekday - 1;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     // Calcular la fecha del lunes de esta semana
     final mondayOfWeek = now.subtract(Duration(days: currentDayIndex));
@@ -160,6 +168,7 @@ class DashboardPage extends StatelessWidget {
                 date: dayDate,
                 isActive: isActive,
                 isToday: isToday,
+                context: context,
               );
             }),
           ),
@@ -173,7 +182,7 @@ class DashboardPage extends StatelessWidget {
             'Récord: ${controller.longestStreak} días',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey[600],
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -187,7 +196,11 @@ class DashboardPage extends StatelessWidget {
     required DateTime date,
     required bool isActive,
     required bool isToday,
+    required BuildContext context,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     // Nombres de días en español
     final dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
     final dayName = dayNames[date.weekday - 1];
@@ -214,10 +227,15 @@ class DashboardPage extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 2),
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
-          color: isToday ? Colors.orange.withOpacity(0.1) : Colors.transparent,
+          color: isToday
+              ? Colors.orange.withOpacity(isDark ? 0.15 : 0.1)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: isToday
-              ? Border.all(color: Colors.orange.withOpacity(0.3), width: 1)
+              ? Border.all(
+                  color: Colors.orange.withOpacity(isDark ? 0.4 : 0.3),
+                  width: 1,
+                )
               : null,
         ),
         child: Column(
@@ -229,7 +247,9 @@ class DashboardPage extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: isToday ? FontWeight.bold : FontWeight.w500,
-                color: isToday ? Colors.orange : Colors.grey[600],
+                color: isToday
+                    ? Colors.orange
+                    : (isDark ? Colors.grey[400] : Colors.grey[600]),
               ),
             ),
 
@@ -239,7 +259,9 @@ class DashboardPage extends StatelessWidget {
             Icon(
               Icons.local_fire_department,
               size: 28,
-              color: isActive ? Colors.orange : Colors.grey[300],
+              color: isActive
+                  ? Colors.orange
+                  : (isDark ? Colors.grey[700] : Colors.grey[300]),
             ),
 
             const SizedBox(height: 4),
@@ -250,7 +272,9 @@ class DashboardPage extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: isToday ? FontWeight.bold : FontWeight.w600,
-                color: isToday ? Colors.orange : Colors.black,
+                color: isToday
+                    ? Colors.orange
+                    : (isDark ? Colors.white : Colors.black),
               ),
             ),
 
@@ -260,7 +284,7 @@ class DashboardPage extends StatelessWidget {
               style: TextStyle(
                 fontSize: 9,
                 fontWeight: FontWeight.w400,
-                color: Colors.grey[500],
+                color: isDark ? Colors.grey[500] : Colors.grey[500],
               ),
             ),
           ],
