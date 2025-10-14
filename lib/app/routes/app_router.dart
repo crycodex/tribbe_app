@@ -79,6 +79,13 @@ class AppRouter {
       transition: Transition.cupertino,
       transitionDuration: const Duration(milliseconds: 300),
     ),
+    GetPage<dynamic>(
+      name: RoutePaths.workoutHistory,
+      page: () => const WorkoutHistoryPage(),
+      binding: ProfileBinding(),
+      transition: Transition.rightToLeft,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
 
     // TODO: Social routes
     // TODO: Gym routes

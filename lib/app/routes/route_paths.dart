@@ -18,6 +18,7 @@ class RoutePaths {
 
   // Training
   static const String trainingMode = '/training-mode';
+  static const String workoutHistory = '/workout-history';
   static const String workoutList = '/workouts';
   static const String workoutDetail = '/workout/:id';
   static const String createWorkout = '/workout/create';

@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/core/enums/app_enums.dart';
 import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
+import 'package:tribbe_app/features/profile/controllers/profile_controller.dart';
 import 'package:tribbe_app/shared/controllers/settings_controller.dart';
 
 /// Página de Perfil
@@ -14,6 +15,7 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
+    final profileController = Get.put(ProfileController());
     final settingsController = Get.find<SettingsController>();
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -105,41 +107,109 @@ class ProfilePage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // Card de estadísticas (placeholder)
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: isDark
-                        ? [const Color(0xFF1a237e), const Color(0xFF0d47a1)]
-                        : [const Color(0xFF2196F3), const Color(0xFF1976D2)],
+              // Card de estadísticas con datos reales
+              Obx(
+                () => Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isDark
+                          ? [const Color(0xFF1a237e), const Color(0xFF0d47a1)]
+                          : [const Color(0xFF2196F3), const Color(0xFF1976D2)],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildStatItem(
-                      icon: Icons.fitness_center,
-                      label: 'Entrenamientos',
-                      value: '25',
-                    ),
-                    Container(
-                      width: 1,
-                      height: 40,
-                      color: Colors.white.withOpacity(0.3),
-                    ),
-                    _buildStatItem(
-                      icon: Icons.emoji_events,
-                      label: 'Ranking',
-                      value: 'Top 40',
-                    ),
-                  ],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildStatItem(
+                        icon: Icons.fitness_center,
+                        label: 'Entrenamientos',
+                        value: profileController.totalWorkouts.toString(),
+                      ),
+                      Container(
+                        width: 1,
+                        height: 40,
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                      _buildStatItem(
+                        icon: Icons.schedule,
+                        label: 'Minutos',
+                        value: profileController.totalDuration.toString(),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
+
+              // Card de Historial de Entrenamientos
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey.shade900 : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => Get.toNamed(RoutePaths.workoutHistory),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.history,
+                              color: Colors.orange,
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Historial de Entrenamientos',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Ver todo mi progreso',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                            color: isDark
+                                ? Colors.grey.shade600
+                                : Colors.grey.shade400,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
 
               // Sección Preferencias
               Align(

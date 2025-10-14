@@ -10,6 +10,7 @@ export 'package:tribbe_app/features/onboarding_stepper/controllers/onboarding_st
 export 'package:tribbe_app/features/onboarding_stepper/views/pages/onboarding_stepper_page.dart';
 export 'package:tribbe_app/features/profile/controllers/profile_controller.dart';
 export 'package:tribbe_app/features/profile/views/pages/edit_profile_page.dart';
+export 'package:tribbe_app/features/profile/views/pages/workout_history_page.dart';
 export 'package:tribbe_app/features/training/controllers/training_controller.dart';
 export 'package:tribbe_app/features/training/views/pages/training_mode_page.dart';
 export 'package:tribbe_app/shared/controllers/settings_controller.dart';

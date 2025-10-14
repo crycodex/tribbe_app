@@ -8,6 +8,7 @@ import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
 import 'package:tribbe_app/features/auth/models/user_profile_model.dart';
 import 'package:tribbe_app/features/training/models/workout_model.dart';
+import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
 import 'package:tribbe_app/shared/services/firestore_service.dart';
 import 'package:tribbe_app/shared/services/storage_service.dart';
 import 'package:tribbe_app/shared/services/workout_service.dart';
@@ -16,6 +17,7 @@ import 'package:tribbe_app/shared/services/workout_service.dart';
 class ProfileController extends GetxController {
   // Dependencias
   final FirestoreService _firestoreService = Get.find();
+  final FirebaseAuthService _firebaseAuthService = Get.find();
   final AuthController _authController = Get.find();
   final StorageService _storageService = Get.find();
   final WorkoutService _workoutService = Get.find();
@@ -129,18 +131,33 @@ class ProfileController extends GetxController {
     try {
       isLoadingWorkouts.value = true;
 
-      final userId = _authController.firebaseUser.value?.uid;
+      // Usar FirebaseAuthService directamente para obtener el usuario actual
+      final currentUser = _firebaseAuthService.currentUser;
+      final userId = currentUser?.uid;
+
       if (userId == null) {
+        debugPrint(
+          '❌ ProfileController: userId es null - Usuario no autenticado',
+        );
         return;
       }
 
       final workouts = await _workoutService.getUserWorkouts(userId);
+
+      if (workouts.isNotEmpty) {
+        debugPrint(
+          '📊 ProfileController: Datos: ${workouts.map((w) => w.focus).toList()}',
+        );
+      } else {
+        debugPrint('📭 ProfileController: No hay entrenamientos');
+      }
+
       userWorkouts.value = workouts;
     } catch (e) {
-      print('Error al cargar entrenamientos: $e');
+      debugPrint('❌ Error al cargar entrenamientos: $e');
       Get.snackbar(
         'Error',
-        'No se pudo cargar el historial de entrenamientos',
+        'No se pudo cargar el historial de entrenamientos: $e',
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
@@ -225,7 +242,7 @@ class ProfileController extends GetxController {
     try {
       isUploadingImage.value = true;
 
-      final userId = _authController.firebaseUser.value?.uid;
+      final userId = _firebaseAuthService.currentUser?.uid;
       if (userId == null) {
         throw Exception('Usuario no autenticado');
       }
@@ -262,7 +279,7 @@ class ProfileController extends GetxController {
     try {
       isLoading.value = true;
 
-      final userId = _authController.firebaseUser.value?.uid;
+      final userId = _firebaseAuthService.currentUser?.uid;
       if (userId == null) {
         throw Exception('Usuario no autenticado');
       }
@@ -424,7 +441,7 @@ class ProfileController extends GetxController {
     try {
       isLoading.value = true;
 
-      final userId = _authController.firebaseUser.value?.uid;
+      final userId = _firebaseAuthService.currentUser?.uid;
       if (userId == null) {
         throw Exception('Usuario no autenticado');
       }
@@ -536,7 +553,7 @@ class ProfileController extends GetxController {
     try {
       isLoading.value = true;
 
-      final user = _authController.firebaseUser.value;
+      final user = _firebaseAuthService.currentUser;
       if (user == null) {
         throw Exception('Usuario no autenticado');
       }
