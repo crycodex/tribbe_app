@@ -87,7 +87,7 @@ class AppRouter {
     ),
     GetPage<dynamic>(
       name: RoutePaths.workoutHistory,
-      page: () => const WorkoutHistoryPage(),
+      page: () => WorkoutHistoryPage(),
       binding: ProfileBinding(),
       transition: Transition.rightToLeft,
       transitionDuration: const Duration(milliseconds: 300),

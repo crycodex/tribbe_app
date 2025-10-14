@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tribbe_app/features/training/models/workout_post_model.dart';
+import 'package:tribbe_app/features/training/views/widgets/comments_bottom_sheet.dart';
+import 'package:get/get.dart';
 
 /// Card de post de entrenamiento para el feed
 class WorkoutPostCard extends StatelessWidget {
@@ -7,7 +9,7 @@ class WorkoutPostCard extends StatelessWidget {
   final String? currentUserId;
   final VoidCallback? onLike;
   final VoidCallback? onComment;
-  final VoidCallback? onShare;
+  // final VoidCallback? onShare; // Eliminado
 
   const WorkoutPostCard({
     super.key,
@@ -15,7 +17,7 @@ class WorkoutPostCard extends StatelessWidget {
     this.currentUserId,
     this.onLike,
     this.onComment,
-    this.onShare,
+    // this.onShare, // Eliminado
   });
 
   @override
@@ -60,7 +62,7 @@ class WorkoutPostCard extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Acciones (like, comment, share)
+            // Acciones (like, comment)
             _buildActions(isLiked, isDark),
 
             const SizedBox(height: 8),
@@ -282,7 +284,7 @@ class WorkoutPostCard extends StatelessWidget {
     );
   }
 
-  /// Acciones (like, comment, share)
+  /// Acciones (like, comment)
   Widget _buildActions(bool isLiked, bool isDark) {
     return Row(
       children: [
@@ -321,7 +323,17 @@ class WorkoutPostCard extends StatelessWidget {
 
         // Comment
         InkWell(
-          onTap: onComment,
+          onTap: () {
+            if (onComment != null) {
+              onComment!();
+            }
+            Get.bottomSheet(
+              CommentsBottomSheet(postId: post.id),
+              isScrollControlled:
+                  true, // Permite que el bottom sheet ocupe casi toda la pantalla
+              backgroundColor: Colors.transparent,
+            );
+          },
           borderRadius: BorderRadius.circular(20),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -348,21 +360,21 @@ class WorkoutPostCard extends StatelessWidget {
           ),
         ),
 
-        const Spacer(),
+        // Spacer() // Eliminado
 
-        // Share
-        InkWell(
-          onTap: onShare,
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Icon(
-              Icons.share_outlined,
-              color: isDark ? Colors.grey[400] : Colors.grey[600],
-              size: 22,
-            ),
-          ),
-        ),
+        // Share (eliminado)
+        // InkWell(
+        //   onTap: onShare,
+        //   borderRadius: BorderRadius.circular(20),
+        //   child: Padding(
+        //     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        //     child: Icon(
+        //       Icons.share_outlined,
+        //       color: isDark ? Colors.grey[400] : Colors.grey[600],
+        //       size: 22,
+        //     ),
+        //   ),
+        // ),
       ],
     );
   }

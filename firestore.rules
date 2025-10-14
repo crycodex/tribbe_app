@@ -109,6 +109,18 @@ service cloud.firestore {
       // Permitir eliminación solo si es el dueño
       allow delete: if isAuthenticated() 
                     && resource.data.user_id == request.auth.uid;
+
+      // Subcolección de Comentarios para Posts de Entrenamientos
+      match /comments/{commentId} {
+        // Permitir lectura a todos los usuarios autenticados (quienes pueden ver el post)
+        allow read: if isAuthenticated();
+
+        // Permitir creación solo si el usuario está autenticado y el user_id del comentario coincide con su UID
+        allow create: if isAuthenticated() && request.resource.data.user_id == request.auth.uid;
+
+        // No permitir actualización ni eliminación de comentarios (los comentarios son inmutables por defecto)
+        allow update, delete: if false;
+      }
     }
     
     // === COLECCIÓN DE AMIGOS/SOCIAL (para el futuro) ===

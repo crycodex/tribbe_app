@@ -30,6 +30,9 @@ dependencies:
   #font
   google_fonts: ^6.3.2
 
+  #intl
+  intl: ^0.20.2
+
   #firebase
   firebase_core: ^4.1.1
   firebase_auth: ^6.1.0
@@ -49,6 +52,10 @@ dependencies:
 
   #body part selector
   body_part_selector: ^0.2.0
+
+  # compartir y capturar widgets
+  screenshot: ^3.0.0
+  share_plus: ^12.0.0
 
 dev_dependencies:
   flutter_test:

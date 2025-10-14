@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tribbe_app/features/training/models/workout_model.dart';
 import 'package:tribbe_app/features/training/models/workout_post_model.dart';
+import 'package:tribbe_app/features/training/models/comment_model.dart';
 
 /// Servicio para manejar entrenamientos y posts en Firestore
 class WorkoutService {
@@ -10,6 +11,8 @@ class WorkoutService {
   static const String workoutPostsCollection = 'workout_posts';
   static const String usersCollection = 'users';
   static const String workoutsSubcollection = 'workouts';
+  static const String commentsSubcollection =
+      'comments'; // Nueva subcolección para comentarios
 
   /// Crear un entrenamiento (guardado en users/{uid}/workouts)
   Future<WorkoutModel> createWorkout({
@@ -161,6 +164,59 @@ class WorkoutService {
         .map(
           (snapshot) => snapshot.docs
               .map((doc) => WorkoutPostModel.fromJson(doc.data()))
+              .toList(),
+        );
+  }
+
+  /// Añadir un comentario a un post
+  Future<CommentModel> addComment({
+    required String postId,
+    required String userId,
+    required String userName,
+    String? userPhotoUrl,
+    required String text,
+  }) async {
+    try {
+      final commentCollectionRef = _firestore
+          .collection(workoutPostsCollection)
+          .doc(postId)
+          .collection(commentsSubcollection);
+
+      final docRef = commentCollectionRef.doc();
+
+      final comment = CommentModel(
+        id: docRef.id,
+        userId: userId,
+        userName: userName,
+        userPhotoUrl: userPhotoUrl,
+        text: text,
+        createdAt: DateTime.now(),
+      );
+
+      await docRef.set(comment.toJson());
+
+      // Actualizar el contador de comentarios en el post principal
+      await _firestore.collection(workoutPostsCollection).doc(postId).update({
+        'comments_count': FieldValue.increment(1),
+      });
+
+      return comment;
+    } catch (e) {
+      throw Exception('Error al añadir comentario: ${e.toString()}');
+    }
+  }
+
+  /// Obtener stream de comentarios para un post
+  Stream<List<CommentModel>> getCommentsStream(String postId) {
+    return _firestore
+        .collection(workoutPostsCollection)
+        .doc(postId)
+        .collection(commentsSubcollection)
+        .orderBy('created_at', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => CommentModel.fromJson(doc.data()))
               .toList(),
         );
   }
