@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/dashboard/controllers/dashboard_controller.dart';
+import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
+import 'package:tribbe_app/shared/widgets/workout_post_card.dart';
 
 /// Dashboard principal (Home Tab)
 class DashboardPage extends StatelessWidget {
@@ -49,28 +51,98 @@ class DashboardPage extends StatelessWidget {
                           _buildWeeklyStreak(controller, context),
 
                           const SizedBox(height: 40),
-
-                          // Botón temporal para registrar entrenamiento (debug)
-                          if (!controller.hasTrainedToday)
-                            ElevatedButton.icon(
-                              onPressed: controller.registerWorkout,
-                              icon: const Icon(Icons.fitness_center),
-                              label: const Text(
-                                'Registrar Entrenamiento (Debug)',
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 12,
-                                ),
-                              ),
-                            ),
-
-                          const SizedBox(height: 40),
                         ],
                       ),
                     ),
                   ),
+
+                  // Sección de Feed
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Text(
+                        'Feed de Entrenamientos',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: theme.textTheme.bodyLarge?.color,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                  // Lista de posts
+                  Obx(() {
+                    if (controller.isFeedLoading.value) {
+                      return const SliverToBoxAdapter(
+                        child: Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(32),
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                      );
+                    }
+
+                    if (controller.feedPosts.isEmpty) {
+                      return SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.fitness_center,
+                                size: 64,
+                                color: theme.brightness == Brightness.dark
+                                    ? Colors.grey[700]
+                                    : Colors.grey[400],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No hay entrenamientos aún',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: theme.brightness == Brightness.dark
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '¡Sé el primero en compartir tu entrenamiento!',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: theme.brightness == Brightness.dark
+                                      ? Colors.grey[500]
+                                      : Colors.grey[500],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    return SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final post = controller.feedPosts[index];
+                        final authService = Get.find<FirebaseAuthService>();
+                        final currentUserId = authService.currentUser?.uid;
+
+                        return WorkoutPostCard(
+                          post: post,
+                          currentUserId: currentUserId,
+                          onLike: () => controller.toggleLike(post.id),
+                        );
+                      }, childCount: controller.feedPosts.length),
+                    );
+                  }),
+
+                  // Espacio final
+                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
                 ],
               ),
       ),

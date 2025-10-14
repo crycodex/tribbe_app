@@ -1,12 +1,263 @@
+import 'dart:async';
 import 'package:get/get.dart';
+import 'package:tribbe_app/features/training/models/workout_model.dart';
+import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
+import 'package:tribbe_app/shared/services/workout_service.dart';
+import 'package:tribbe_app/shared/services/streak_service.dart';
 
-/// Controlador de Entrenamiento
+/// Controlador para el modo entrenamiento
 class TrainingController extends GetxController {
-  // TODO: Implementar lógica de entrenamiento
+  final WorkoutService _workoutService = Get.find();
+  final FirebaseAuthService _authService = Get.find();
+  final StreakService _streakService = Get.find();
+
+  // Estado del entrenamiento
+  final isTraining = false.obs;
+  final isLoading = false.obs;
+  final isPaused = false.obs;
+
+  // Timer
+  final elapsedSeconds = 0.obs;
+  Timer? _timer;
+
+  // Datos del entrenamiento actual
+  final focusType = 'Fuerza'.obs;
+  final exercises = <ExerciseData>[].obs;
+  final currentExerciseName = ''.obs;
+  final currentSets = <SetModel>[].obs;
+
+  // Lista de enfoques disponibles
+  final List<String> focusTypes = [
+    'Fuerza',
+    'Hipertrofia',
+    'Resistencia',
+    'Cardio',
+    'Funcional',
+    'CrossFit',
+    'Calistenia',
+    'Otro',
+  ];
 
   @override
-  void onInit() {
-    super.onInit();
-    print('TrainingController initialized');
+  void onClose() {
+    _timer?.cancel();
+    super.onClose();
+  }
+
+  /// Iniciar entrenamiento
+  void startTraining() {
+    if (isTraining.value) return;
+
+    isTraining.value = true;
+    isPaused.value = false;
+    elapsedSeconds.value = 0;
+    exercises.clear();
+
+    _startTimer();
+  }
+
+  /// Pausar/Reanudar entrenamiento
+  void togglePause() {
+    if (!isTraining.value) return;
+
+    isPaused.value = !isPaused.value;
+
+    if (isPaused.value) {
+      _stopTimer();
+    } else {
+      _startTimer();
+    }
+  }
+
+  /// Finalizar entrenamiento
+  Future<void> finishTraining({String? caption}) async {
+    if (!isTraining.value) return;
+
+    try {
+      isLoading.value = true;
+      _stopTimer();
+
+      final user = _authService.currentUser;
+      if (user == null) {
+        throw Exception('Usuario no autenticado');
+      }
+
+      // Convertir ejercicios a modelo
+      final exerciseModels = exercises
+          .map((e) => ExerciseModel(name: e.name, sets: e.sets))
+          .toList();
+
+      if (exerciseModels.isEmpty) {
+        Get.snackbar(
+          'Error',
+          'Debes agregar al menos un ejercicio',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        isLoading.value = false;
+        return;
+      }
+
+      // Crear entrenamiento
+      final workout = await _workoutService.createWorkout(
+        userId: user.uid,
+        userName: user.displayName ?? 'Usuario',
+        focus: focusType.value,
+        duration: (elapsedSeconds.value / 60).ceil(),
+        exercises: exerciseModels,
+      );
+
+      // Crear post en el feed
+      await _workoutService.createWorkoutPost(
+        workout: workout,
+        userName: user.displayName ?? 'Usuario',
+        userPhotoUrl: user.photoURL,
+        caption: caption,
+      );
+
+      // Registrar entrenamiento para la racha
+      await _streakService.registerWorkout();
+
+      // Resetear estado
+      _resetState();
+
+      Get.snackbar(
+        'Entrenamiento Completado',
+        '¡Excelente trabajo! Tu entrenamiento ha sido registrado.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+
+      // Volver atrás
+      Get.back();
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'No se pudo guardar el entrenamiento: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Cancelar entrenamiento
+  void cancelTraining() {
+    _stopTimer();
+    _resetState();
+    Get.back();
+  }
+
+  /// Agregar ejercicio
+  void addExercise({required String name, required List<SetModel> sets}) {
+    if (name.trim().isEmpty || sets.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Completa todos los datos del ejercicio',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    exercises.add(ExerciseData(name: name, sets: sets));
+    currentExerciseName.value = '';
+    currentSets.clear();
+
+    Get.snackbar(
+      'Ejercicio Agregado',
+      '$name - ${sets.length} series',
+      snackPosition: SnackPosition.BOTTOM,
+    );
+  }
+
+  /// Eliminar ejercicio
+  void removeExercise(int index) {
+    if (index >= 0 && index < exercises.length) {
+      exercises.removeAt(index);
+    }
+  }
+
+  /// Agregar serie al ejercicio actual
+  void addSet({required double weight, required int reps}) {
+    if (weight <= 0 || reps <= 0) {
+      Get.snackbar(
+        'Error',
+        'Peso y repeticiones deben ser mayores a 0',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    currentSets.add(SetModel(weight: weight, reps: reps));
+  }
+
+  /// Eliminar serie
+  void removeSet(int index) {
+    if (index >= 0 && index < currentSets.length) {
+      currentSets.removeAt(index);
+    }
+  }
+
+  /// Cambiar enfoque
+  void changeFocus(String focus) {
+    focusType.value = focus;
+  }
+
+  /// Iniciar timer
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!isPaused.value) {
+        elapsedSeconds.value++;
+      }
+    });
+  }
+
+  /// Detener timer
+  void _stopTimer() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  /// Resetear estado
+  void _resetState() {
+    isTraining.value = false;
+    isPaused.value = false;
+    elapsedSeconds.value = 0;
+    exercises.clear();
+    currentExerciseName.value = '';
+    currentSets.clear();
+    focusType.value = 'Fuerza';
+  }
+
+  /// Formatear tiempo transcurrido
+  String get formattedTime {
+    final hours = (elapsedSeconds.value / 3600).floor();
+    final minutes = ((elapsedSeconds.value % 3600) / 60).floor();
+    final seconds = elapsedSeconds.value % 60;
+
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  /// Calcular volumen total actual
+  double get totalVolume {
+    return exercises.fold(0.0, (sum, exercise) => sum + exercise.totalVolume);
+  }
+
+  /// Calcular total de series actual
+  int get totalSets {
+    return exercises.fold(0, (sum, exercise) => sum + exercise.sets.length);
+  }
+}
+
+/// Clase auxiliar para datos de ejercicio
+class ExerciseData {
+  final String name;
+  final List<SetModel> sets;
+
+  ExerciseData({required this.name, required this.sets});
+
+  double get totalVolume {
+    return sets.fold(0.0, (sum, set) => sum + (set.weight * set.reps));
   }
 }

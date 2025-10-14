@@ -70,6 +70,12 @@ service cloud.firestore {
       match /historial_medidas/{measurementId} {
         allow read, write: if isOwner(userId);
       }
+      
+      // Subcolección de Entrenamientos
+      match /workouts/{workoutId} {
+        // El usuario puede leer, crear, actualizar y eliminar sus propios entrenamientos
+        allow read, write: if isOwner(userId);
+      }
     }
     
     // === COLECCIÓN DE GIMNASIOS (para el futuro) ===
@@ -81,19 +87,28 @@ service cloud.firestore {
       allow create, update, delete: if false; // Cambiar cuando implementes roles
     }
     
-    // === COLECCIÓN DE ENTRENAMIENTOS (para el futuro) ===
-    match /workouts/{workoutId} {
-      // Permitir lectura si el usuario está autenticado y es el dueño
-      allow read: if isAuthenticated() 
-                  && resource.data.user_id == request.auth.uid;
+    // === COLECCIÓN DE POSTS DE ENTRENAMIENTOS (FEED) ===
+    match /workout_posts/{postId} {
+      // Permitir lectura a todos los usuarios autenticados
+      // TODO: Filtrar solo por amigos cuando implementemos el sistema de amigos
+      allow read: if isAuthenticated();
       
-      // Permitir creación solo si es el dueño
+      // Permitir creación solo si:
+      // - El usuario está autenticado Y
+      // - El user_id del post coincide con el UID del usuario autenticado
       allow create: if isAuthenticated() 
                     && request.resource.data.user_id == request.auth.uid;
       
-      // Permitir actualización y eliminación solo si es el dueño
-      allow update, delete: if isAuthenticated() 
-                            && resource.data.user_id == request.auth.uid;
+      // Permitir actualización solo si:
+      // - Es el dueño del post O
+      // - Solo está modificando el array de likes
+      allow update: if isAuthenticated() 
+                    && (resource.data.user_id == request.auth.uid
+                        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])));
+      
+      // Permitir eliminación solo si es el dueño
+      allow delete: if isAuthenticated() 
+                    && resource.data.user_id == request.auth.uid;
     }
     
     // === COLECCIÓN DE AMIGOS/SOCIAL (para el futuro) ===

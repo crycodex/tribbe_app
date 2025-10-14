@@ -7,8 +7,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
 import 'package:tribbe_app/features/auth/models/user_profile_model.dart';
+import 'package:tribbe_app/features/training/models/workout_model.dart';
 import 'package:tribbe_app/shared/services/firestore_service.dart';
 import 'package:tribbe_app/shared/services/storage_service.dart';
+import 'package:tribbe_app/shared/services/workout_service.dart';
 
 /// Controlador de Perfil
 class ProfileController extends GetxController {
@@ -16,13 +18,16 @@ class ProfileController extends GetxController {
   final FirestoreService _firestoreService = Get.find();
   final AuthController _authController = Get.find();
   final StorageService _storageService = Get.find();
+  final WorkoutService _workoutService = Get.find();
   final ImagePicker _imagePicker = ImagePicker();
 
   // Observables
   final RxBool isLoading = false.obs;
   final RxBool isUploadingImage = false.obs;
+  final RxBool isLoadingWorkouts = false.obs;
   final Rx<File?> selectedImage = Rx<File?>(null);
   final RxString photoUrl = ''.obs;
+  final RxList<WorkoutModel> userWorkouts = <WorkoutModel>[].obs;
 
   // Form fields - Datos Personales
   final RxString nombreCompleto = ''.obs;
@@ -77,6 +82,7 @@ class ProfileController extends GetxController {
   void onInit() {
     super.onInit();
     _loadUserProfile();
+    loadUserWorkouts();
   }
 
   /// Cargar perfil del usuario actual
@@ -116,6 +122,54 @@ class ProfileController extends GetxController {
       // Foto de perfil
       photoUrl.value = profile.personaje?.avatarUrl ?? '';
     }
+  }
+
+  /// Cargar historial de entrenamientos del usuario
+  Future<void> loadUserWorkouts() async {
+    try {
+      isLoadingWorkouts.value = true;
+
+      final userId = _authController.firebaseUser.value?.uid;
+      if (userId == null) {
+        return;
+      }
+
+      final workouts = await _workoutService.getUserWorkouts(userId);
+      userWorkouts.value = workouts;
+    } catch (e) {
+      print('Error al cargar entrenamientos: $e');
+      Get.snackbar(
+        'Error',
+        'No se pudo cargar el historial de entrenamientos',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoadingWorkouts.value = false;
+    }
+  }
+
+  /// Refrescar entrenamientos
+  Future<void> refreshWorkouts() async {
+    await loadUserWorkouts();
+  }
+
+  /// Estadísticas rápidas de entrenamientos
+  int get totalWorkouts => userWorkouts.length;
+
+  double get totalVolume {
+    return userWorkouts.fold(0.0, (sum, workout) => sum + workout.totalVolume);
+  }
+
+  int get totalDuration {
+    return userWorkouts.fold(0, (sum, workout) => sum + workout.duration);
+  }
+
+  Map<String, int> get workoutsByFocus {
+    final Map<String, int> focusMap = {};
+    for (final workout in userWorkouts) {
+      focusMap[workout.focus] = (focusMap[workout.focus] ?? 0) + 1;
+    }
+    return focusMap;
   }
 
   /// Seleccionar imagen desde la galería

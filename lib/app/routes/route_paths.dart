@@ -16,7 +16,8 @@ class RoutePaths {
   static const String home = '/home';
   static const String splash = '/splash';
 
-  // Workout
+  // Training
+  static const String trainingMode = '/training-mode';
   static const String workoutList = '/workouts';
   static const String workoutDetail = '/workout/:id';
   static const String createWorkout = '/workout/create';

@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/features/home/controllers/home_controller.dart';
 import 'package:tribbe_app/features/dashboard/views/pages/dashboard_page.dart';
 import 'package:tribbe_app/features/gym/views/pages/gym_page.dart';
 import 'package:tribbe_app/features/profile/views/pages/profile_page.dart';
 import 'package:tribbe_app/features/store/views/pages/store_page.dart';
-import 'package:tribbe_app/features/training/views/pages/training_page.dart';
-import 'package:tribbe_app/shared/widgets/training_menu_sheet.dart';
 import 'package:tribbe_app/shared/widgets/tribbe_tab_bar.dart';
 
 /// Página principal con navegación por tabs
@@ -18,7 +17,7 @@ class HomePage extends StatelessWidget {
   static const List<Widget> _pages = [
     DashboardPage(), // Home/Dashboard
     GymPage(), // Gimnasios
-    TrainingPage(), // Entrenar
+    DashboardPage(), // Placeholder (no usado, botón central abre training)
     StorePage(), // Tienda
     ProfilePage(), // Perfil
   ];
@@ -46,15 +45,8 @@ class HomePage extends StatelessWidget {
             child: Obx(
               () => TribbeTabBar(
                 currentIndex: controller.currentTabIndex.value,
-                onTap: (index) {
-                  if (index == 2) {
-                    // Tab central: solo cambiar índice, el long press abre menú
-                    controller.changeTab(index);
-                  } else {
-                    controller.changeTab(index);
-                  }
-                },
-                onCenterLongPress: () => _showTrainingMenu(context),
+                onTap: (index) => controller.changeTab(index),
+                onTrainingTap: () => _openTrainingMode(),
               ),
             ),
           ),
@@ -63,13 +55,8 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  /// Mostrar bottom sheet con opciones de entrenamiento
-  void _showTrainingMenu(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => const TrainingMenuSheet(),
-    );
+  /// Abrir modo entrenamiento
+  void _openTrainingMode() {
+    Get.toNamed(RoutePaths.trainingMode);
   }
 }

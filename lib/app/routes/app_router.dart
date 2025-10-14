@@ -71,7 +71,15 @@ class AppRouter {
       transitionDuration: const Duration(milliseconds: 300),
     ),
 
-    // TODO: Workout routes
+    // Training routes
+    GetPage<dynamic>(
+      name: RoutePaths.trainingMode,
+      page: () => const TrainingModePage(),
+      binding: TrainingBinding(),
+      transition: Transition.cupertino,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+
     // TODO: Social routes
     // TODO: Gym routes
   ];
@@ -88,13 +96,10 @@ class AppRouter {
 
     // Servicios de la aplicación
     Get.put(StreakService(), permanent: true);
+    Get.put(WorkoutService(), permanent: true);
 
     // Controllers globales
     Get.put(SettingsController(), permanent: true);
-
-    // TODO: Inicializar otros servicios
-    // Get.lazyPut<ApiService>(() => ApiService());
-    // Get.lazyPut<WorkoutService>(() => WorkoutService());
   }
 
   /// Determina la ruta inicial basándose en el estado de autenticación
@@ -175,5 +180,13 @@ class ProfileBinding extends Bindings {
   void dependencies() {
     Get.lazyPut<ProfileController>(() => ProfileController());
     Get.lazyPut<AuthController>(() => AuthController());
+  }
+}
+
+/// Binding para el entrenamiento
+class TrainingBinding extends Bindings {
+  @override
+  void dependencies() {
+    Get.lazyPut<TrainingController>(() => TrainingController());
   }
 }
