@@ -178,7 +178,7 @@ class WorkoutHistoryPage extends StatelessWidget {
     );
   }
 
-  /// Card de entrenamiento individual
+  /// Card de entrenamiento individual - Estilo Strava
   Widget _buildWorkoutCard(
     WorkoutModel workout,
     bool isDark,
@@ -188,159 +188,149 @@ class WorkoutHistoryPage extends StatelessWidget {
     final GlobalKey shareButtonKey = GlobalKey();
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: isDark ? Colors.grey[900] : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
           width: 1,
         ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header con enfoque y fecha
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.local_fire_department,
-                    color: _getFocusColor(workout.focus),
-                    size: 24,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    workout.focus,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Text(
-                    _formatDate(workout.createdAt),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? Colors.grey[400] : Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    key: shareButtonKey, // Asignar la key al IconButton
-                    icon: Icon(
-                      Icons.share,
-                      color: isDark ? Colors.grey[400] : Colors.grey[600],
-                      size: 20,
-                    ),
-                    onPressed: () => _shareWorkout(
-                      context,
-                      workout,
-                      shareButtonKey,
-                    ), // Pasar la key
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Estadísticas del entrenamiento
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildWorkoutStat(
-                'Duración',
-                '${workout.duration} min',
-                Icons.timer,
-                isDark,
-              ),
-              _buildWorkoutStat(
-                'Ejercicios',
-                workout.exercises.length.toString(),
-                Icons.fitness_center,
-                isDark,
-              ),
-              _buildWorkoutStat(
-                'Series',
-                workout.totalSets.toString(),
-                Icons.repeat,
-                isDark,
-              ),
-              _buildWorkoutStat(
-                'Volumen',
-                '${workout.totalVolume.toInt()} kg',
-                Icons.scale,
-                isDark,
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Lista de ejercicios (colapsada)
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.grey[850] : Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // Header con fecha y botón compartir
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Ejercicios (${workout.exercises.length})',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                  _formatDate(workout.createdAt),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                IconButton(
+                  key: shareButtonKey,
+                  icon: Icon(
+                    Icons.share,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    size: 20,
+                  ),
+                  onPressed: () =>
+                      _shareWorkout(context, workout, shareButtonKey),
+                ),
+              ],
+            ),
+          ),
+
+          // Métricas principales - Estilo Strava
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                // Duración (métrica principal)
+                _buildMainMetric('Duración', '${workout.duration} min', isDark),
+
+                const SizedBox(height: 20),
+
+                // Métricas secundarias en fila
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildSecondaryMetric(
+                      'Ejercicios',
+                      workout.exercises.length.toString(),
+                      isDark,
+                    ),
+                    _buildSecondaryMetric(
+                      'Series',
+                      workout.totalSets.toString(),
+                      isDark,
+                    ),
+                    _buildSecondaryMetric(
+                      'Volumen',
+                      '${workout.totalVolume.toInt()} kg',
+                      isDark,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Icono del tipo de entrenamiento
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: _getFocusColor(workout.focus).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: Icon(
+                    Icons.local_fire_department,
+                    color: _getFocusColor(workout.focus),
+                    size: 32,
                   ),
                 ),
                 const SizedBox(height: 8),
-                ...workout.exercises.take(3).map((exercise) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.circle,
-                          size: 6,
-                          color: isDark ? Colors.grey[500] : Colors.grey[600],
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '${exercise.name} - ${exercise.sets.length} series',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDark
-                                  ? Colors.grey[400]
-                                  : Colors.grey[700],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-                if (workout.exercises.length > 3)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      '+${workout.exercises.length - 3} más',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Colors.blueAccent,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                Text(
+                  workout.focus,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.grey[300] : Colors.grey[700],
                   ),
+                ),
+              ],
+            ),
+          ),
+
+          // Footer con ejercicios
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.fitness_center,
+                  size: 16,
+                  color: isDark ? Colors.grey[500] : Colors.grey[600],
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${workout.exercises.length} ejercicios',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.grey[500] : Colors.grey[600],
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  'Ver detalles',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: _getFocusColor(workout.focus),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
           ),
@@ -349,29 +339,49 @@ class WorkoutHistoryPage extends StatelessWidget {
     );
   }
 
-  Widget _buildWorkoutStat(
-    String label,
-    String value,
-    IconData icon,
-    bool isDark,
-  ) {
+  /// Métrica principal - Estilo Strava (más grande y destacada)
+  Widget _buildMainMetric(String label, String value, bool isDark) {
     return Column(
       children: [
-        Icon(
-          icon,
-          size: 20,
-          color: isDark ? Colors.grey[400] : Colors.grey[600],
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
-          value,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            color: isDark ? Colors.grey[400] : Colors.grey[600],
+            fontWeight: FontWeight.w500,
+          ),
         ),
+      ],
+    );
+  }
+
+  /// Métrica secundaria - Estilo Strava (más pequeña)
+  Widget _buildSecondaryMetric(String label, String value, bool isDark) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 2),
         Text(
           label,
           style: TextStyle(
-            fontSize: 10,
-            color: isDark ? Colors.grey[500] : Colors.grey[600],
+            fontSize: 12,
+            color: isDark ? Colors.grey[400] : Colors.grey[600],
           ),
         ),
       ],
@@ -496,9 +506,7 @@ class WorkoutHistoryPage extends StatelessWidget {
   }
 }
 
-// --- Nuevo Widget para la imagen de resumen del entrenamiento ---
-
-/// Widget para generar la imagen compartible del resumen de entrenamiento
+/// Widget para generar la imagen compartible del resumen de entrenamiento - Estilo Strava
 class WorkoutSummaryImage extends StatelessWidget {
   final WorkoutModel workout;
   final Key shareKey; // Recibe la GlobalKey para la captura
@@ -514,33 +522,67 @@ class WorkoutSummaryImage extends StatelessWidget {
     return RepaintBoundary(
       key: shareKey, // Asigna la key al RepaintBoundary
       child: Container(
-        width: 225, // Ancho fijo para la imagen
-        padding: const EdgeInsets.all(24), // Padding interno del container
+        height: 580,
+        padding: const EdgeInsets.all(32), // Padding interno
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Logo de Tribbe
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.asset('assets/icon/icon_ligth.png', height: 50),
+            Text(
+              'Tribbe.',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
             ),
-            _buildStatRow('Duración', '${workout.duration} min', Icons.timer),
-            _buildStatRow(
-              'Ejercicios',
-              '${workout.exercises.length}',
-              Icons.fitness_center,
+
+            const SizedBox(height: 40),
+
+            // Métricas principales - Estilo Strava
+            _buildMainMetric('Duración', '${workout.duration} min'),
+            const SizedBox(height: 32),
+            _buildMainMetric('Ejercicios', '${workout.exercises.length}'),
+            const SizedBox(height: 32),
+            _buildMainMetric('Volumen', '${workout.totalVolume.toInt()} kg'),
+
+            const SizedBox(height: 40),
+
+            // Icono del tipo de entrenamiento
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: _getFocusColor(workout.focus).withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(40),
+              ),
+              child: Icon(
+                _getFocusIcon(workout.focus),
+                color: _getFocusColor(workout.focus),
+                size: 40,
+              ),
             ),
-            _buildStatRow('Series', '${workout.totalSets}', Icons.repeat),
-            _buildStatRow(
-              'Volumen Total',
-              '${workout.totalVolume.toInt()} kg',
-              Icons.scale,
+
+            const SizedBox(height: 16),
+
+            Text(
+              workout.focus,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
             ),
+
+            const SizedBox(height: 40),
+
+            // Hashtag
             Text(
               '#TribbeApp',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.blueAccent,
+                color: Colors.grey[400],
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -550,25 +592,70 @@ class WorkoutSummaryImage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatRow(String label, String value, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.blueAccent, size: 20),
-          const SizedBox(width: 12),
-          Text(label, style: TextStyle(fontSize: 14, color: Colors.black87)),
-          const Spacer(),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
+  /// Métrica principal - Estilo Strava
+  Widget _buildMainMetric(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey[400],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
+  }
+
+  Color _getFocusColor(String focus) {
+    switch (focus) {
+      case 'Fuerza':
+        return Colors.red;
+      case 'Hipertrofia':
+        return Colors.purple;
+      case 'Resistencia':
+        return Colors.green;
+      case 'Cardio':
+        return Colors.blue;
+      case 'Funcional':
+        return Colors.orange;
+      case 'CrossFit':
+        return Colors.deepOrange;
+      case 'Calistenia':
+        return Colors.teal;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getFocusIcon(String focus) {
+    switch (focus) {
+      case 'Fuerza':
+        return Icons.fitness_center;
+      case 'Hipertrofia':
+        return Icons.trending_up;
+      case 'Resistencia':
+        return Icons.directions_run;
+      case 'Cardio':
+        return Icons.favorite;
+      case 'Funcional':
+        return Icons.accessibility_new;
+      case 'CrossFit':
+        return Icons.local_fire_department;
+      case 'Calistenia':
+        return Icons.person;
+      default:
+        return Icons.sports_gymnastics;
+    }
   }
 }

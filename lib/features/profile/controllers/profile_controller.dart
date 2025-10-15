@@ -25,6 +25,7 @@ class ProfileController extends GetxController {
 
   // Observables
   final RxBool isLoading = false.obs;
+  final RxBool isLoadingProfile = true.obs; // Loading del perfil inicial
   final RxBool isUploadingImage = false.obs;
   final RxBool isLoadingWorkouts = false.obs;
   final RxBool isLoadingMoreWorkouts = false.obs;
@@ -105,11 +106,41 @@ class ProfileController extends GetxController {
     pesoController = TextEditingController();
     porcentajeGrasaController = TextEditingController();
 
-    // Cargar perfil con delay para asegurar que AuthController esté listo
-    Future.delayed(const Duration(milliseconds: 100), () {
+    // Escuchar cambios en el perfil del AuthController
+    ever(_authController.userProfile, (_) {
+      debugPrint('👂 ProfileController: Detectado cambio en userProfile');
       _loadUserProfile();
-      loadUserWorkouts();
     });
+
+    // Cargar perfil inmediatamente
+    _initializeProfile();
+  }
+
+  /// Inicializar perfil del usuario
+  Future<void> _initializeProfile() async {
+    try {
+      isLoadingProfile.value = true;
+
+      // Si el perfil ya está cargado en AuthController, usarlo
+      if (_authController.userProfile.value != null) {
+        debugPrint(
+          '✅ ProfileController: Perfil ya disponible en AuthController',
+        );
+        _loadUserProfile();
+        await loadUserWorkouts();
+      } else {
+        // Si no está disponible, forzar recarga desde Firestore
+        debugPrint(
+          '🔄 ProfileController: Recargando perfil desde Firestore...',
+        );
+        await reloadUserProfile();
+        await loadUserWorkouts();
+      }
+    } catch (e) {
+      debugPrint('❌ ProfileController: Error al inicializar perfil: $e');
+    } finally {
+      isLoadingProfile.value = false;
+    }
   }
 
   @override
