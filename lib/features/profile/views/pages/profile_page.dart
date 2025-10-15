@@ -2,9 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
+import 'package:tribbe_app/features/home/views/pages/home_page.dart';
 import 'package:tribbe_app/features/profile/controllers/profile_controller.dart';
 import 'package:tribbe_app/features/profile/views/widgets/workout_grid_item.dart';
-import 'package:tribbe_app/shared/widgets/settings_drawer.dart';
 
 /// Página de Perfil - Estilo Instagram Minimalista
 class ProfilePage extends StatelessWidget {
@@ -15,12 +15,9 @@ class ProfilePage extends StatelessWidget {
     final profileController = Get.put(ProfileController());
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final scaffoldKey = GlobalKey<ScaffoldState>();
 
     return Scaffold(
-      key: scaffoldKey,
       backgroundColor: isDark ? Colors.black : Colors.grey.shade50,
-      endDrawer: const SettingsDrawer(),
       body: SafeArea(
         child: NestedScrollView(
           headerSliverBuilder: (context, innerBoxIsScrolled) {
@@ -33,7 +30,7 @@ class ProfilePage extends StatelessWidget {
                 title: Obx(() {
                   final username = profileController.nombreUsuario.value;
                   return Text(
-                    username.isEmpty ? 'Mi Perfil' : '@$username',
+                    username.isEmpty ? 'Perfil' : '@$username',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -44,7 +41,8 @@ class ProfilePage extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.menu),
                     onPressed: () {
-                      scaffoldKey.currentState?.openEndDrawer();
+                      // Abrir drawer usando el GlobalKey del HomePage
+                      homeScaffoldKey.currentState?.openEndDrawer();
                     },
                   ),
                 ],

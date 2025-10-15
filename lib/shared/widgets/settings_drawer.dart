@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/core/enums/app_enums.dart';
 import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
-import 'package:tribbe_app/features/profile/controllers/profile_controller.dart';
 import 'package:tribbe_app/shared/controllers/settings_controller.dart';
 
 /// Drawer lateral derecho para configuraciones y preferencias
@@ -20,8 +19,10 @@ class SettingsDrawer extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Drawer(
+      elevation: 0,
       backgroundColor: isDark ? Colors.black : Colors.grey.shade50,
       child: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             // Header del drawer
@@ -376,60 +377,6 @@ class SettingsDrawer extends StatelessWidget {
               controller.logout();
             },
             child: const Text('Cerrar Sesión'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDeleteAccountDialog(BuildContext context) {
-    final profileController = Get.find<ProfileController>();
-
-    showCupertinoDialog<void>(
-      context: context,
-      builder: (BuildContext context) => CupertinoAlertDialog(
-        title: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.warning, color: Colors.red, size: 24),
-            SizedBox(width: 8),
-            Text('Eliminar Cuenta'),
-          ],
-        ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(height: 8),
-            Text(
-              '¿Estás seguro que deseas eliminar tu cuenta?',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            SizedBox(height: 12),
-            Text(
-              'Esta acción eliminará permanentemente:\n\n'
-              '• Tu información personal\n'
-              '• Fotos y archivos\n'
-              '• Entrenamientos y estadísticas\n'
-              '• Tu cuenta de autenticación\n\n'
-              'No podrás recuperar esta información.',
-              style: TextStyle(fontSize: 13),
-            ),
-          ],
-        ),
-        actions: <CupertinoDialogAction>[
-          CupertinoDialogAction(
-            child: const Text('Cancelar'),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () {
-              Navigator.pop(context);
-              profileController.deleteUserAccount();
-            },
-            child: const Text('Eliminar Cuenta'),
           ),
         ],
       ),

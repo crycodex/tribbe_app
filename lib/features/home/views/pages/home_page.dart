@@ -7,6 +7,10 @@ import 'package:tribbe_app/features/gym/views/pages/gym_page.dart';
 import 'package:tribbe_app/features/profile/views/pages/profile_page.dart';
 import 'package:tribbe_app/features/store/views/pages/store_page.dart';
 import 'package:tribbe_app/shared/widgets/tribbe_tab_bar.dart';
+import 'package:tribbe_app/shared/widgets/settings_drawer.dart';
+
+/// GlobalKey para acceder al Scaffold desde cualquier lugar
+final GlobalKey<ScaffoldState> homeScaffoldKey = GlobalKey<ScaffoldState>();
 
 /// Página principal con navegación por tabs
 /// Cada tab es un feature completamente independiente
@@ -27,6 +31,10 @@ class HomePage extends StatelessWidget {
     final controller = Get.put(HomeController());
 
     return Scaffold(
+      key: homeScaffoldKey, // GlobalKey para acceder desde otras páginas
+      // Drawer lateral derecho disponible globalmente
+      endDrawer: const SettingsDrawer(),
+      endDrawerEnableOpenDragGesture: false, // Solo se abre con botón
       body: Stack(
         children: [
           // Contenido del tab actual
