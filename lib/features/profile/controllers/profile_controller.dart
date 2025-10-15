@@ -31,6 +31,14 @@ class ProfileController extends GetxController {
   final RxString photoUrl = ''.obs;
   final RxList<WorkoutModel> userWorkouts = <WorkoutModel>[].obs;
 
+  // Controladores de texto para campos del formulario
+  late final TextEditingController nombreCompletoController;
+  late final TextEditingController nombreUsuarioController;
+  late final TextEditingController bioController;
+  late final TextEditingController alturaController;
+  late final TextEditingController pesoController;
+  late final TextEditingController porcentajeGrasaController;
+
   // Form fields - Datos Personales
   final RxString nombreCompleto = ''.obs;
   final RxString nombreUsuario = ''.obs;
@@ -83,8 +91,27 @@ class ProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // Inicializar controladores de texto
+    nombreCompletoController = TextEditingController();
+    nombreUsuarioController = TextEditingController();
+    bioController = TextEditingController();
+    alturaController = TextEditingController();
+    pesoController = TextEditingController();
+    porcentajeGrasaController = TextEditingController();
+
     _loadUserProfile();
     loadUserWorkouts();
+  }
+
+  @override
+  void onClose() {
+    nombreCompletoController.dispose();
+    nombreUsuarioController.dispose();
+    bioController.dispose();
+    alturaController.dispose();
+    pesoController.dispose();
+    porcentajeGrasaController.dispose();
+    super.onClose();
   }
 
   /// Cargar perfil del usuario actual
@@ -94,12 +121,18 @@ class ProfileController extends GetxController {
       // Datos personales
       nombreCompleto.value = profile.datosPersonales?.nombreCompleto ?? '';
       nombreUsuario.value = profile.datosPersonales?.nombreUsuario ?? '';
-      if (profile.datosPersonales?.fechaNacimiento != null) {
+      bio.value = profile.datosPersonales?.bio ?? '';
+
+      nombreCompletoController.text = nombreCompleto.value;
+      nombreUsuarioController.text = nombreUsuario.value;
+      bioController.text = bio.value;
+
+      if (profile.datosPersonales?.fechaNacimiento != null &&
+          profile.datosPersonales!.fechaNacimiento!.isNotEmpty) {
         fechaNacimiento.value = DateTime.tryParse(
           profile.datosPersonales!.fechaNacimiento!,
         );
       }
-      bio.value = ''; // Bio no está en el modelo actual
 
       // Ubicación
       pais.value = profile.datosPersonales?.ubicacion?.pais ?? '';
@@ -121,8 +154,23 @@ class ProfileController extends GetxController {
       porcentajeGrasa.value =
           profile.medidas?.porcentajeGrasaCorporal?.toString() ?? '';
 
+      alturaController.text = altura.value;
+      pesoController.text = peso.value;
+      porcentajeGrasaController.text = porcentajeGrasa.value;
+
       // Foto de perfil
       photoUrl.value = profile.personaje?.avatarUrl ?? '';
+    } else {
+      debugPrint(
+        '📭 ProfileController: userProfile en AuthController es nulo.',
+      );
+      // Limpiar y resetear controladores si el perfil es nulo
+      nombreCompletoController.clear();
+      nombreUsuarioController.clear();
+      bioController.clear();
+      alturaController.clear();
+      pesoController.clear();
+      porcentajeGrasaController.clear();
     }
   }
 
@@ -464,6 +512,7 @@ class ProfileController extends GetxController {
             ? nombreUsuario.value
             : null,
         fechaNacimiento: fechaNacimiento.value?.toIso8601String(),
+        bio: bio.value.isNotEmpty ? bio.value : null,
         ubicacion: (pais.value.isNotEmpty || ciudad.value.isNotEmpty)
             ? Ubicacion(
                 pais: pais.value.isNotEmpty ? pais.value : null,
@@ -495,9 +544,17 @@ class ProfileController extends GetxController {
             )
           : null;
 
-      final personaje = imageUrl.isNotEmpty
-          ? Personaje(avatarUrl: imageUrl)
-          : null;
+      // Preservar datos existentes del personaje y solo actualizar avatarUrl si es necesario
+      Personaje? personaje;
+      if (imageUrl.isNotEmpty) {
+        // Si hay una nueva imagen, actualizar el personaje preservando datos existentes
+        final existingPersonaje = _authController.userProfile.value?.personaje;
+        personaje = Personaje(
+          genero: existingPersonaje?.genero,
+          tonoPiel: existingPersonaje?.tonoPiel,
+          avatarUrl: imageUrl,
+        );
+      }
 
       // Actualizar en Firestore - Usar los métodos individuales
       await _firestoreService.updateDatosPersonales(

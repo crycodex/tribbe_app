@@ -147,7 +147,7 @@ class EditProfilePage extends StatelessWidget {
               label: 'Nombre completo',
               icon: Icons.person,
               onChanged: (value) => controller.nombreCompleto.value = value,
-              initialValue: controller.nombreCompleto.value,
+              controller: controller.nombreCompletoController,
             ),
             const SizedBox(height: 16),
 
@@ -157,7 +157,18 @@ class EditProfilePage extends StatelessWidget {
               label: 'Nombre de usuario',
               icon: Icons.alternate_email,
               onChanged: (value) => controller.nombreUsuario.value = value,
-              initialValue: controller.nombreUsuario.value,
+              controller: controller.nombreUsuarioController,
+            ),
+            const SizedBox(height: 16),
+
+            // Biografía
+            _buildTextField(
+              context: context,
+              label: 'Biografía',
+              icon: Icons.description,
+              maxLines: 3,
+              onChanged: (value) => controller.bio.value = value,
+              controller: controller.bioController,
             ),
             const SizedBox(height: 16),
 
@@ -432,7 +443,7 @@ class EditProfilePage extends StatelessWidget {
               icon: Icons.height,
               keyboardType: TextInputType.number,
               onChanged: (value) => controller.altura.value = value,
-              initialValue: controller.altura.value,
+              controller: controller.alturaController,
             ),
             const SizedBox(height: 16),
 
@@ -443,7 +454,7 @@ class EditProfilePage extends StatelessWidget {
               icon: Icons.monitor_weight,
               keyboardType: TextInputType.number,
               onChanged: (value) => controller.peso.value = value,
-              initialValue: controller.peso.value,
+              controller: controller.pesoController,
             ),
             const SizedBox(height: 16),
 
@@ -454,7 +465,7 @@ class EditProfilePage extends StatelessWidget {
               icon: Icons.percent,
               keyboardType: TextInputType.number,
               onChanged: (value) => controller.porcentajeGrasa.value = value,
-              initialValue: controller.porcentajeGrasa.value,
+              controller: controller.porcentajeGrasaController,
             ),
             const SizedBox(height: 32),
 
@@ -539,15 +550,17 @@ class EditProfilePage extends StatelessWidget {
     required String label,
     required IconData icon,
     required ValueChanged<String> onChanged,
-    String? initialValue,
     TextInputType keyboardType = TextInputType.text,
+    int? maxLines = 1,
+    required TextEditingController controller,
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return TextFormField(
-      initialValue: initialValue,
+      controller: controller,
       keyboardType: keyboardType,
+      maxLines: maxLines,
       style: TextStyle(color: isDark ? Colors.white : Colors.black),
       decoration: InputDecoration(
         labelText: label,
@@ -838,11 +851,13 @@ class EditProfilePage extends StatelessWidget {
     ProfileController controller,
     bool isDark,
   ) {
-    final paisController = TextEditingController(text: controller.pais.value);
-    final provinciaController = TextEditingController(
+    final TextEditingController paisController = TextEditingController(
+      text: controller.pais.value,
+    );
+    final TextEditingController provinciaController = TextEditingController(
       text: controller.provincia.value,
     );
-    final ciudadController = TextEditingController(
+    final TextEditingController ciudadController = TextEditingController(
       text: controller.ciudad.value,
     );
 

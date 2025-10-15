@@ -51,7 +51,15 @@ class AuthController extends GetxController {
     try {
       final profile = await _firestoreService.getUserProfile(uid);
       userProfile.value = profile;
+      if (profile == null) {
+        debugPrint(
+          '📭 AuthController: Perfil de usuario $uid no encontrado en Firestore.',
+        );
+      }
     } catch (e) {
+      debugPrint(
+        '❌ AuthController: Error al cargar perfil para $uid: ${e.toString()}',
+      );
       Get.snackbar(
         'Error',
         'Error al cargar perfil: ${e.toString()}',

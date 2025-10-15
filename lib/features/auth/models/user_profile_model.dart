@@ -109,12 +109,14 @@ class DatosPersonales {
     this.nombreUsuario,
     this.fechaNacimiento,
     this.ubicacion,
+    this.bio,
   });
 
   final String? nombreCompleto;
   final String? nombreUsuario;
   final String? fechaNacimiento;
   final Ubicacion? ubicacion;
+  final String? bio;
 
   factory DatosPersonales.fromJson(Map<String, dynamic> json) {
     return DatosPersonales(
@@ -124,6 +126,7 @@ class DatosPersonales {
       ubicacion: json['ubicacion'] != null
           ? Ubicacion.fromJson(json['ubicacion'] as Map<String, dynamic>)
           : null,
+      bio: json['bio'] as String?,
     );
   }
 
@@ -133,6 +136,7 @@ class DatosPersonales {
       'nombre_usuario': nombreUsuario,
       'fecha_nacimiento': fechaNacimiento,
       'ubicacion': ubicacion?.toJson(),
+      'bio': bio,
     };
   }
 }
