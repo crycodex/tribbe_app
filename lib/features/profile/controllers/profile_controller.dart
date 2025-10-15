@@ -27,9 +27,15 @@ class ProfileController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isUploadingImage = false.obs;
   final RxBool isLoadingWorkouts = false.obs;
+  final RxBool isLoadingMoreWorkouts = false.obs;
   final Rx<File?> selectedImage = Rx<File?>(null);
   final RxString photoUrl = ''.obs;
   final RxList<WorkoutModel> userWorkouts = <WorkoutModel>[].obs;
+
+  // Paginación de entrenamientos
+  final RxInt currentPage = 0.obs;
+  final RxInt workoutsPerPage = 5.obs;
+  final RxBool hasMoreWorkouts = true.obs;
 
   // Controladores de texto para campos del formulario
   late final TextEditingController nombreCompletoController;
@@ -309,10 +315,12 @@ class ProfileController extends GetxController {
     }
   }
 
-  /// Cargar historial de entrenamientos del usuario
+  /// Cargar historial de entrenamientos del usuario (inicial)
   Future<void> loadUserWorkouts() async {
     try {
       isLoadingWorkouts.value = true;
+      currentPage.value = 0;
+      userWorkouts.clear();
 
       // Usar FirebaseAuthService directamente para obtener el usuario actual
       final currentUser = _firebaseAuthService.currentUser;
@@ -335,7 +343,10 @@ class ProfileController extends GetxController {
         debugPrint('📭 ProfileController: No hay entrenamientos');
       }
 
-      userWorkouts.value = workouts;
+      // Cargar solo la primera página
+      final firstPage = workouts.take(workoutsPerPage.value).toList();
+      userWorkouts.value = firstPage;
+      hasMoreWorkouts.value = workouts.length > workoutsPerPage.value;
     } catch (e) {
       debugPrint('❌ Error al cargar entrenamientos: $e');
       Get.snackbar(
@@ -345,6 +356,46 @@ class ProfileController extends GetxController {
       );
     } finally {
       isLoadingWorkouts.value = false;
+    }
+  }
+
+  /// Cargar más entrenamientos (paginación)
+  Future<void> loadMoreWorkouts() async {
+    if (isLoadingMoreWorkouts.value || !hasMoreWorkouts.value) {
+      return;
+    }
+
+    try {
+      isLoadingMoreWorkouts.value = true;
+
+      final currentUser = _firebaseAuthService.currentUser;
+      final userId = currentUser?.uid;
+
+      if (userId == null) {
+        return;
+      }
+
+      final allWorkouts = await _workoutService.getUserWorkouts(userId);
+      final nextPage = currentPage.value + 1;
+      final startIndex = nextPage * workoutsPerPage.value;
+      final endIndex = startIndex + workoutsPerPage.value;
+
+      if (startIndex < allWorkouts.length) {
+        final moreWorkouts = allWorkouts
+            .skip(startIndex)
+            .take(workoutsPerPage.value)
+            .toList();
+
+        userWorkouts.addAll(moreWorkouts);
+        currentPage.value = nextPage;
+        hasMoreWorkouts.value = endIndex < allWorkouts.length;
+      } else {
+        hasMoreWorkouts.value = false;
+      }
+    } catch (e) {
+      debugPrint('❌ Error al cargar más entrenamientos: $e');
+    } finally {
+      isLoadingMoreWorkouts.value = false;
     }
   }
 

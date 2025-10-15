@@ -1,481 +1,413 @@
-import 'package:cupertino_native/cupertino_native.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
-import 'package:tribbe_app/core/enums/app_enums.dart';
-import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
 import 'package:tribbe_app/features/profile/controllers/profile_controller.dart';
-import 'package:tribbe_app/shared/controllers/settings_controller.dart';
+import 'package:tribbe_app/features/profile/views/widgets/workout_grid_item.dart';
+import 'package:tribbe_app/shared/widgets/settings_drawer.dart';
 
-/// Página de Perfil
+/// Página de Perfil - Estilo Instagram Minimalista
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final authController = Get.find<AuthController>();
     final profileController = Get.put(ProfileController());
-    final settingsController = Get.find<SettingsController>();
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final scaffoldKey = GlobalKey<ScaffoldState>();
 
     return Scaffold(
+      key: scaffoldKey,
       backgroundColor: isDark ? Colors.black : Colors.grey.shade50,
+      endDrawer: const SettingsDrawer(),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              // Header con título y settings
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Perfil',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                  ),
+        child: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return [
+              // AppBar con título y settings
+              SliverAppBar(
+                backgroundColor: isDark ? Colors.black : Colors.grey.shade50,
+                elevation: 0,
+                pinned: true,
+                title: Obx(() {
+                  final username = profileController.nombreUsuario.value;
+                  return Text(
+                    username.isEmpty ? 'Mi Perfil' : '@$username',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  );
+                }),
+                actions: [
                   IconButton(
-                    icon: const Icon(Icons.settings_outlined),
+                    icon: const Icon(Icons.menu),
                     onPressed: () {
-                      // TODO: Navegar a configuración
+                      scaffoldKey.currentState?.openEndDrawer();
                     },
                   ),
                 ],
               ),
-              const SizedBox(height: 32),
+            ];
+          },
+          body: RefreshIndicator(
+            onRefresh: profileController.refreshWorkouts,
+            child: CustomScrollView(
+              slivers: [
+                // Header del perfil
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 16),
 
-              // Avatar con foto de perfil
-              Obx(() {
-                final profile = authController.userProfile.value;
-                final photoUrl = profile?.personaje?.avatarUrl;
-
-                return Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
-                    shape: BoxShape.circle,
-                    image: photoUrl != null && photoUrl.isNotEmpty
-                        ? DecorationImage(
-                            image: NetworkImage(photoUrl),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
-                  ),
-                  child: photoUrl == null || photoUrl.isEmpty
-                      ? Icon(
-                          Icons.person,
-                          size: 60,
-                          color: isDark
-                              ? Colors.grey.shade600
-                              : Colors.grey.shade500,
-                        )
-                      : null,
-                );
-              }),
-              const SizedBox(height: 16),
-
-              // Nombre del usuario
-              Obx(() {
-                final profile = authController.userProfile.value;
-                final displayName =
-                    profile?.datosPersonales?.nombreCompleto ??
-                    profile?.datosPersonales?.nombreUsuario ??
-                    authController.firebaseUser.value?.email?.split('@')[0] ??
-                    'Usuario';
-                return Text(
-                  displayName,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                );
-              }),
-              const SizedBox(height: 8),
-
-              // Botón Editar Perfil
-              TextButton.icon(
-                onPressed: () {
-                  Get.toNamed(RoutePaths.editProfile);
-                },
-                icon: const Icon(Icons.edit, size: 18),
-                label: const Text(
-                  'Editar perfil',
-                  style: TextStyle(fontSize: 14),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Card de estadísticas con datos reales
-              Obx(
-                () => Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: isDark
-                          ? [const Color(0xFF1a237e), const Color(0xFF0d47a1)]
-                          : [const Color(0xFF2196F3), const Color(0xFF1976D2)],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildStatItem(
-                        icon: Icons.fitness_center,
-                        label: 'Entrenamientos',
-                        value: profileController.totalWorkouts.toString(),
-                      ),
-                      Container(
-                        width: 1,
-                        height: 40,
-                        color: Colors.white.withOpacity(0.3),
-                      ),
-                      _buildStatItem(
-                        icon: Icons.schedule,
-                        label: 'Minutos',
-                        value: profileController.totalDuration.toString(),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Card de Historial de Entrenamientos
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey.shade900 : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () => Get.toNamed(RoutePaths.workoutHistory),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(
-                              Icons.history,
-                              color: Colors.orange,
-                              size: 28,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Historial de Entrenamientos',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                        // Foto de perfil + Stats
+                        Row(
+                          children: [
+                            // Foto de perfil
+                            Obx(() {
+                              final photoUrl = profileController.photoUrl.value;
+                              return Container(
+                                width: 90,
+                                height: 90,
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? Colors.grey.shade800
+                                      : Colors.grey.shade300,
+                                  shape: BoxShape.circle,
+                                  image: photoUrl.isNotEmpty
+                                      ? DecorationImage(
+                                          image: NetworkImage(photoUrl),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null,
+                                  border: Border.all(
+                                    color: isDark
+                                        ? Colors.grey.shade700
+                                        : Colors.grey.shade300,
+                                    width: 2,
                                   ),
                                 ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Ver todo mi progreso',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.grey,
+                                child: photoUrl.isEmpty
+                                    ? Icon(
+                                        Icons.person,
+                                        size: 45,
+                                        color: isDark
+                                            ? Colors.grey.shade600
+                                            : Colors.grey.shade500,
+                                      )
+                                    : null,
+                              );
+                            }),
+
+                            const SizedBox(width: 24),
+
+                            // Estadísticas
+                            Expanded(
+                              child: Obx(() {
+                                return Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: [
+                                    _buildStatColumn(
+                                      context,
+                                      value: profileController.totalWorkouts
+                                          .toString(),
+                                      label: 'Posts',
+                                      onTap: () {
+                                        // TODO: Mostrar todos los posts
+                                      },
+                                    ),
+                                    _buildStatColumn(
+                                      context,
+                                      value:
+                                          '0', // TODO: Implementar seguidores
+                                      label: 'Seguidores',
+                                      onTap: () {
+                                        // TODO: Navegar a seguidores
+                                      },
+                                    ),
+                                    _buildStatColumn(
+                                      context,
+                                      value: '0', // TODO: Implementar siguiendo
+                                      label: 'Siguiendo',
+                                      onTap: () {
+                                        // TODO: Navegar a siguiendo
+                                      },
+                                    ),
+                                  ],
+                                );
+                              }),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Nombre completo
+                        Obx(() {
+                          final nombre = profileController.nombreCompleto.value;
+                          if (nombre.isEmpty) return const SizedBox.shrink();
+                          return Text(
+                            nombre,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          );
+                        }),
+
+                        const SizedBox(height: 4),
+
+                        // Bio
+                        Obx(() {
+                          final bio = profileController.bio.value;
+                          if (bio.isEmpty) return const SizedBox.shrink();
+                          return Text(
+                            bio,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: isDark
+                                  ? Colors.grey.shade400
+                                  : Colors.grey.shade700,
+                            ),
+                          );
+                        }),
+
+                        const SizedBox(height: 20),
+
+                        // Botones de acción
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  Get.toNamed(RoutePaths.editProfile);
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
+                                  side: BorderSide(
+                                    color: isDark
+                                        ? Colors.grey.shade700
+                                        : Colors.grey.shade300,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 16,
-                            color: isDark
-                                ? Colors.grey.shade600
-                                : Colors.grey.shade400,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Sección Preferencias
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Preferencias',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Información Personal
-              _buildPreferenceItem(
-                context,
-                icon: Icons.person_outline,
-                title: 'Información Personal',
-                onTap: () {
-                  // TODO: Navegar a información personal
-                },
-              ),
-
-              // Idioma
-              Obx(
-                () => _buildPreferenceItem(
-                  context,
-                  icon: Icons.language,
-                  title: 'Idioma',
-                  trailing: Text(
-                    settingsController.language.value == AppLanguage.spanish
-                        ? 'Español'
-                        : 'English',
-                    style: TextStyle(
-                      color: isDark
-                          ? Colors.grey.shade400
-                          : Colors.grey.shade600,
-                    ),
-                  ),
-                  onTap: () => _showLanguageSheet(context, settingsController),
-                ),
-              ),
-
-              // Tema oscuro
-              Obx(
-                () => _buildPreferenceItem(
-                  context,
-                  icon: isDark ? Icons.dark_mode : Icons.light_mode,
-                  title: 'Tema oscuro',
-                  trailing: CNSwitch(
-                    value:
-                        settingsController.themeMode.value == AppThemeMode.dark,
-                    onChanged: (value) {
-                      settingsController.setThemeMode(
-                        value ? AppThemeMode.dark : AppThemeMode.light,
-                      );
-                    },
-                  ),
-                  showArrow: false,
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Botón Cerrar Sesión
-              Obx(
-                () => Container(
-                  width: double.infinity,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: authController.isLoading.value
-                          ? null
-                          : () => _showLogoutDialog(context, authController),
-                      child: Center(
-                        child: authController.isLoading.value
-                            ? const CupertinoActivityIndicator(
-                                color: Colors.white,
-                              )
-                            : const Text(
-                                'Cerrar Sesión',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                                child: const Text(
+                                  'Editar perfil',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
+                            ),
+                            const SizedBox(width: 8),
+                            OutlinedButton(
+                              onPressed: () {
+                                // TODO: Compartir perfil
+                              },
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
+                                side: BorderSide(
+                                  color: isDark
+                                      ? Colors.grey.shade700
+                                      : Colors.grey.shade300,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Icon(Icons.share, size: 18),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Divider
+                        Divider(
+                          height: 1,
+                          color: isDark
+                              ? Colors.grey.shade800
+                              : Colors.grey.shade200,
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Título de entrenamientos
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Entrenamientos',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            TextButton.icon(
+                              onPressed: () {
+                                Get.toNamed(RoutePaths.workoutHistory);
+                              },
+                              icon: const Icon(Icons.grid_view, size: 16),
+                              label: const Text('Ver todos'),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Grilla de entrenamientos
+                Obx(() {
+                  if (profileController.isLoadingWorkouts.value) {
+                    return const SliverFillRemaining(
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  if (profileController.userWorkouts.isEmpty) {
+                    return SliverFillRemaining(
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.fitness_center,
+                              size: 64,
+                              color: isDark
+                                  ? Colors.grey.shade700
+                                  : Colors.grey.shade400,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Sin entrenamientos aún',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: isDark
+                                    ? Colors.grey.shade400
+                                    : Colors.grey.shade600,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '¡Comienza tu primer entrenamiento!',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isDark
+                                    ? Colors.grey.shade600
+                                    : Colors.grey.shade500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  return SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    sliver: SliverGrid(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: 1,
+                          ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          // Verificar si debemos cargar más
+                          if (index ==
+                                  profileController.userWorkouts.length - 1 &&
+                              profileController.hasMoreWorkouts.value) {
+                            profileController.loadMoreWorkouts();
+                          }
+
+                          if (index < profileController.userWorkouts.length) {
+                            final workout =
+                                profileController.userWorkouts[index];
+                            return WorkoutGridItem(
+                              workout: workout,
+                              onTap: () {
+                                // TODO: Navegar a detalle del entrenamiento
+                              },
+                            );
+                          } else {
+                            // Mostrar loading al final
+                            return const Center(
+                              child: CupertinoActivityIndicator(),
+                            );
+                          }
+                        },
+                        childCount:
+                            profileController.userWorkouts.length +
+                            (profileController.hasMoreWorkouts.value ? 1 : 0),
                       ),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
+                  );
+                }),
+
+                // Espacio al final
+                const SliverToBoxAdapter(child: SizedBox(height: 32)),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildStatItem({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Column(
-      children: [
-        Icon(icon, color: Colors.white, size: 28),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPreferenceItem(
+  /// Widget para columna de estadística
+  Widget _buildStatColumn(
     BuildContext context, {
-    required IconData icon,
-    required String title,
-    Widget? trailing,
+    required String value,
+    required String label,
     VoidCallback? onTap,
-    bool showArrow = true,
   }) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey.shade900 : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
-                  size: 24,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: isDark ? Colors.white : Colors.black,
-                    ),
-                  ),
-                ),
-                if (trailing != null) trailing,
-                if (showArrow && trailing == null)
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
-                  ),
-              ],
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showLanguageSheet(BuildContext context, SettingsController controller) {
-    showCupertinoModalPopup<void>(
-      context: context,
-      builder: (BuildContext context) => CupertinoActionSheet(
-        title: const Text(
-          'Selecciona tu idioma',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-        actions: <CupertinoActionSheetAction>[
-          CupertinoActionSheetAction(
-            onPressed: () {
-              controller.setLanguage(AppLanguage.spanish);
-              Navigator.pop(context);
-            },
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('🇪🇸', style: TextStyle(fontSize: 24)),
-                const SizedBox(width: 12),
-                Text(
-                  'Español',
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: controller.language.value == AppLanguage.spanish
-                        ? CupertinoColors.activeBlue
-                        : null,
-                    fontWeight: controller.language.value == AppLanguage.spanish
-                        ? FontWeight.w600
-                        : FontWeight.normal,
-                  ),
-                ),
-                if (controller.language.value == AppLanguage.spanish) ...[
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.check_circle,
-                    color: CupertinoColors.activeBlue,
-                    size: 20,
-                  ),
-                ],
-              ],
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey.shade400
+                    : Colors.grey.shade700,
+              ),
             ),
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          isDestructiveAction: true,
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: const Text('Cancelar'),
+          ],
         ),
-      ),
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context, AuthController controller) {
-    showCupertinoDialog<void>(
-      context: context,
-      builder: (BuildContext context) => CupertinoAlertDialog(
-        title: const Text('Cerrar Sesión'),
-        content: const Text('¿Estás seguro que deseas cerrar sesión?'),
-        actions: <CupertinoDialogAction>[
-          CupertinoDialogAction(
-            child: const Text('Cancelar'),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () {
-              Navigator.pop(context);
-              controller.logout();
-            },
-            child: const Text('Cerrar Sesión'),
-          ),
-        ],
       ),
     );
   }
