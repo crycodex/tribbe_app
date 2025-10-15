@@ -7,12 +7,14 @@ import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
 import 'package:tribbe_app/shared/services/workout_service.dart';
 import 'package:tribbe_app/shared/services/streak_service.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
+import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
 
 /// Controlador para el modo entrenamiento
 class TrainingController extends GetxController {
   final WorkoutService _workoutService = Get.find();
   final FirebaseAuthService _authService = Get.find();
   final StreakService _streakService = Get.find();
+  final AuthController _authController = Get.find<AuthController>();
 
   // Estado del entrenamiento
   final isTraining = false.obs;
@@ -128,10 +130,29 @@ class TrainingController extends GetxController {
         return;
       }
 
+      // Obtener el nombre real del usuario desde el perfil
+      String userName = 'Usuario'; // Valor por defecto
+      String? userPhotoUrl = user.photoURL;
+
+      final userProfile = _authController.userProfile.value;
+      if (userProfile?.datosPersonales?.nombreCompleto != null &&
+          userProfile!.datosPersonales!.nombreCompleto!.isNotEmpty) {
+        userName = userProfile.datosPersonales!.nombreCompleto!;
+      } else if (userProfile?.datosPersonales?.nombreUsuario != null &&
+          userProfile!.datosPersonales!.nombreUsuario!.isNotEmpty) {
+        userName = userProfile.datosPersonales!.nombreUsuario!;
+      }
+
+      // Obtener foto de perfil desde el perfil si no está en Auth
+      if (userProfile?.personaje?.avatarUrl != null &&
+          userProfile!.personaje!.avatarUrl!.isNotEmpty) {
+        userPhotoUrl = userProfile.personaje!.avatarUrl;
+      }
+
       // Crear entrenamiento
       final workout = await _workoutService.createWorkout(
         userId: user.uid,
-        userName: user.displayName ?? 'Usuario',
+        userName: userName,
         focus: focusType.value,
         duration: (elapsedSeconds.value / 60).ceil(),
         exercises: exerciseModels,
@@ -140,8 +161,8 @@ class TrainingController extends GetxController {
       // Crear post en el feed
       await _workoutService.createWorkoutPost(
         workout: workout,
-        userName: user.displayName ?? 'Usuario',
-        userPhotoUrl: user.photoURL,
+        userName: userName,
+        userPhotoUrl: userPhotoUrl,
         caption: caption,
       );
 

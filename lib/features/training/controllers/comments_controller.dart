@@ -3,11 +3,13 @@ import 'package:get/get.dart';
 import 'package:tribbe_app/features/training/models/comment_model.dart';
 import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
 import 'package:tribbe_app/shared/services/workout_service.dart';
+import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
 
 /// Controlador para gestionar los comentarios de un post de entrenamiento
 class CommentsController extends GetxController {
   final WorkoutService _workoutService = Get.find<WorkoutService>();
   final FirebaseAuthService _authService = Get.find<FirebaseAuthService>();
+  final AuthController _authController = Get.find<AuthController>();
 
   final String postId;
 
@@ -77,11 +79,31 @@ class CommentsController extends GetxController {
 
     try {
       isSendingComment.value = true;
+
+      // Obtener el nombre real del usuario desde el perfil
+      String userName = 'Usuario'; // Valor por defecto
+      String? userPhotoUrl = currentUser.photoURL;
+
+      final userProfile = _authController.userProfile.value;
+      if (userProfile?.datosPersonales?.nombreCompleto != null &&
+          userProfile!.datosPersonales!.nombreCompleto!.isNotEmpty) {
+        userName = userProfile.datosPersonales!.nombreCompleto!;
+      } else if (userProfile?.datosPersonales?.nombreUsuario != null &&
+          userProfile!.datosPersonales!.nombreUsuario!.isNotEmpty) {
+        userName = userProfile.datosPersonales!.nombreUsuario!;
+      }
+
+      // Obtener foto de perfil desde el perfil si no está en Auth
+      if (userProfile?.personaje?.avatarUrl != null &&
+          userProfile!.personaje!.avatarUrl!.isNotEmpty) {
+        userPhotoUrl = userProfile.personaje!.avatarUrl;
+      }
+
       await _workoutService.addComment(
         postId: postId,
         userId: currentUser.uid,
-        userName: currentUser.displayName ?? 'Usuario',
-        userPhotoUrl: currentUser.photoURL,
+        userName: userName,
+        userPhotoUrl: userPhotoUrl,
         text: newCommentText.value.trim(),
       );
       newCommentText.value = ''; // Limpiar el campo de texto
