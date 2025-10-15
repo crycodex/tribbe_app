@@ -1,23 +1,41 @@
-import 'dart:convert';
-import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tribbe_app/features/dashboard/models/streak_model.dart';
-import 'package:tribbe_app/shared/services/storage_service.dart';
 
-/// Servicio para manejar las rachas de entrenamiento
+/// Servicio para manejar las rachas de entrenamiento en Firestore
 class StreakService {
-  final StorageService _storageService = Get.find<StorageService>();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  /// Obtener la racha actual del usuario
-  StreakModel getStreak() {
+  /// Colecciones
+  static const String usersCollection = 'users';
+  static const String streaksSubcollection = 'streaks';
+  static const String streakDocId =
+      'current_streak'; // Documento único para la racha actual
+
+  /// Obtener la racha actual del usuario desde Firestore
+  Future<StreakModel> getStreak() async {
     try {
-      final streakData = _storageService.getStreakData();
-
-      if (streakData == null) {
+      final userId = _auth.currentUser?.uid;
+      if (userId == null) {
         return StreakModel.empty();
       }
 
-      final json = jsonDecode(streakData) as Map<String, dynamic>;
-      final streak = StreakModel.fromJson(json);
+      final docSnapshot = await _firestore
+          .collection(usersCollection)
+          .doc(userId)
+          .collection(streaksSubcollection)
+          .doc(streakDocId)
+          .get();
+
+      if (!docSnapshot.exists || docSnapshot.data() == null) {
+        // Si no existe, crear una racha nueva
+        final newStreak = StreakModel.empty();
+        await saveStreak(newStreak);
+        return newStreak;
+      }
+
+      final streak = StreakModel.fromJson(docSnapshot.data()!);
 
       // Verificar si necesitamos resetear la semana
       return _checkAndResetWeek(streak);
@@ -27,19 +45,29 @@ class StreakService {
     }
   }
 
-  /// Guardar la racha
+  /// Guardar la racha en Firestore
   Future<void> saveStreak(StreakModel streak) async {
     try {
-      final json = jsonEncode(streak.toJson());
-      await _storageService.saveStreakData(json);
+      final userId = _auth.currentUser?.uid;
+      if (userId == null) {
+        throw Exception('Usuario no autenticado');
+      }
+
+      await _firestore
+          .collection(usersCollection)
+          .doc(userId)
+          .collection(streaksSubcollection)
+          .doc(streakDocId)
+          .set(streak.toJson(), SetOptions(merge: true));
     } catch (e) {
       print('Error al guardar racha: $e');
+      throw Exception('Error al guardar racha: ${e.toString()}');
     }
   }
 
   /// Registrar un entrenamiento (incrementar racha)
   Future<StreakModel> registerWorkout() async {
-    final currentStreak = getStreak();
+    final currentStreak = await getStreak();
 
     // Si ya entrenó hoy, no hacer nada
     if (currentStreak.hasTrainedToday()) {
@@ -76,43 +104,127 @@ class StreakService {
     );
 
     await saveStreak(updatedStreak);
+
+    // Guardar en el historial si es un nuevo récord
+    if (newCurrentStreak == newLongestStreak && newCurrentStreak > 1) {
+      await _saveStreakHistory(updatedStreak);
+    }
+
     return updatedStreak;
   }
 
   /// Verificar y resetear la semana si es necesario
   StreakModel _checkAndResetWeek(StreakModel streak) {
     final now = DateTime.now();
-    final weekStartString = _storageService.getWeekStartDate();
+    final lastWorkoutDate = streak.lastWorkoutDate;
 
-    if (weekStartString == null) {
-      // Primera vez, guardar el inicio de la semana actual
-      _saveWeekStart(now);
+    if (lastWorkoutDate == null) {
       return streak;
     }
 
-    final weekStart = DateTime.parse(weekStartString);
-    final daysSinceWeekStart = now.difference(weekStart).inDays;
+    // Calcular el inicio de la semana actual (lunes)
+    final currentWeekStart = _getWeekStart(now);
+    final lastWorkoutWeekStart = _getWeekStart(lastWorkoutDate);
 
-    // Si han pasado 7 días o más, resetear la semana
-    if (daysSinceWeekStart >= 7) {
-      final resetStreak = streak.copyWith(weeklyStreak: List.filled(7, false));
-      _saveWeekStart(now);
-      saveStreak(resetStreak);
-      return resetStreak;
+    // Si estamos en una semana diferente, resetear la semana
+    if (currentWeekStart.isAfter(lastWorkoutWeekStart)) {
+      return streak.copyWith(weeklyStreak: List.filled(7, false));
     }
 
     return streak;
   }
 
-  /// Guardar la fecha de inicio de semana
-  void _saveWeekStart(DateTime date) {
-    _storageService.saveWeekStartDate(date.toIso8601String());
+  /// Obtener el inicio de la semana (lunes a las 00:00:00)
+  DateTime _getWeekStart(DateTime date) {
+    final weekday = date.weekday; // 1 = lunes, 7 = domingo
+    final daysToSubtract = weekday - 1; // Días desde el lunes
+    final weekStart = DateTime(
+      date.year,
+      date.month,
+      date.day,
+    ).subtract(Duration(days: daysToSubtract));
+    return weekStart;
+  }
+
+  /// Guardar en el historial de rachas (cuando se alcanza un nuevo récord)
+  Future<void> _saveStreakHistory(StreakModel streak) async {
+    try {
+      final userId = _auth.currentUser?.uid;
+      if (userId == null) return;
+
+      await _firestore
+          .collection(usersCollection)
+          .doc(userId)
+          .collection(streaksSubcollection)
+          .add({
+            'current_streak': streak.currentStreak,
+            'longest_streak': streak.longestStreak,
+            'achieved_at': FieldValue.serverTimestamp(),
+            'type': 'new_record',
+          });
+    } catch (e) {
+      print('Error al guardar historial de racha: $e');
+    }
+  }
+
+  /// Obtener el historial de récords de rachas
+  Future<List<Map<String, dynamic>>> getStreakHistory() async {
+    try {
+      final userId = _auth.currentUser?.uid;
+      if (userId == null) return [];
+
+      final snapshot = await _firestore
+          .collection(usersCollection)
+          .doc(userId)
+          .collection(streaksSubcollection)
+          .where('type', isEqualTo: 'new_record')
+          .orderBy('achieved_at', descending: true)
+          .limit(10)
+          .get();
+
+      return snapshot.docs.map((doc) => doc.data()).toList();
+    } catch (e) {
+      print('Error al obtener historial de rachas: $e');
+      return [];
+    }
   }
 
   /// Resetear completamente la racha (útil para testing)
   Future<void> resetStreak() async {
-    await _storageService.removeStreakData();
-    await _storageService.removeWeekStartDate();
+    try {
+      final userId = _auth.currentUser?.uid;
+      if (userId == null) return;
+
+      await _firestore
+          .collection(usersCollection)
+          .doc(userId)
+          .collection(streaksSubcollection)
+          .doc(streakDocId)
+          .delete();
+    } catch (e) {
+      print('Error al resetear racha: $e');
+    }
+  }
+
+  /// Stream para escuchar cambios en la racha en tiempo real
+  Stream<StreakModel> getStreakStream() {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null) {
+      return Stream.value(StreakModel.empty());
+    }
+
+    return _firestore
+        .collection(usersCollection)
+        .doc(userId)
+        .collection(streaksSubcollection)
+        .doc(streakDocId)
+        .snapshots()
+        .map((snapshot) {
+          if (!snapshot.exists || snapshot.data() == null) {
+            return StreakModel.empty();
+          }
+          return StreakModel.fromJson(snapshot.data()!);
+        });
   }
 
   /// Obtener los nombres de los días de la semana

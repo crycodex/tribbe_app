@@ -76,6 +76,12 @@ service cloud.firestore {
         // El usuario puede leer, crear, actualizar y eliminar sus propios entrenamientos
         allow read, write: if isOwner(userId);
       }
+      
+      // Subcolección de Rachas
+      match /streaks/{streakId} {
+        // El usuario puede leer, crear, actualizar y eliminar sus propias rachas
+        allow read, write: if isOwner(userId);
+      }
     }
     
     // === COLECCIÓN DE GIMNASIOS (para el futuro) ===

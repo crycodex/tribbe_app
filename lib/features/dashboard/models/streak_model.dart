@@ -4,21 +4,28 @@ class StreakModel {
   final int longestStreak;
   final DateTime? lastWorkoutDate;
   final List<bool> weeklyStreak; // 7 días: [lun, mar, mie, jue, vie, sab, dom]
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   StreakModel({
     required this.currentStreak,
     required this.longestStreak,
     this.lastWorkoutDate,
     required this.weeklyStreak,
+    this.createdAt,
+    this.updatedAt,
   });
 
   /// Crear desde cero (nuevo usuario)
   factory StreakModel.empty() {
+    final now = DateTime.now();
     return StreakModel(
       currentStreak: 0,
       longestStreak: 0,
       lastWorkoutDate: null,
       weeklyStreak: List.filled(7, false),
+      createdAt: now,
+      updatedAt: now,
     );
   }
 
@@ -35,6 +42,12 @@ class StreakModel {
               ?.map((e) => e as bool)
               .toList() ??
           List.filled(7, false),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : null,
     );
   }
 
@@ -45,6 +58,8 @@ class StreakModel {
       'longest_streak': longestStreak,
       'last_workout_date': lastWorkoutDate?.toIso8601String(),
       'weekly_streak': weeklyStreak,
+      'created_at': createdAt?.toIso8601String(),
+      'updated_at': updatedAt?.toIso8601String(),
     };
   }
 
@@ -54,12 +69,18 @@ class StreakModel {
     int? longestStreak,
     DateTime? lastWorkoutDate,
     List<bool>? weeklyStreak,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return StreakModel(
       currentStreak: currentStreak ?? this.currentStreak,
       longestStreak: longestStreak ?? this.longestStreak,
       lastWorkoutDate: lastWorkoutDate ?? this.lastWorkoutDate,
       weeklyStreak: weeklyStreak ?? List.from(this.weeklyStreak),
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt:
+          updatedAt ??
+          DateTime.now(), // Siempre actualizar la fecha de modificación
     );
   }
 

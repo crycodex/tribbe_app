@@ -39,11 +39,11 @@ class DashboardController extends GetxController {
     super.onClose();
   }
 
-  /// Cargar la racha desde el almacenamiento
-  void loadStreak() {
+  /// Cargar la racha desde Firestore
+  Future<void> loadStreak() async {
     try {
       isLoading.value = true;
-      final loadedStreak = _streakService.getStreak();
+      final loadedStreak = await _streakService.getStreak();
       streak.value = loadedStreak;
     } catch (e) {
       print('Error al cargar racha: $e');
