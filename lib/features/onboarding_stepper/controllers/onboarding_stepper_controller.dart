@@ -466,8 +466,7 @@ class OnboardingStepperController extends GetxController {
           uid: userId.value,
           email: _auth.currentUser!.email!,
         );
-      } else {
-      }
+      } else {}
 
       // 1. Actualizar/Confirmar preferencias
       final preferencias = Preferencias(
@@ -483,10 +482,12 @@ class OnboardingStepperController extends GetxController {
       );
 
       // 2. Guardar información fitness
+      final bioText = bio.value.isEmpty
+          ? 'Mejorar mi condición física general'
+          : bio.value;
+
       final informacion = Informacion(
-        proposito: bio.value.isEmpty
-            ? 'Mejorar mi condición física general'
-            : bio.value,
+        proposito: bioText,
         metaFitness: metaFitness.value,
         lesiones: lesiones.isNotEmpty ? lesiones : null,
         nivelExperiencia: nivelExperiencia.value,
@@ -578,8 +579,9 @@ class OnboardingStepperController extends GetxController {
             ? null
             : nombreCompleto.value.split(' ')[0].toLowerCase(),
         fechaNacimiento: fechaNacimiento.value != null
-            ? '${fechaNacimiento.value!.day}/${fechaNacimiento.value!.month}/${fechaNacimiento.value!.year}'
+            ? fechaNacimiento.value!.toIso8601String()
             : null,
+        bio: bioText,
         ubicacion: (pais.value.isNotEmpty || latitud.value != null)
             ? Ubicacion(
                 pais: pais.value.isEmpty ? null : pais.value,

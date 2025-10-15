@@ -99,8 +99,11 @@ class ProfileController extends GetxController {
     pesoController = TextEditingController();
     porcentajeGrasaController = TextEditingController();
 
-    _loadUserProfile();
-    loadUserWorkouts();
+    // Cargar perfil con delay para asegurar que AuthController esté listo
+    Future.delayed(const Duration(milliseconds: 100), () {
+      _loadUserProfile();
+      loadUserWorkouts();
+    });
   }
 
   @override
@@ -116,8 +119,28 @@ class ProfileController extends GetxController {
 
   /// Cargar perfil del usuario actual
   void _loadUserProfile() {
+    debugPrint('🔍 ProfileController: Iniciando _loadUserProfile');
+    debugPrint(
+      '🔍 AuthController.userProfile.value: ${_authController.userProfile.value}',
+    );
+    debugPrint(
+      '🔍 AuthController.isAuthenticated.value: ${_authController.isAuthenticated.value}',
+    );
+    debugPrint(
+      '🔍 AuthController.firebaseUser.value: ${_authController.firebaseUser.value?.uid}',
+    );
+
     final profile = _authController.userProfile.value;
     if (profile != null) {
+      debugPrint('📊 ProfileController: Perfil encontrado, cargando datos...');
+      debugPrint('📊 ProfileController: Datos del perfil:');
+      debugPrint('  - uid: ${profile.uid}');
+      debugPrint('  - email: ${profile.email}');
+      debugPrint('  - datosPersonales: ${profile.datosPersonales?.toJson()}');
+      debugPrint('  - informacion: ${profile.informacion?.toJson()}');
+      debugPrint('  - medidas: ${profile.medidas?.toJson()}');
+      debugPrint('  - personaje: ${profile.personaje?.toJson()}');
+
       // Datos personales
       nombreCompleto.value = profile.datosPersonales?.nombreCompleto ?? '';
       nombreUsuario.value = profile.datosPersonales?.nombreUsuario ?? '';
@@ -127,11 +150,28 @@ class ProfileController extends GetxController {
       nombreUsuarioController.text = nombreUsuario.value;
       bioController.text = bio.value;
 
+      // Fecha de nacimiento - manejar formato de fecha
       if (profile.datosPersonales?.fechaNacimiento != null &&
           profile.datosPersonales!.fechaNacimiento!.isNotEmpty) {
-        fechaNacimiento.value = DateTime.tryParse(
+        // Intentar parsear como ISO8601 primero
+        DateTime? parsedDate = DateTime.tryParse(
           profile.datosPersonales!.fechaNacimiento!,
         );
+
+        // Si no funciona, intentar como DD/MM/YYYY
+        if (parsedDate == null) {
+          final parts = profile.datosPersonales!.fechaNacimiento!.split('/');
+          if (parts.length == 3) {
+            final day = int.tryParse(parts[0]);
+            final month = int.tryParse(parts[1]);
+            final year = int.tryParse(parts[2]);
+            if (day != null && month != null && year != null) {
+              parsedDate = DateTime(year, month, day);
+            }
+          }
+        }
+
+        fechaNacimiento.value = parsedDate;
       }
 
       // Ubicación
@@ -160,6 +200,17 @@ class ProfileController extends GetxController {
 
       // Foto de perfil
       photoUrl.value = profile.personaje?.avatarUrl ?? '';
+
+      debugPrint('📊 ProfileController: Datos cargados:');
+      debugPrint('  - Nombre: ${nombreCompleto.value}');
+      debugPrint('  - Usuario: ${nombreUsuario.value}');
+      debugPrint('  - Bio: ${bio.value}');
+      debugPrint('  - Meta Fitness: ${metaFitness.value}');
+      debugPrint('  - Nivel: ${nivelExperiencia.value}');
+      debugPrint('  - Lesiones: ${lesiones}');
+      debugPrint('  - Altura: ${altura.value}');
+      debugPrint('  - Peso: ${peso.value}');
+      debugPrint('  - Foto: ${photoUrl.value}');
     } else {
       debugPrint(
         '📭 ProfileController: userProfile en AuthController es nulo.',
@@ -171,6 +222,90 @@ class ProfileController extends GetxController {
       alturaController.clear();
       pesoController.clear();
       porcentajeGrasaController.clear();
+    }
+  }
+
+  /// Forzar recarga del perfil desde Firestore
+  Future<void> reloadUserProfile() async {
+    try {
+      debugPrint('🔄 ProfileController: Recargando perfil desde Firestore...');
+
+      final userId = _firebaseAuthService.currentUser?.uid;
+      if (userId == null) {
+        debugPrint('❌ ProfileController: Usuario no autenticado');
+        return;
+      }
+
+      // Recargar perfil desde Firestore
+      final profile = await _firestoreService.getUserProfile(userId);
+      _authController.userProfile.value = profile;
+
+      debugPrint('✅ ProfileController: Perfil recargado desde Firestore');
+
+      // Verificar si los datos personales están vacíos y migrar si es necesario
+      if (profile != null &&
+          (profile.datosPersonales?.nombreCompleto == null ||
+              profile.datosPersonales?.nombreCompleto?.isEmpty == true)) {
+        debugPrint(
+          '🔄 ProfileController: Datos personales vacíos, iniciando migración...',
+        );
+        await migratePersonalDataToMainDocument();
+      } else {
+        // Cargar datos en el ProfileController
+        _loadUserProfile();
+      }
+    } catch (e) {
+      debugPrint('❌ ProfileController: Error al recargar perfil: $e');
+    }
+  }
+
+  /// Migrar datos personales desde subcolecciones al documento principal
+  Future<void> migratePersonalDataToMainDocument() async {
+    try {
+      debugPrint(
+        '🔄 ProfileController: Migrando datos personales al documento principal...',
+      );
+
+      final userId = _firebaseAuthService.currentUser?.uid;
+      if (userId == null) {
+        debugPrint('❌ ProfileController: Usuario no autenticado');
+        return;
+      }
+
+      // Obtener el perfil completo que ya incluye las subcolecciones
+      final profile = await _firestoreService.getUserProfile(userId);
+      if (profile == null) {
+        debugPrint('❌ ProfileController: No se pudo obtener el perfil');
+        return;
+      }
+
+      // Crear datos personales con información básica
+      final bioText =
+          profile.informacion?.proposito ??
+          'Mejorar mi condición física general';
+
+      final datosPersonales = DatosPersonales(
+        nombreCompleto: 'Usuario', // Valor por defecto
+        nombreUsuario: 'usuario', // Valor por defecto
+        fechaNacimiento: null, // Se puede completar después
+        bio: bioText, // Usar proposito como bio o valor por defecto
+        ubicacion: null, // Se puede completar después
+      );
+
+      // Actualizar el documento principal
+      await _firestoreService.updateDatosPersonales(
+        uid: userId,
+        datosPersonales: datosPersonales,
+      );
+
+      debugPrint(
+        '✅ ProfileController: Datos personales migrados al documento principal',
+      );
+
+      // Recargar perfil
+      await reloadUserProfile();
+    } catch (e) {
+      debugPrint('❌ ProfileController: Error al migrar datos personales: $e');
     }
   }
 
@@ -344,7 +479,7 @@ class ProfileController extends GetxController {
         await storageRef.delete();
       } catch (e) {
         // Si no existe la imagen en Storage, continuar
-        print('No se encontró imagen en Storage o ya fue eliminada: $e');
+        debugPrint('No se encontró imagen en Storage o ya fue eliminada: $e');
       }
 
       // Eliminar de Firestore (actualizar personaje con avatarUrl vacío)
@@ -630,7 +765,7 @@ class ProfileController extends GetxController {
           await item.delete();
         }
       } catch (e) {
-        print('Error al eliminar archivos de Storage: $e');
+        debugPrint('Error al eliminar archivos de Storage: $e');
         // Continuar aunque falle (puede que no haya archivos)
       }
 

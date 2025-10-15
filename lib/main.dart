@@ -6,13 +6,14 @@ import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/app/theme/theme_data.dart';
 import 'package:tribbe_app/shared/controllers/settings_controller.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:tribbe_app/firebase_options.dart';
 
 Future<void> main() async {
   // Asegurar inicialización de Flutter
   WidgetsFlutterBinding.ensureInitialized();
 
   // Inicializar Firebase
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Inicializar dependencias globales
   await AppRouter.initDependencies();

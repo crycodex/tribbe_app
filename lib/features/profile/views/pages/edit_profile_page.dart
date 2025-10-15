@@ -14,6 +14,11 @@ class EditProfilePage extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    // Forzar recarga del perfil cuando se abre la página
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.reloadUserProfile();
+    });
+
     return Scaffold(
       backgroundColor: isDark ? Colors.black : Colors.grey.shade50,
       appBar: AppBar(
