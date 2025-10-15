@@ -514,29 +514,16 @@ class WorkoutSummaryImage extends StatelessWidget {
     return RepaintBoundary(
       key: shareKey, // Asigna la key al RepaintBoundary
       child: Container(
-        width: 350, // Ancho fijo para la imagen
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white, // Fondo blanco
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
-              blurRadius: 10,
-              spreadRadius: 5,
-            ),
-          ],
-        ),
+        width: 225, // Ancho fijo para la imagen
+        padding: const EdgeInsets.all(24), // Padding interno del container
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Logo de Tribbe
-            Image.asset(
-              'assets/icon/icon_ligth.png', // Asegúrate de tener este asset
-              height: 50,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.asset('assets/icon/icon_ligth.png', height: 50),
             ),
-            const SizedBox(height: 16),
-            const Divider(height: 24, thickness: 1, color: Colors.grey),
             _buildStatRow('Duración', '${workout.duration} min', Icons.timer),
             _buildStatRow(
               'Ejercicios',
@@ -549,7 +536,6 @@ class WorkoutSummaryImage extends StatelessWidget {
               '${workout.totalVolume.toInt()} kg',
               Icons.scale,
             ),
-            const Divider(height: 24, thickness: 1, color: Colors.grey),
             Text(
               '#TribbeApp',
               style: TextStyle(
