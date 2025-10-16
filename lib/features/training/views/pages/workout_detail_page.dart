@@ -1,23 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:screenshot/screenshot.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:tribbe_app/features/training/models/workout_model.dart';
 import 'package:tribbe_app/features/profile/utils/workout_utils.dart';
-import 'package:tribbe_app/features/profile/views/widgets/workout_summary_image.dart';
-import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
+import 'package:tribbe_app/shared/utils/share_workout_util.dart';
 
 /// Vista de detalle unificada para entrenamientos
 class WorkoutDetailPage extends StatelessWidget {
   final WorkoutModel workout;
 
-  WorkoutDetailPage({super.key, required this.workout});
-
-  // Controlador para capturar el widget como imagen
-  final ScreenshotController screenshotController = ScreenshotController();
+  const WorkoutDetailPage({super.key, required this.workout});
 
   @override
   Widget build(BuildContext context) {
@@ -67,11 +58,11 @@ class WorkoutDetailPage extends StatelessWidget {
               onPressed: () => Get.back(),
             ),
             actions: [
-              if (_isOwner())
-                IconButton(
-                  icon: const Icon(Icons.share, color: Colors.white),
-                  onPressed: () => _shareWorkout(context),
-                ),
+              ShareWorkoutUtil.buildShareButton(
+                workout,
+                icon: Icons.share,
+                iconColor: Colors.white,
+              ),
             ],
           ),
 
@@ -352,78 +343,5 @@ class WorkoutDetailPage extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  /// Verificar si el usuario actual es el dueño del entrenamiento
-  bool _isOwner() {
-    final authService = Get.find<FirebaseAuthService>();
-    final currentUserId = authService.currentUser?.uid;
-    return currentUserId != null && currentUserId == workout.userId;
-  }
-
-  /// Compartir entrenamiento como imagen
-  Future<void> _shareWorkout(BuildContext context) async {
-    // Mostrar un indicador de carga
-    Get.dialog(
-      const Center(child: CircularProgressIndicator()),
-      barrierDismissible: false,
-    );
-
-    try {
-      debugPrint('🔄 Iniciando proceso de compartir entrenamiento.');
-
-      // Crear una key única para el widget a capturar
-      final GlobalKey captureKey = GlobalKey();
-
-      // Capturar el widget de resumen de entrenamiento con un retardo y timeout
-      final Uint8List? imageBytes = await screenshotController
-          .captureFromWidget(
-            WorkoutSummaryImage(workout: workout, shareKey: captureKey),
-            delay: const Duration(milliseconds: 300),
-            pixelRatio: 3.0, // Alta resolución
-          )
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              debugPrint(
-                '❌ Timeout: La captura de imagen superó los 10 segundos.',
-              );
-              throw Exception('La captura de imagen tardó demasiado.');
-            },
-          );
-
-      if (imageBytes != null) {
-        debugPrint(
-          '✅ Imagen capturada exitosamente. Guardando temporalmente...',
-        );
-
-        final directory = await getTemporaryDirectory();
-        final imagePath = await File(
-          '${directory.path}/tribbe_workout_${workout.id}.png',
-        ).create();
-        await imagePath.writeAsBytes(imageBytes);
-
-        debugPrint('📄 Imagen guardada en: ${imagePath.path}');
-
-        await Share.shareXFiles(
-          [XFile(imagePath.path)],
-          text: '¡Mira mi entrenamiento en Tribbe App!',
-          sharePositionOrigin: Rect.fromLTWH(0, 0, 100, 100),
-        );
-        debugPrint('🚀 Compartido exitosamente.');
-      } else {
-        throw Exception('No se pudo capturar la imagen. Bytes nulos.');
-      }
-    } catch (e) {
-      debugPrint('❌ Error al compartir entrenamiento: ${e.toString()}');
-      Get.snackbar(
-        'Error',
-        'No se pudo compartir el entrenamiento: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      Get.back(); // Asegurarse de cerrar el indicador de carga
-      debugPrint('🔚 Proceso de compartir entrenamiento finalizado.');
-    }
   }
 }
