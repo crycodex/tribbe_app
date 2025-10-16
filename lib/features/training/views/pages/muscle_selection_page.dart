@@ -190,8 +190,8 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
       selected.add(MuscleGroups.pecho);
     }
 
-    // Abdomen
-    if (_bodyParts.abdomen) {
+    // Abdomen (está en lowerBody del selector)
+    if (_bodyParts.lowerBody) {
       selected.add(MuscleGroups.abdomen);
     }
 
@@ -205,8 +205,8 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
       selected.add(MuscleGroups.pantorrillas);
     }
 
-    // Torso inferior (puede ser glúteos)
-    if (_bodyParts.lowerBody) {
+    // Glúteos (está en abdomen del selector)
+    if (_bodyParts.abdomen) {
       selected.add(MuscleGroups.gluteos);
     }
 
@@ -487,6 +487,22 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
         return Icons.settings;
       case Equipment.pesoCorporal:
         return Icons.accessibility;
+      case Equipment.polea:
+        return Icons.linear_scale;
+      case Equipment.bandasElasticas:
+        return Icons.all_out;
+      case Equipment.kettlebells:
+        return Icons.sports_martial_arts;
+      case Equipment.barraZ:
+        return Icons.show_chart;
+      case Equipment.discos:
+        return Icons.album;
+      case Equipment.banca:
+        return Icons.weekend;
+      case Equipment.trx:
+        return Icons.extension;
+      case Equipment.balon:
+        return Icons.sports_baseball;
       default:
         return Icons.fitness_center;
     }

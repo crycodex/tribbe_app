@@ -87,12 +87,28 @@ class Equipment {
   static const String mancuernas = 'Mancuernas';
   static const String pesoCorporal = 'Peso Corporal';
   static const String maquina = 'Máquina';
+  static const String polea = 'Polea/Cable';
+  static const String bandasElasticas = 'Bandas Elásticas';
+  static const String kettlebells = 'Kettlebells';
+  static const String barraZ = 'Barra Z';
+  static const String discos = 'Discos/Placas';
+  static const String banca = 'Banca';
+  static const String trx = 'TRX/Suspensión';
+  static const String balon = 'Balón Medicinal';
 
   static const List<String> all = [
     barraOlimpica,
     mancuernas,
     pesoCorporal,
     maquina,
+    polea,
+    bandasElasticas,
+    kettlebells,
+    barraZ,
+    discos,
+    banca,
+    trx,
+    balon,
   ];
 }
 
