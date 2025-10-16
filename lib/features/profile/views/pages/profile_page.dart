@@ -356,7 +356,13 @@ class ProfilePage extends StatelessWidget {
                               return WorkoutGridItem(
                                 workout: workout,
                                 onTap: () {
-                                  // TODO: Navegar a detalle del entrenamiento
+                                  Get.toNamed(
+                                    RoutePaths.workoutDetail.replaceAll(
+                                      ':id',
+                                      workout.id,
+                                    ),
+                                    arguments: {'workout': workout},
+                                  );
                                 },
                               );
                             } else {

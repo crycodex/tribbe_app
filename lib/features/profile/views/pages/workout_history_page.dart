@@ -108,12 +108,7 @@ class WorkoutHistoryPage extends StatelessWidget {
 
   /// Navegar al detalle del entrenamiento
   void _navigateToWorkoutDetail(WorkoutModel workout) {
-    // TODO: Implementar navegación al detalle
-    Get.snackbar(
-      'Próximamente',
-      'Función de detalle en desarrollo',
-      snackPosition: SnackPosition.BOTTOM,
-    );
+    Get.toNamed('/workout/${workout.id}', arguments: {'workout': workout});
   }
 
   /// Compartir un entrenamiento como imagen
@@ -160,9 +155,11 @@ class WorkoutHistoryPage extends StatelessWidget {
 
         debugPrint('📄 Imagen guardada en: ${imagePath.path}');
 
-        await Share.shareXFiles([
-          XFile(imagePath.path),
-        ], text: '¡Mira mi entrenamiento en Tribbe App!');
+        await Share.shareXFiles(
+          [XFile(imagePath.path)],
+          text: '¡Mira mi entrenamiento en Tribbe App!',
+          sharePositionOrigin: Rect.fromLTWH(0, 0, 100, 100),
+        );
         debugPrint('🚀 Compartido exitosamente.');
       } else {
         throw Exception('No se pudo capturar la imagen. Bytes nulos.');

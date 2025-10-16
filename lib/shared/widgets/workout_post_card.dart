@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tribbe_app/features/training/models/workout_post_model.dart';
 import 'package:tribbe_app/features/training/views/widgets/comments_bottom_sheet.dart';
+import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:get/get.dart';
 
 /// Card de post de entrenamiento para el feed
@@ -133,67 +134,80 @@ class WorkoutPostCard extends StatelessWidget {
 
   /// Información del entrenamiento
   Widget _buildWorkoutInfo(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.blueAccent.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blueAccent.withOpacity(0.3), width: 1),
-      ),
-      child: Column(
-        children: [
-          // Enfoque
-          Row(
-            children: [
-              const Icon(
-                Icons.local_fire_department,
-                color: Colors.orange,
-                size: 24,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                post.workout.focus,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+    return GestureDetector(
+      onTap: () => _navigateToWorkoutDetail(),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.blueAccent.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.blueAccent.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            // Enfoque
+            Row(
+              children: [
+                const Icon(
+                  Icons.local_fire_department,
+                  color: Colors.orange,
+                  size: 24,
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    post.workout.focus,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.blueAccent.withOpacity(0.6),
+                ),
+              ],
+            ),
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-          // Estadísticas
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatItem(
-                'Duración',
-                '${post.workout.duration} min',
-                Icons.timer,
-                isDark,
-              ),
-              _buildStatItem(
-                'Ejercicios',
-                '${post.workout.exercises.length}',
-                Icons.fitness_center,
-                isDark,
-              ),
-              _buildStatItem(
-                'Series',
-                '${post.workout.totalSets}',
-                Icons.repeat,
-                isDark,
-              ),
-              _buildStatItem(
-                'Volumen',
-                '${post.workout.totalVolume.toStringAsFixed(0)} kg',
-                Icons.scale,
-                isDark,
-              ),
-            ],
-          ),
-        ],
+            // Estadísticas
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStatItem(
+                  'Duración',
+                  '${post.workout.duration} min',
+                  Icons.timer,
+                  isDark,
+                ),
+                _buildStatItem(
+                  'Ejercicios',
+                  '${post.workout.exercises.length}',
+                  Icons.fitness_center,
+                  isDark,
+                ),
+                _buildStatItem(
+                  'Series',
+                  '${post.workout.totalSets}',
+                  Icons.repeat,
+                  isDark,
+                ),
+                _buildStatItem(
+                  'Volumen',
+                  '${post.workout.totalVolume.toStringAsFixed(0)} kg',
+                  Icons.scale,
+                  isDark,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -395,5 +409,13 @@ class WorkoutPostCard extends StatelessWidget {
     } else {
       return '${timestamp.day}/${timestamp.month}/${timestamp.year}';
     }
+  }
+
+  /// Navegar al detalle del entrenamiento
+  void _navigateToWorkoutDetail() {
+    Get.toNamed(
+      RoutePaths.workoutDetail.replaceAll(':id', post.workout.id),
+      arguments: {'workout': post.workout},
+    );
   }
 }

@@ -194,8 +194,6 @@ class DashboardPage extends StatelessWidget {
   ) {
     final now = DateTime.now();
     final currentDayIndex = now.weekday - 1;
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     // Calcular la fecha del lunes de esta semana
     final mondayOfWeek = now.subtract(Duration(days: currentDayIndex));

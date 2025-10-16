@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/app/routes/routes.dart';
+import 'package:tribbe_app/features/training/models/workout_model.dart';
+import 'package:tribbe_app/features/training/views/pages/workout_detail_page.dart';
 
 /// Configuración de rutas de la aplicación usando GetX
 class AppRouter {
@@ -89,6 +91,16 @@ class AppRouter {
       name: RoutePaths.workoutHistory,
       page: () => WorkoutHistoryPage(),
       binding: ProfileBinding(),
+      transition: Transition.rightToLeft,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage<dynamic>(
+      name: RoutePaths.workoutDetail,
+      page: () {
+        final args = Get.arguments as Map<String, dynamic>;
+        final workout = args['workout'] as WorkoutModel;
+        return WorkoutDetailPage(workout: workout);
+      },
       transition: Transition.rightToLeft,
       transitionDuration: const Duration(milliseconds: 300),
     ),
