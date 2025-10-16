@@ -245,20 +245,6 @@ class DashboardPage extends StatelessWidget {
             }),
           ),
         ),
-
-        const SizedBox(height: 24),
-
-        // Récord personal
-        Obx(
-          () => Text(
-            'Récord: ${controller.longestStreak} días',
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? Colors.grey[400] : Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
       ],
     );
   }
