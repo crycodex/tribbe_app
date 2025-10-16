@@ -110,7 +110,10 @@ class WorkoutPostCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: WorkoutUtils.getGradientColors(post.workout.focus, isDark: isDark),
+          colors: WorkoutUtils.getGradientColors(
+            post.workout.focus,
+            isDark: isDark,
+          ),
         ),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
@@ -184,10 +187,7 @@ class WorkoutPostCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: focusColor.withOpacity(0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: focusColor.withOpacity(0.2),
-            width: 1.5,
-          ),
+          border: Border.all(color: focusColor.withOpacity(0.2), width: 1.5),
         ),
         child: Column(
           children: [
@@ -347,7 +347,9 @@ class WorkoutPostCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          ...post.workout.exercises.take(3).toList().asMap().entries.map((entry) {
+          ...post.workout.exercises.take(3).toList().asMap().entries.map((
+            entry,
+          ) {
             final index = entry.key;
             final exercise = entry.value;
             return Container(
@@ -389,7 +391,10 @@ class WorkoutPostCard extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.blue.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -417,11 +422,7 @@ class WorkoutPostCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.more_horiz,
-                    size: 16,
-                    color: Colors.blue,
-                  ),
+                  Icon(Icons.more_horiz, size: 16, color: Colors.blue),
                   const SizedBox(width: 8),
                   Text(
                     '+${post.workout.exercises.length - 3} ejercicios más',
@@ -580,4 +581,3 @@ class WorkoutPostCard extends StatelessWidget {
     );
   }
 }
-
