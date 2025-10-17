@@ -16,7 +16,7 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
   BodyParts _bodyParts = const BodyParts();
   final Set<String> selectedEquipment = {};
   String selectedFocus = 'Fuerza'; // Enfoque por defecto
-  
+
   @override
   void initState() {
     super.initState();
