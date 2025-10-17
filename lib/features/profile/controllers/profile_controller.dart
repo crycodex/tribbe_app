@@ -45,7 +45,7 @@ class ProfileController extends GetxController {
   late final TextEditingController alturaController;
   late final TextEditingController pesoController;
   late final TextEditingController porcentajeGrasaController;
-  
+
   // Flag para verificar si está disposed
   bool _isDisposed = false;
 
@@ -160,7 +160,7 @@ class ProfileController extends GetxController {
   /// Cargar perfil del usuario actual
   void _loadUserProfile() {
     if (_isDisposed) return;
-    
+
     debugPrint('🔍 ProfileController: Iniciando _loadUserProfile');
     debugPrint(
       '🔍 AuthController.userProfile.value: ${_authController.userProfile.value}',
