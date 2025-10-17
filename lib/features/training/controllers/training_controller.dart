@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:get/get.dart';
-import 'package:tribbe_app/features/training/data/exercises_data.dart';
-import 'package:tribbe_app/features/training/models/exercise_model.dart';
+import 'package:tribbe_app/shared/data/exercises_data.dart';
+import 'package:tribbe_app/shared/models/exercise_model.dart';
 import 'package:tribbe_app/features/training/models/workout_model.dart';
 import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
 import 'package:tribbe_app/shared/services/workout_service.dart';
@@ -85,7 +85,7 @@ class TrainingController extends GetxController {
     isPaused.value = false;
     elapsedSeconds.value = 0;
     exercises.clear();
-    
+
     // Establecer enfoque si se proporciona
     if (focus != null) {
       focusType.value = focus;

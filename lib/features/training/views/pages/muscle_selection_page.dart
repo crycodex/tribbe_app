@@ -2,7 +2,7 @@ import 'package:body_part_selector/body_part_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
-import 'package:tribbe_app/features/training/models/exercise_model.dart';
+import 'package:tribbe_app/shared/models/exercise_model.dart';
 
 /// Página de selección de músculo y equipamiento (estilo Muscle Wiki)
 class MuscleSelectionPage extends StatefulWidget {

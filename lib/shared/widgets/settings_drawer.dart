@@ -124,6 +124,16 @@ class SettingsDrawer extends StatelessWidget {
 
                   _buildSettingItem(
                     context: context,
+                    icon: Icons.library_books,
+                    title: 'Biblioteca de Ejercicios',
+                    onTap: () {
+                      Get.back();
+                      Get.toNamed(RoutePaths.exercisesLibrary);
+                    },
+                  ),
+
+                  _buildSettingItem(
+                    context: context,
                     icon: Icons.fitness_center,
                     title: 'Objetivos Fitness',
                     onTap: () {

@@ -24,6 +24,10 @@ class RoutePaths {
   static const String workoutDetail = '/workout/:id';
   static const String createWorkout = '/workout/create';
 
+  // Exercises
+  static const String exercisesLibrary = '/exercises';
+  static const String exerciseDetail = '/exercise/:id';
+
   // Profile
   static const String profile = '/profile';
   static const String editProfile = '/profile/edit';

@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:tribbe_app/features/training/models/exercise_model.dart';
+import 'package:tribbe_app/shared/models/exercise_model.dart';
 
 /// Modal para seleccionar ejercicio estilo Cupertino
 class ExercisePickerModal extends StatelessWidget {
@@ -98,4 +98,3 @@ class ExercisePickerModal extends StatelessWidget {
     );
   }
 }
-

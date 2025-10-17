@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/training/controllers/training_controller.dart';
-import 'package:tribbe_app/features/training/models/exercise_model.dart';
+import 'package:tribbe_app/shared/models/exercise_model.dart';
 import 'package:tribbe_app/features/training/models/workout_model.dart';
 
 /// Controller para manejar la edición de ejercicios en modo entrenamiento
@@ -90,13 +90,18 @@ class TrainingExerciseEditorController extends GetxController {
       editingSetIndex.value = null;
       weightController.clear();
       repsController.clear();
-    } else if (editingSetIndex.value != null && editingSetIndex.value! > index) {
+    } else if (editingSetIndex.value != null &&
+        editingSetIndex.value! > index) {
       editingSetIndex.value = editingSetIndex.value! - 1;
     }
   }
 
   /// Preparar edición de un ejercicio completo
-  void editExercise(ExerciseData exercise, int exerciseIndex, List<ExerciseTemplate> availableExercises) {
+  void editExercise(
+    ExerciseData exercise,
+    int exerciseIndex,
+    List<ExerciseTemplate> availableExercises,
+  ) {
     // Buscar el template del ejercicio
     final template = availableExercises.firstWhere(
       (e) => e.name == exercise.name,
@@ -138,4 +143,3 @@ class TrainingExerciseEditorController extends GetxController {
     cancelExercise();
   }
 }
-

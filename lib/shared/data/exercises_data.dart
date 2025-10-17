@@ -1,4 +1,4 @@
-import 'package:tribbe_app/features/training/models/exercise_model.dart';
+import 'package:tribbe_app/shared/models/exercise_model.dart';
 
 /// Base de datos local de ejercicios
 class ExercisesData {

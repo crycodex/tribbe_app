@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:tribbe_app/features/training/models/exercise_model.dart';
+import 'package:tribbe_app/shared/models/exercise_model.dart';
 
 /// Widget de ejercicios sugeridos
 class SuggestedExercisesWidget extends StatelessWidget {
@@ -126,4 +126,3 @@ class _SuggestedExerciseCard extends StatelessWidget {
     );
   }
 }
-

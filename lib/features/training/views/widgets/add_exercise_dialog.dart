@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tribbe_app/features/training/controllers/training_controller.dart';
-import 'package:tribbe_app/features/training/models/exercise_model.dart';
+import 'package:tribbe_app/shared/models/exercise_model.dart';
 import 'package:tribbe_app/features/training/models/workout_model.dart';
 
 /// Diálogo para agregar ejercicio (con lista de ejercicios)

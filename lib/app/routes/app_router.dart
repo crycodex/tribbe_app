@@ -4,6 +4,9 @@ import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/app/routes/routes.dart';
 import 'package:tribbe_app/features/training/models/workout_model.dart';
 import 'package:tribbe_app/features/training/views/pages/workout_detail_page.dart';
+import 'package:tribbe_app/shared/views/pages/exercises_library_page.dart';
+import 'package:tribbe_app/shared/views/pages/exercise_detail_page.dart';
+import 'package:tribbe_app/shared/controllers/exercises_controller.dart';
 
 /// Configuración de rutas de la aplicación usando GetX
 class AppRouter {
@@ -101,6 +104,22 @@ class AppRouter {
         final workout = args['workout'] as WorkoutModel;
         return WorkoutDetailPage(workout: workout);
       },
+      transition: Transition.rightToLeft,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+
+    // Exercises routes
+    GetPage<dynamic>(
+      name: RoutePaths.exercisesLibrary,
+      page: () => const ExercisesLibraryPage(),
+      binding: ExercisesBinding(),
+      transition: Transition.rightToLeft,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage<dynamic>(
+      name: RoutePaths.exerciseDetail,
+      page: () => const ExerciseDetailPage(),
+      binding: ExercisesBinding(),
       transition: Transition.rightToLeft,
       transitionDuration: const Duration(milliseconds: 300),
     ),
@@ -213,5 +232,13 @@ class TrainingBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<TrainingController>(() => TrainingController());
+  }
+}
+
+/// Binding para ejercicios
+class ExercisesBinding extends Bindings {
+  @override
+  void dependencies() {
+    Get.lazyPut<ExercisesController>(() => ExercisesController());
   }
 }
