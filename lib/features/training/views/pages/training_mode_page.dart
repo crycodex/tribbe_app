@@ -232,19 +232,20 @@ class _TrainingModePageState extends State<TrainingModePage> {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          // Botón agregar
-                          CupertinoButton.filled(
-                            onPressed: () =>
-                                _showExercisePicker(context, controller),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(CupertinoIcons.add_circled),
-                                SizedBox(width: 8),
-                                Text('Agregar Ejercicio'),
-                              ],
+                          // Botón agregar (oculto si está agregando o editando serie)
+                          if (selectedExercise == null)
+                            CupertinoButton.filled(
+                              onPressed: () =>
+                                  _showExercisePicker(context, controller),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(CupertinoIcons.add_circled),
+                                  SizedBox(width: 8),
+                                  Text('Agregar Ejercicio'),
+                                ],
+                              ),
                             ),
-                          ),
 
                           const SizedBox(height: 12),
 
@@ -1230,18 +1231,16 @@ class _TrainingModePageState extends State<TrainingModePage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          editingSetIndex != null
-                              ? CupertinoIcons.checkmark_circle
-                              : CupertinoIcons.add_circled,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 6),
                         Text(
                           editingSetIndex != null
                               ? 'Actualizar Serie'
                               : 'Agregar Serie',
-                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Get.isDarkMode
+                                ? CupertinoColors.black
+                                : CupertinoColors.white,
+                          ),
                         ),
                       ],
                     ),
