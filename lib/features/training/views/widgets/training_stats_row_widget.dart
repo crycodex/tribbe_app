@@ -16,11 +16,13 @@ class TrainingStatsRowWidget extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: _StatItem(
-              icon: CupertinoIcons.sportscourt,
-              label: 'Ejercicios',
-              value: controller.exercises.length.toString(),
-              isDark: isDark,
+            child: Obx(
+              () => _StatItem(
+                icon: CupertinoIcons.sportscourt,
+                label: 'Ejercicios',
+                value: controller.exercises.length.toString(),
+                isDark: isDark,
+              ),
             ),
           ),
           Container(
@@ -109,4 +111,3 @@ class _StatItem extends StatelessWidget {
     );
   }
 }
-

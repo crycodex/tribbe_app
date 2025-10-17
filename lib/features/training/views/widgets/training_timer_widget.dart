@@ -6,6 +6,18 @@ import 'package:tribbe_app/features/training/controllers/training_controller.dar
 class TrainingTimerWidget extends StatelessWidget {
   const TrainingTimerWidget({super.key});
 
+  /// Formatear tiempo transcurrido
+  String _formatTime(int seconds) {
+    final hours = (seconds / 3600).floor();
+    final minutes = ((seconds % 3600) / 60).floor();
+    final secs = seconds % 60;
+
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<TrainingController>();
@@ -31,9 +43,10 @@ class TrainingTimerWidget extends StatelessWidget {
             size: 20,
           ),
           const SizedBox(width: 8),
+          // Observar explícitamente elapsedSeconds para actualizaciones en tiempo real
           Obx(
             () => Text(
-              controller.formattedTime,
+              _formatTime(controller.elapsedSeconds.value),
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.w600,
@@ -76,4 +89,3 @@ class TrainingTimerWidget extends StatelessWidget {
     );
   }
 }
-

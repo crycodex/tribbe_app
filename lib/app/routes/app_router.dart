@@ -231,7 +231,13 @@ class ProfileBinding extends Bindings {
 class TrainingBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<TrainingController>(() => TrainingController());
+    // Si ya existe el controller (entrenamiento activo), no crear uno nuevo
+    if (!Get.isRegistered<TrainingController>()) {
+      Get.lazyPut<TrainingController>(
+        () => TrainingController(),
+        fenix: true, // Permite recrear el controller si se elimina
+      );
+    }
   }
 }
 

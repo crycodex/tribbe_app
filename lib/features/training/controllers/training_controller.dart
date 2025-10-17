@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/shared/data/exercises_data.dart';
 import 'package:tribbe_app/shared/models/exercise_model.dart';
@@ -115,6 +116,9 @@ class TrainingController extends GetxController {
       isLoading.value = true;
       _stopTimer();
 
+      // Marcar que el entrenamiento ya no está activo
+      isTraining.value = false;
+
       final user = _authService.currentUser;
       if (user == null) {
         throw Exception('Usuario no autenticado');
@@ -185,7 +189,16 @@ class TrainingController extends GetxController {
 
       // Volver atrás
       Get.offAllNamed(RoutePaths.home);
+
+      // Eliminar el controller después de finalizar
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (Get.isRegistered<TrainingController>()) {
+          Get.delete<TrainingController>();
+        }
+      });
     } catch (e) {
+      // Restaurar estado si hay error
+      isTraining.value = true;
       Get.snackbar(
         'Error',
         'No se pudo guardar el entrenamiento: ${e.toString()}',
@@ -201,6 +214,13 @@ class TrainingController extends GetxController {
     _stopTimer();
     _resetState();
     Get.back();
+
+    // Eliminar el controller después de cancelar
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.isRegistered<TrainingController>()) {
+        Get.delete<TrainingController>();
+      }
+    });
   }
 
   /// Agregar ejercicio
@@ -260,9 +280,15 @@ class TrainingController extends GetxController {
 
   /// Iniciar timer
   void _startTimer() {
+    // Cancelar timer previo si existe
+    _timer?.cancel();
+
+    // Crear nuevo timer
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!isPaused.value) {
+      if (!isPaused.value && isTraining.value) {
         elapsedSeconds.value++;
+        // Forzar actualización de observables
+        elapsedSeconds.refresh();
       }
     });
   }

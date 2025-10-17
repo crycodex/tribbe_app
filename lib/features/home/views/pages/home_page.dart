@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/features/home/controllers/home_controller.dart';
+import 'package:tribbe_app/features/training/controllers/training_controller.dart';
 import 'package:tribbe_app/features/dashboard/views/pages/dashboard_page.dart';
 import 'package:tribbe_app/features/gym/views/pages/gym_page.dart';
 import 'package:tribbe_app/features/profile/views/pages/profile_page.dart';
 import 'package:tribbe_app/features/store/views/pages/store_page.dart';
 import 'package:tribbe_app/shared/widgets/tribbe_tab_bar.dart';
 import 'package:tribbe_app/shared/widgets/settings_drawer.dart';
+import 'package:tribbe_app/shared/widgets/active_training_indicator.dart';
 
 /// GlobalKey para acceder al Scaffold desde cualquier lugar
 final GlobalKey<ScaffoldState> homeScaffoldKey = GlobalKey<ScaffoldState>();
@@ -58,13 +60,26 @@ class HomePage extends StatelessWidget {
               ),
             ),
           ),
+
+          // Indicador de entrenamiento activo
+          const ActiveTrainingIndicator(),
         ],
       ),
     );
   }
 
-  /// Abrir selección de músculo
+  /// Abrir selección de músculo o volver al entrenamiento activo
   void _openTrainingMode() {
+    // Si hay un entrenamiento activo, volver a esa página
+    if (Get.isRegistered<TrainingController>()) {
+      final trainingController = Get.find<TrainingController>();
+      if (trainingController.isTraining.value) {
+        Get.toNamed(RoutePaths.trainingMode);
+        return;
+      }
+    }
+
+    // Si no hay entrenamiento activo, iniciar uno nuevo
     Get.toNamed(RoutePaths.muscleSelection);
   }
 }

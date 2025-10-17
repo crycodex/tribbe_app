@@ -29,7 +29,10 @@ class _TrainingModePageState extends State<TrainingModePage> {
   @override
   void initState() {
     super.initState();
-    trainingController = Get.put(TrainingController());
+    // Si ya existe el controller, usarlo; si no, crear uno nuevo
+    trainingController = Get.isRegistered<TrainingController>()
+        ? Get.find<TrainingController>()
+        : Get.put(TrainingController(), permanent: true);
     editorController = Get.put(TrainingExerciseEditorController());
 
     // Obtener enfoque seleccionado de los argumentos
@@ -46,12 +49,14 @@ class _TrainingModePageState extends State<TrainingModePage> {
 
   @override
   void dispose() {
-    // Esperar un frame antes de eliminar el controller para asegurar que
-    // todas las operaciones pendientes terminen
+    // Eliminar solo el TrainingExerciseEditorController
+    // NO eliminar TrainingController para mantener el estado
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (Get.isRegistered<TrainingExerciseEditorController>()) {
         Get.delete<TrainingExerciseEditorController>();
       }
+      // El TrainingController se mantiene vivo para conservar el estado
+      // Solo se eliminará cuando se finalice o cancele el entrenamiento
     });
     super.dispose();
   }

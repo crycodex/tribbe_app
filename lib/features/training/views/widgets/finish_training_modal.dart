@@ -17,6 +17,17 @@ class FinishTrainingModal extends StatefulWidget {
   State<FinishTrainingModal> createState() => _FinishTrainingModalState();
 }
 
+String _formatTime(int seconds) {
+  final hours = (seconds / 3600).floor();
+  final minutes = ((seconds % 3600) / 60).floor();
+  final secs = seconds % 60;
+
+  if (hours > 0) {
+    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  }
+  return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+}
+
 class _FinishTrainingModalState extends State<FinishTrainingModal> {
   final captionController = TextEditingController();
 
@@ -123,9 +134,7 @@ class _FinishTrainingModalState extends State<FinishTrainingModal> {
     return Icon(
       CupertinoIcons.checkmark_circle,
       size: 60,
-      color: isDark
-          ? CupertinoColors.systemGreen
-          : CupertinoColors.systemGreen,
+      color: isDark ? CupertinoColors.systemGreen : CupertinoColors.systemGreen,
     );
   }
 
@@ -145,7 +154,7 @@ class _FinishTrainingModalState extends State<FinishTrainingModal> {
   Widget _buildStats(TrainingController controller, bool isDark) {
     return Obx(
       () => Text(
-        '${controller.exercises.length} ejercicios • ${controller.totalSets} series • ${controller.formattedTime}',
+        '${controller.exercises.length} ejercicios • ${controller.totalSets} series • ${_formatTime(controller.elapsedSeconds.value)}',
         style: TextStyle(
           fontSize: 15,
           color: isDark
@@ -184,4 +193,3 @@ class _FinishTrainingModalState extends State<FinishTrainingModal> {
     );
   }
 }
-
