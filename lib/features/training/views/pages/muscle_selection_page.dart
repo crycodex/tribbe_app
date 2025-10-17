@@ -15,6 +15,17 @@ class MuscleSelectionPage extends StatefulWidget {
 class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
   BodyParts _bodyParts = const BodyParts();
   final Set<String> selectedEquipment = {};
+  String selectedFocus = 'Fuerza'; // Enfoque por defecto
+  
+  @override
+  void initState() {
+    super.initState();
+    // Obtener el enfoque seleccionado de los argumentos si existe
+    final args = Get.arguments as Map<String, dynamic>?;
+    if (args != null && args['selectedFocus'] != null) {
+      selectedFocus = args['selectedFocus'] as String;
+    }
+  }
 
   /// Aplica selección espejo: si seleccionas un lado, se selecciona el otro,
   /// y si deseleccionas uno, ambos se deseleccionan.
@@ -452,6 +463,7 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
                         arguments: {
                           'muscleGroup': selectedMuscle.join(", "),
                           'equipment': selectedEquipment.toList(),
+                          'selectedFocus': selectedFocus,
                         },
                       );
                     }

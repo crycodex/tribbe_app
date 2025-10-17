@@ -78,13 +78,18 @@ class TrainingController extends GetxController {
   }
 
   /// Iniciar entrenamiento
-  void startTraining() {
+  void startTraining({String? focus}) {
     if (isTraining.value) return;
 
     isTraining.value = true;
     isPaused.value = false;
     elapsedSeconds.value = 0;
     exercises.clear();
+    
+    // Establecer enfoque si se proporciona
+    if (focus != null) {
+      focusType.value = focus;
+    }
 
     _startTimer();
   }

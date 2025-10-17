@@ -11,6 +11,7 @@ import 'package:tribbe_app/features/training/views/widgets/finish_training_modal
 import 'package:tribbe_app/features/training/views/widgets/suggested_exercises_widget.dart';
 import 'package:tribbe_app/features/training/views/widgets/training_stats_row_widget.dart';
 import 'package:tribbe_app/features/training/views/widgets/training_timer_widget.dart';
+import 'package:tribbe_app/features/training/views/widgets/training_focus_selector_widget.dart';
 
 /// Página de modo entrenamiento - Diseño Cupertino simplificado
 /// Actúa como orquestador de widgets especializados
@@ -31,10 +32,14 @@ class _TrainingModePageState extends State<TrainingModePage> {
     trainingController = Get.put(TrainingController());
     editorController = Get.put(TrainingExerciseEditorController());
 
+    // Obtener enfoque seleccionado de los argumentos
+    final args = Get.arguments as Map<String, dynamic>?;
+    final selectedFocus = args?['selectedFocus'] as String?;
+
     // Iniciar entrenamiento automáticamente
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!trainingController.isTraining.value) {
-        trainingController.startTraining();
+        trainingController.startTraining(focus: selectedFocus);
       }
     });
   }
@@ -93,6 +98,8 @@ class _TrainingModePageState extends State<TrainingModePage> {
       child: Column(
         children: [
           const SizedBox(height: 8),
+          const TrainingFocusSelectorWidget(),
+          const SizedBox(height: 12),
           const TrainingTimerWidget(),
           const SizedBox(height: 16),
           const TrainingStatsRowWidget(),

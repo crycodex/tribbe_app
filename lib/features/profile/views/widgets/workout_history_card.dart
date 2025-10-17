@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tribbe_app/features/profile/utils/workout_utils.dart';
+import 'package:tribbe_app/shared/utils/workout_utils.dart';
 import 'package:tribbe_app/features/training/models/workout_model.dart';
 
 /// Widget para tarjeta individual de entrenamiento en el historial

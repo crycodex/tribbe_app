@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tribbe_app/features/training/models/workout_model.dart';
-import 'package:tribbe_app/features/profile/utils/workout_utils.dart';
+import 'package:tribbe_app/shared/utils/workout_utils.dart';
 
 /// Widget para mostrar un entrenamiento en formato de grilla (estilo Instagram)
 class WorkoutGridItem extends StatelessWidget {

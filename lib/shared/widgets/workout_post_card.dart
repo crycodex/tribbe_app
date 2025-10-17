@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tribbe_app/features/training/models/workout_post_model.dart';
 import 'package:tribbe_app/features/training/views/widgets/comments_bottom_sheet.dart';
-import 'package:tribbe_app/features/profile/utils/workout_utils.dart';
+import 'package:tribbe_app/shared/utils/workout_utils.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:get/get.dart';
 
