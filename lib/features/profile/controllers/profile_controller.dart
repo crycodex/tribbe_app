@@ -45,6 +45,9 @@ class ProfileController extends GetxController {
   late final TextEditingController alturaController;
   late final TextEditingController pesoController;
   late final TextEditingController porcentajeGrasaController;
+  
+  // Flag para verificar si está disposed
+  bool _isDisposed = false;
 
   // Form fields - Datos Personales
   final RxString nombreCompleto = ''.obs;
@@ -144,6 +147,7 @@ class ProfileController extends GetxController {
 
   @override
   void onClose() {
+    _isDisposed = true;
     nombreCompletoController.dispose();
     nombreUsuarioController.dispose();
     bioController.dispose();
@@ -155,6 +159,8 @@ class ProfileController extends GetxController {
 
   /// Cargar perfil del usuario actual
   void _loadUserProfile() {
+    if (_isDisposed) return;
+    
     debugPrint('🔍 ProfileController: Iniciando _loadUserProfile');
     debugPrint(
       '🔍 AuthController.userProfile.value: ${_authController.userProfile.value}',
@@ -182,9 +188,11 @@ class ProfileController extends GetxController {
       nombreUsuario.value = profile.datosPersonales?.nombreUsuario ?? '';
       bio.value = profile.datosPersonales?.bio ?? '';
 
-      nombreCompletoController.text = nombreCompleto.value;
-      nombreUsuarioController.text = nombreUsuario.value;
-      bioController.text = bio.value;
+      if (!_isDisposed) {
+        nombreCompletoController.text = nombreCompleto.value;
+        nombreUsuarioController.text = nombreUsuario.value;
+        bioController.text = bio.value;
+      }
 
       // Fecha de nacimiento - manejar formato de fecha
       if (profile.datosPersonales?.fechaNacimiento != null &&
@@ -230,9 +238,11 @@ class ProfileController extends GetxController {
       porcentajeGrasa.value =
           profile.medidas?.porcentajeGrasaCorporal?.toString() ?? '';
 
-      alturaController.text = altura.value;
-      pesoController.text = peso.value;
-      porcentajeGrasaController.text = porcentajeGrasa.value;
+      if (!_isDisposed) {
+        alturaController.text = altura.value;
+        pesoController.text = peso.value;
+        porcentajeGrasaController.text = porcentajeGrasa.value;
+      }
 
       // Foto de perfil
       photoUrl.value = profile.personaje?.avatarUrl ?? '';
@@ -252,12 +262,14 @@ class ProfileController extends GetxController {
         '📭 ProfileController: userProfile en AuthController es nulo.',
       );
       // Limpiar y resetear controladores si el perfil es nulo
-      nombreCompletoController.clear();
-      nombreUsuarioController.clear();
-      bioController.clear();
-      alturaController.clear();
-      pesoController.clear();
-      porcentajeGrasaController.clear();
+      if (!_isDisposed) {
+        nombreCompletoController.clear();
+        nombreUsuarioController.clear();
+        bioController.clear();
+        alturaController.clear();
+        pesoController.clear();
+        porcentajeGrasaController.clear();
+      }
     }
   }
 

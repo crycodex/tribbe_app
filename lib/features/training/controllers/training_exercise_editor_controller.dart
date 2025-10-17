@@ -16,6 +16,9 @@ class TrainingExerciseEditorController extends GetxController {
   final editingSetIndex = Rx<int?>(null);
   final editingExerciseIndex = Rx<int?>(null);
 
+  // Flag para verificar si está disposed
+  bool _isDisposed = false;
+
   // Getters
   bool get hasExerciseSelected => selectedExercise.value != null;
   bool get hasSets => currentSets.isNotEmpty;
@@ -23,6 +26,7 @@ class TrainingExerciseEditorController extends GetxController {
   bool get isEditingExercise => editingExerciseIndex.value != null;
 
   double get totalVolume {
+    if (_isDisposed) return 0.0;
     return currentSets.fold<double>(
       0.0,
       (sum, set) => sum + (set.weight * set.reps),
@@ -31,6 +35,7 @@ class TrainingExerciseEditorController extends GetxController {
 
   @override
   void onClose() {
+    _isDisposed = true;
     weightController.dispose();
     repsController.dispose();
     super.onClose();
@@ -38,16 +43,24 @@ class TrainingExerciseEditorController extends GetxController {
 
   /// Seleccionar un ejercicio para configurar
   void selectExercise(ExerciseTemplate exercise) {
+    if (_isDisposed) return;
+
     selectedExercise.value = exercise;
     currentSets.clear();
-    weightController.clear();
-    repsController.clear();
+
+    if (!_isDisposed) {
+      weightController.clear();
+      repsController.clear();
+    }
+
     editingSetIndex.value = null;
     editingExerciseIndex.value = null;
   }
 
   /// Agregar o actualizar una serie
   void addOrUpdateSet() {
+    if (_isDisposed) return;
+
     final weight = double.tryParse(weightController.text);
     final reps = int.tryParse(repsController.text);
 
@@ -63,13 +76,18 @@ class TrainingExerciseEditorController extends GetxController {
         // Agregando nueva serie
         currentSets.add(SetModel(weight: weight, reps: reps));
       }
-      weightController.clear();
-      repsController.clear();
+
+      if (!_isDisposed) {
+        weightController.clear();
+        repsController.clear();
+      }
     }
   }
 
   /// Editar una serie existente
   void editSet(int index) {
+    if (_isDisposed) return;
+
     final set = currentSets[index];
     editingSetIndex.value = index;
     weightController.text = set.weight.toString();
@@ -78,6 +96,8 @@ class TrainingExerciseEditorController extends GetxController {
 
   /// Cancelar edición de serie
   void cancelSetEdit() {
+    if (_isDisposed) return;
+
     editingSetIndex.value = null;
     weightController.clear();
     repsController.clear();
@@ -85,11 +105,15 @@ class TrainingExerciseEditorController extends GetxController {
 
   /// Eliminar una serie
   void removeSet(int index) {
+    if (_isDisposed) return;
+
     currentSets.removeAt(index);
     if (editingSetIndex.value == index) {
       editingSetIndex.value = null;
-      weightController.clear();
-      repsController.clear();
+      if (!_isDisposed) {
+        weightController.clear();
+        repsController.clear();
+      }
     } else if (editingSetIndex.value != null &&
         editingSetIndex.value! > index) {
       editingSetIndex.value = editingSetIndex.value! - 1;
@@ -102,6 +126,8 @@ class TrainingExerciseEditorController extends GetxController {
     int exerciseIndex,
     List<ExerciseTemplate> availableExercises,
   ) {
+    if (_isDisposed) return;
+
     // Buscar el template del ejercicio
     final template = availableExercises.firstWhere(
       (e) => e.name == exercise.name,
@@ -113,16 +139,25 @@ class TrainingExerciseEditorController extends GetxController {
     currentSets.addAll(exercise.sets);
     editingSetIndex.value = null;
     editingExerciseIndex.value = exerciseIndex;
-    weightController.clear();
-    repsController.clear();
+
+    if (!_isDisposed) {
+      weightController.clear();
+      repsController.clear();
+    }
   }
 
   /// Cancelar configuración de ejercicio
   void cancelExercise() {
+    if (_isDisposed) return;
+
     selectedExercise.value = null;
     currentSets.clear();
-    weightController.clear();
-    repsController.clear();
+
+    if (!_isDisposed) {
+      weightController.clear();
+      repsController.clear();
+    }
+
     editingSetIndex.value = null;
     editingExerciseIndex.value = null;
   }

@@ -46,7 +46,13 @@ class _TrainingModePageState extends State<TrainingModePage> {
 
   @override
   void dispose() {
-    Get.delete<TrainingExerciseEditorController>();
+    // Esperar un frame antes de eliminar el controller para asegurar que
+    // todas las operaciones pendientes terminen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Get.isRegistered<TrainingExerciseEditorController>()) {
+        Get.delete<TrainingExerciseEditorController>();
+      }
+    });
     super.dispose();
   }
 
