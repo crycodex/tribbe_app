@@ -1,4 +1,6 @@
 import 'package:flutter/cupertino.dart';
+import 'package:get/get.dart';
+import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/shared/models/exercise_model.dart';
 
 /// Widget de ejercicios sugeridos
@@ -88,11 +90,34 @@ class _SuggestedExerciseCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Icon(
-              CupertinoIcons.add_circled_solid,
-              color: CupertinoColors.activeBlue,
-              size: 24,
+            // Header con íconos
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Icon(
+                  CupertinoIcons.add_circled_solid,
+                  color: CupertinoColors.activeBlue,
+                  size: 24,
+                ),
+                // Botón de información
+                GestureDetector(
+                  onTap: () {
+                    Get.toNamed(
+                      RoutePaths.exerciseDetail,
+                      arguments: {'exerciseId': exercise.id},
+                    );
+                  },
+                  child: Icon(
+                    CupertinoIcons.info_circle,
+                    size: 20,
+                    color: isDark
+                        ? CupertinoColors.systemGrey
+                        : CupertinoColors.systemGrey2,
+                  ),
+                ),
+              ],
             ),
+            // Info del ejercicio
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

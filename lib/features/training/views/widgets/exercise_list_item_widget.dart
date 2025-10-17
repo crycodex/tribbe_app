@@ -1,6 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/features/training/controllers/training_controller.dart';
+import 'package:tribbe_app/shared/data/exercises_data.dart';
 
 /// Widget de item de ejercicio en la lista
 class ExerciseListItemWidget extends StatelessWidget {
@@ -22,8 +25,12 @@ class ExerciseListItemWidget extends StatelessWidget {
     final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
 
     return Dismissible(
-      key: Key('exercise_${exercise.name}_${DateTime.now().millisecondsSinceEpoch}'),
-      direction: isBeingEdited ? DismissDirection.none : DismissDirection.horizontal,
+      key: Key(
+        'exercise_${exercise.name}_${DateTime.now().millisecondsSinceEpoch}',
+      ),
+      direction: isBeingEdited
+          ? DismissDirection.none
+          : DismissDirection.horizontal,
       background: _buildSwipeBackground(
         alignment: Alignment.centerLeft,
         color: CupertinoColors.systemOrange,
@@ -59,8 +66,8 @@ class ExerciseListItemWidget extends StatelessWidget {
           color: isBeingEdited
               ? null
               : (isDark
-                  ? CupertinoColors.darkBackgroundGray
-                  : CupertinoColors.systemGrey6),
+                    ? CupertinoColors.darkBackgroundGray
+                    : CupertinoColors.systemGrey6),
           borderRadius: BorderRadius.circular(12),
           border: isBeingEdited
               ? Border.all(color: CupertinoColors.systemOrange, width: 2)
@@ -105,9 +112,7 @@ class ExerciseListItemWidget extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color, color.withOpacity(0.8)],
-        ),
+        gradient: LinearGradient(colors: [color, color.withOpacity(0.8)]),
         borderRadius: BorderRadius.circular(12),
       ),
       alignment: alignment,
@@ -157,6 +162,31 @@ class ExerciseListItemWidget extends StatelessWidget {
             ],
           ),
         ),
+        // Botón de información del ejercicio
+        CupertinoButton(
+          padding: EdgeInsets.zero,
+          minSize: 0,
+          onPressed: () {
+            // Buscar el ejercicio por nombre en la data
+            final exerciseTemplate = ExercisesData.exercises.firstWhere(
+              (ex) => ex.name == exercise.name,
+              orElse: () => ExercisesData.exercises.first,
+            );
+            Get.toNamed(
+              RoutePaths.exerciseDetail,
+              arguments: {'exerciseId': exerciseTemplate.id},
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: Icon(
+              CupertinoIcons.info_circle,
+              size: 20,
+              color: CupertinoColors.activeBlue.withOpacity(0.7),
+            ),
+          ),
+        ),
+        // Badge de series
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
@@ -187,11 +217,7 @@ class ExerciseListItemWidget extends StatelessWidget {
       child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            CupertinoIcons.pencil,
-            color: CupertinoColors.white,
-            size: 10,
-          ),
+          Icon(CupertinoIcons.pencil, color: CupertinoColors.white, size: 10),
           SizedBox(width: 4),
           Text(
             'EDITANDO',
@@ -310,4 +336,3 @@ class ExerciseListItemWidget extends StatelessWidget {
     );
   }
 }
-

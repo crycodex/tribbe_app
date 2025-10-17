@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/features/training/controllers/training_exercise_editor_controller.dart';
 import 'package:tribbe_app/features/training/views/widgets/set_item_widget.dart';
 
@@ -50,16 +51,22 @@ class ExerciseConfigPanelWidget extends StatelessWidget {
               children: [
                 _buildInputFields(controller, isDark),
                 const SizedBox(height: 12),
-                Obx(() => controller.isEditingSet
-                    ? _buildEditingIndicator(controller)
-                    : const SizedBox.shrink()),
+                Obx(
+                  () => controller.isEditingSet
+                      ? _buildEditingIndicator(controller)
+                      : const SizedBox.shrink(),
+                ),
                 _buildAddSetButton(controller),
-                Obx(() => controller.hasSets
-                    ? _buildSetsList(controller, isDark)
-                    : const SizedBox.shrink()),
-                Obx(() => controller.hasSets
-                    ? _buildSaveButton()
-                    : const SizedBox.shrink()),
+                Obx(
+                  () => controller.hasSets
+                      ? _buildSetsList(controller, isDark)
+                      : const SizedBox.shrink(),
+                ),
+                Obx(
+                  () => controller.hasSets
+                      ? _buildSaveButton()
+                      : const SizedBox.shrink(),
+                ),
               ],
             ),
           ),
@@ -68,7 +75,10 @@ class ExerciseConfigPanelWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(TrainingExerciseEditorController controller, bool isDark) {
+  Widget _buildHeader(
+    TrainingExerciseEditorController controller,
+    bool isDark,
+  ) {
     return Obx(() {
       final isEditing = controller.isEditingExercise;
       return Container(
@@ -77,23 +87,23 @@ class ExerciseConfigPanelWidget extends StatelessWidget {
           gradient: LinearGradient(
             colors: isEditing
                 ? (isDark
-                    ? [
-                        CupertinoColors.systemOrange.withValues(alpha: 0.3),
-                        CupertinoColors.systemOrange.withValues(alpha: 0.15),
-                      ]
-                    : [
-                        CupertinoColors.systemOrange.withValues(alpha: 0.15),
-                        CupertinoColors.systemOrange.withValues(alpha: 0.05),
-                      ])
+                      ? [
+                          CupertinoColors.systemOrange.withValues(alpha: 0.3),
+                          CupertinoColors.systemOrange.withValues(alpha: 0.15),
+                        ]
+                      : [
+                          CupertinoColors.systemOrange.withValues(alpha: 0.15),
+                          CupertinoColors.systemOrange.withValues(alpha: 0.05),
+                        ])
                 : (isDark
-                    ? [
-                        CupertinoColors.activeBlue.withValues(alpha: 0.3),
-                        CupertinoColors.activeBlue.withValues(alpha: 0.15),
-                      ]
-                    : [
-                        CupertinoColors.activeBlue.withValues(alpha: 0.15),
-                        CupertinoColors.activeBlue.withValues(alpha: 0.05),
-                      ]),
+                      ? [
+                          CupertinoColors.activeBlue.withValues(alpha: 0.3),
+                          CupertinoColors.activeBlue.withValues(alpha: 0.15),
+                        ]
+                      : [
+                          CupertinoColors.activeBlue.withValues(alpha: 0.15),
+                          CupertinoColors.activeBlue.withValues(alpha: 0.05),
+                        ]),
           ),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
         ),
@@ -169,6 +179,24 @@ class ExerciseConfigPanelWidget extends StatelessWidget {
                 ],
               ),
             ),
+            // Botón de información
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              onPressed: () {
+                final exerciseId = controller.selectedExercise.value!.id;
+                Get.toNamed(
+                  RoutePaths.exerciseDetail,
+                  arguments: {'exerciseId': exerciseId},
+                );
+              },
+              child: Icon(
+                CupertinoIcons.info_circle_fill,
+                color: CupertinoColors.activeBlue,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 4),
+            // Botón de cerrar
             CupertinoButton(
               padding: EdgeInsets.zero,
               onPressed: onCancel,
@@ -186,7 +214,10 @@ class ExerciseConfigPanelWidget extends StatelessWidget {
     });
   }
 
-  Widget _buildInputFields(TrainingExerciseEditorController controller, bool isDark) {
+  Widget _buildInputFields(
+    TrainingExerciseEditorController controller,
+    bool isDark,
+  ) {
     return Row(
       children: [
         Expanded(
@@ -207,15 +238,15 @@ class ExerciseConfigPanelWidget extends StatelessWidget {
               CupertinoTextField(
                 controller: controller.weightController,
                 placeholder: '0',
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
                 ],
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? CupertinoColors.black
-                      : CupertinoColors.white,
+                  color: isDark ? CupertinoColors.black : CupertinoColors.white,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 style: const TextStyle(fontSize: 18),
@@ -247,9 +278,7 @@ class ExerciseConfigPanelWidget extends StatelessWidget {
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? CupertinoColors.black
-                      : CupertinoColors.white,
+                  color: isDark ? CupertinoColors.black : CupertinoColors.white,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 style: const TextStyle(fontSize: 18),
@@ -335,7 +364,10 @@ class ExerciseConfigPanelWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildSetsList(TrainingExerciseEditorController controller, bool isDark) {
+  Widget _buildSetsList(
+    TrainingExerciseEditorController controller,
+    bool isDark,
+  ) {
     return Column(
       children: [
         const SizedBox(height: 16),
@@ -422,4 +454,3 @@ class ExerciseConfigPanelWidget extends StatelessWidget {
     );
   }
 }
-
