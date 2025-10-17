@@ -503,16 +503,12 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
         return Icons.linear_scale;
       case Equipment.bandasElasticas:
         return Icons.all_out;
-      case Equipment.kettlebells:
-        return Icons.sports_martial_arts;
       case Equipment.barraZ:
         return Icons.show_chart;
       case Equipment.discos:
         return Icons.album;
       case Equipment.banca:
         return Icons.weekend;
-      case Equipment.trx:
-        return Icons.extension;
       case Equipment.balon:
         return Icons.sports_baseball;
       default:

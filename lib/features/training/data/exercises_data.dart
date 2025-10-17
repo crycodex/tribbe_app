@@ -59,6 +59,7 @@ class ExercisesData {
       difficulty: Difficulty.principiante,
     ),
 
+
     // ========== ESPALDA ==========
     ExerciseTemplate(
       id: 'espalda_1',
@@ -401,13 +402,6 @@ class ExercisesData {
       equipment: Equipment.polea,
       difficulty: Difficulty.intermedio,
     ),
-    ExerciseTemplate(
-      id: 'pecho_10',
-      name: 'Press con Kettlebell',
-      muscleGroup: MuscleGroups.pecho,
-      equipment: Equipment.kettlebells,
-      difficulty: Difficulty.intermedio,
-    ),
 
     // ========== MÁS EJERCICIOS DE ESPALDA ==========
     ExerciseTemplate(
@@ -528,13 +522,6 @@ class ExercisesData {
       muscleGroup: MuscleGroups.piernas,
       secondaryMuscles: [MuscleGroups.gluteos],
       equipment: Equipment.mancuernas,
-      difficulty: Difficulty.principiante,
-    ),
-    ExerciseTemplate(
-      id: 'piernas_10',
-      name: 'Sentadilla Goblet',
-      muscleGroup: MuscleGroups.piernas,
-      equipment: Equipment.kettlebells,
       difficulty: Difficulty.principiante,
     ),
 
