@@ -91,7 +91,6 @@ class OnboardingStepperController extends GetxController {
     'Principiante',
     'Intermedio',
     'Avanzado',
-    'Experto',
   ];
 
   @override

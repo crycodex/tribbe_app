@@ -8,6 +8,10 @@ class ExerciseTemplate {
   final String difficulty; // Principiante, Intermedio, Avanzado
   final String? instructions;
   final String? imageUrl;
+  final List<String>? commonMistakes; // Bulleted list of common errors to avoid.
+  final List<String>? proTips; // Actionable tips for better form and muscle activation.
+  final String? videoUrl; // For future expansion into video tutorials.
+
 
   ExerciseTemplate({
     required this.id,
@@ -18,6 +22,9 @@ class ExerciseTemplate {
     required this.difficulty,
     this.instructions,
     this.imageUrl,
+    this.commonMistakes,
+    this.proTips,
+    this.videoUrl,
   });
 
   factory ExerciseTemplate.fromJson(Map<String, dynamic> json) {

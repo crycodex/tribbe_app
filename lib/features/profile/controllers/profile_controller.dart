@@ -92,7 +92,6 @@ class ProfileController extends GetxController {
     'Principiante',
     'Intermedio',
     'Avanzado',
-    'Experto',
   ];
 
   @override
