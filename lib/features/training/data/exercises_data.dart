@@ -305,7 +305,273 @@ class ExercisesData {
       id: 'gluteos_3',
       name: 'Patada de Glúteo en Cable',
       muscleGroup: MuscleGroups.gluteos,
+      equipment: Equipment.polea,
+      difficulty: Difficulty.principiante,
+    ),
+    ExerciseTemplate(
+      id: 'gluteos_4',
+      name: 'Peso Muerto Rumano',
+      muscleGroup: MuscleGroups.gluteos,
+      secondaryMuscles: [MuscleGroups.piernas],
+      equipment: Equipment.barraOlimpica,
+      difficulty: Difficulty.intermedio,
+    ),
+    ExerciseTemplate(
+      id: 'gluteos_5',
+      name: 'Sentadilla Búlgara',
+      muscleGroup: MuscleGroups.gluteos,
+      secondaryMuscles: [MuscleGroups.piernas],
+      equipment: Equipment.mancuernas,
+      difficulty: Difficulty.intermedio,
+    ),
+
+    // ========== PANTORRILLAS ==========
+    ExerciseTemplate(
+      id: 'pantorrillas_1',
+      name: 'Elevación de Talones de Pie',
+      muscleGroup: MuscleGroups.pantorrillas,
       equipment: Equipment.maquina,
+      difficulty: Difficulty.principiante,
+    ),
+    ExerciseTemplate(
+      id: 'pantorrillas_2',
+      name: 'Elevación de Talones Sentado',
+      muscleGroup: MuscleGroups.pantorrillas,
+      equipment: Equipment.maquina,
+      difficulty: Difficulty.principiante,
+    ),
+    ExerciseTemplate(
+      id: 'pantorrillas_3',
+      name: 'Elevación con Mancuernas',
+      muscleGroup: MuscleGroups.pantorrillas,
+      equipment: Equipment.mancuernas,
+      difficulty: Difficulty.principiante,
+    ),
+    ExerciseTemplate(
+      id: 'pantorrillas_4',
+      name: 'Saltos de Pantorrilla',
+      muscleGroup: MuscleGroups.pantorrillas,
+      equipment: Equipment.pesoCorporal,
+      difficulty: Difficulty.principiante,
+    ),
+
+    // ========== ANTEBRAZOS ==========
+    ExerciseTemplate(
+      id: 'antebrazos_1',
+      name: 'Curl de Muñeca',
+      muscleGroup: MuscleGroups.antebrazos,
+      equipment: Equipment.mancuernas,
+      difficulty: Difficulty.principiante,
+    ),
+    ExerciseTemplate(
+      id: 'antebrazos_2',
+      name: 'Curl Inverso de Muñeca',
+      muscleGroup: MuscleGroups.antebrazos,
+      equipment: Equipment.mancuernas,
+      difficulty: Difficulty.principiante,
+    ),
+    ExerciseTemplate(
+      id: 'antebrazos_3',
+      name: 'Agarre de Barra',
+      muscleGroup: MuscleGroups.antebrazos,
+      equipment: Equipment.barraOlimpica,
+      difficulty: Difficulty.intermedio,
+    ),
+    ExerciseTemplate(
+      id: 'antebrazos_4',
+      name: 'Farmers Walk',
+      muscleGroup: MuscleGroups.antebrazos,
+      equipment: Equipment.mancuernas,
+      difficulty: Difficulty.intermedio,
+    ),
+
+    // ========== MÁS EJERCICIOS DE PECHO ==========
+    ExerciseTemplate(
+      id: 'pecho_8',
+      name: 'Press Declinado',
+      muscleGroup: MuscleGroups.pecho,
+      secondaryMuscles: [MuscleGroups.triceps],
+      equipment: Equipment.barraOlimpica,
+      difficulty: Difficulty.intermedio,
+    ),
+    ExerciseTemplate(
+      id: 'pecho_9',
+      name: 'Aperturas en Polea',
+      muscleGroup: MuscleGroups.pecho,
+      equipment: Equipment.polea,
+      difficulty: Difficulty.intermedio,
+    ),
+    ExerciseTemplate(
+      id: 'pecho_10',
+      name: 'Press con Kettlebell',
+      muscleGroup: MuscleGroups.pecho,
+      equipment: Equipment.kettlebells,
+      difficulty: Difficulty.intermedio,
+    ),
+
+    // ========== MÁS EJERCICIOS DE ESPALDA ==========
+    ExerciseTemplate(
+      id: 'espalda_6',
+      name: 'Face Pull con Polea',
+      muscleGroup: MuscleGroups.espalda,
+      secondaryMuscles: [MuscleGroups.hombros],
+      equipment: Equipment.polea,
+      difficulty: Difficulty.principiante,
+    ),
+    ExerciseTemplate(
+      id: 'espalda_7',
+      name: 'Pullover con Mancuerna',
+      muscleGroup: MuscleGroups.espalda,
+      secondaryMuscles: [MuscleGroups.pecho],
+      equipment: Equipment.mancuernas,
+      difficulty: Difficulty.intermedio,
+    ),
+    ExerciseTemplate(
+      id: 'espalda_8',
+      name: 'Remo en Polea Baja',
+      muscleGroup: MuscleGroups.espalda,
+      secondaryMuscles: [MuscleGroups.biceps],
+      equipment: Equipment.polea,
+      difficulty: Difficulty.principiante,
+    ),
+
+    // ========== MÁS EJERCICIOS DE HOMBROS ==========
+    ExerciseTemplate(
+      id: 'hombros_6',
+      name: 'Pájaros',
+      muscleGroup: MuscleGroups.hombros,
+      equipment: Equipment.mancuernas,
+      difficulty: Difficulty.principiante,
+    ),
+    ExerciseTemplate(
+      id: 'hombros_7',
+      name: 'Press Arnold',
+      muscleGroup: MuscleGroups.hombros,
+      secondaryMuscles: [MuscleGroups.triceps],
+      equipment: Equipment.mancuernas,
+      difficulty: Difficulty.intermedio,
+    ),
+    ExerciseTemplate(
+      id: 'hombros_8',
+      name: 'Remo al Cuello',
+      muscleGroup: MuscleGroups.hombros,
+      equipment: Equipment.barraOlimpica,
+      difficulty: Difficulty.intermedio,
+    ),
+
+    // ========== MÁS EJERCICIOS DE BÍCEPS ==========
+    ExerciseTemplate(
+      id: 'biceps_5',
+      name: 'Curl en Polea',
+      muscleGroup: MuscleGroups.biceps,
+      equipment: Equipment.polea,
+      difficulty: Difficulty.principiante,
+    ),
+    ExerciseTemplate(
+      id: 'biceps_6',
+      name: 'Curl 21s',
+      muscleGroup: MuscleGroups.biceps,
+      equipment: Equipment.barraOlimpica,
+      difficulty: Difficulty.avanzado,
+    ),
+    ExerciseTemplate(
+      id: 'biceps_7',
+      name: 'Curl Concentrado',
+      muscleGroup: MuscleGroups.biceps,
+      equipment: Equipment.mancuernas,
+      difficulty: Difficulty.principiante,
+    ),
+
+    // ========== MÁS EJERCICIOS DE TRÍCEPS ==========
+    ExerciseTemplate(
+      id: 'triceps_5',
+      name: 'Extensión con Polea',
+      muscleGroup: MuscleGroups.triceps,
+      equipment: Equipment.polea,
+      difficulty: Difficulty.principiante,
+    ),
+    ExerciseTemplate(
+      id: 'triceps_6',
+      name: 'Press Cerrado',
+      muscleGroup: MuscleGroups.triceps,
+      secondaryMuscles: [MuscleGroups.pecho],
+      equipment: Equipment.barraOlimpica,
+      difficulty: Difficulty.intermedio,
+    ),
+    ExerciseTemplate(
+      id: 'triceps_7',
+      name: 'Patada de Tríceps',
+      muscleGroup: MuscleGroups.triceps,
+      equipment: Equipment.mancuernas,
+      difficulty: Difficulty.principiante,
+    ),
+
+    // ========== MÁS EJERCICIOS DE PIERNAS ==========
+    ExerciseTemplate(
+      id: 'piernas_7',
+      name: 'Sentadilla Frontal',
+      muscleGroup: MuscleGroups.piernas,
+      secondaryMuscles: [MuscleGroups.abdomen],
+      equipment: Equipment.barraOlimpica,
+      difficulty: Difficulty.avanzado,
+    ),
+    ExerciseTemplate(
+      id: 'piernas_8',
+      name: 'Hack Squat',
+      muscleGroup: MuscleGroups.piernas,
+      equipment: Equipment.maquina,
+      difficulty: Difficulty.intermedio,
+    ),
+    ExerciseTemplate(
+      id: 'piernas_9',
+      name: 'Step Up',
+      muscleGroup: MuscleGroups.piernas,
+      secondaryMuscles: [MuscleGroups.gluteos],
+      equipment: Equipment.mancuernas,
+      difficulty: Difficulty.principiante,
+    ),
+    ExerciseTemplate(
+      id: 'piernas_10',
+      name: 'Sentadilla Goblet',
+      muscleGroup: MuscleGroups.piernas,
+      equipment: Equipment.kettlebells,
+      difficulty: Difficulty.principiante,
+    ),
+
+    // ========== MÁS EJERCICIOS DE ABDOMEN ==========
+    ExerciseTemplate(
+      id: 'abdomen_6',
+      name: 'Bicicleta',
+      muscleGroup: MuscleGroups.abdomen,
+      equipment: Equipment.pesoCorporal,
+      difficulty: Difficulty.principiante,
+    ),
+    ExerciseTemplate(
+      id: 'abdomen_7',
+      name: 'Mountain Climbers',
+      muscleGroup: MuscleGroups.abdomen,
+      equipment: Equipment.pesoCorporal,
+      difficulty: Difficulty.intermedio,
+    ),
+    ExerciseTemplate(
+      id: 'abdomen_8',
+      name: 'Crunch en Polea',
+      muscleGroup: MuscleGroups.abdomen,
+      equipment: Equipment.polea,
+      difficulty: Difficulty.intermedio,
+    ),
+    ExerciseTemplate(
+      id: 'abdomen_9',
+      name: 'L-Sit',
+      muscleGroup: MuscleGroups.abdomen,
+      equipment: Equipment.pesoCorporal,
+      difficulty: Difficulty.avanzado,
+    ),
+    ExerciseTemplate(
+      id: 'abdomen_10',
+      name: 'Plancha Lateral',
+      muscleGroup: MuscleGroups.abdomen,
+      equipment: Equipment.pesoCorporal,
       difficulty: Difficulty.principiante,
     ),
   ];
