@@ -70,8 +70,7 @@ class _TrainingModePageState extends State<TrainingModePage> {
   /// AppBar estilo Cupertino
   Widget _buildAppBar(bool isDark) {
     return CupertinoSliverNavigationBar(
-      backgroundColor:
-          isDark ? CupertinoColors.black : CupertinoColors.white,
+      backgroundColor: isDark ? CupertinoColors.black : CupertinoColors.white,
       largeTitle: const Text('Entrenamiento'),
       trailing: CupertinoButton(
         padding: EdgeInsets.zero,
@@ -128,21 +127,18 @@ class _TrainingModePageState extends State<TrainingModePage> {
       return SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         sliver: SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final exercise = trainingController.exercises[index];
-              return Obx(
-                () => ExerciseListItemWidget(
-                  exercise: exercise,
-                  isBeingEdited:
-                      editorController.editingExerciseIndex.value == index,
-                  onEdit: () => _handleEditExercise(index),
-                  onDelete: () => trainingController.removeExercise(index),
-                ),
-              );
-            },
-            childCount: trainingController.exercises.length,
-          ),
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final exercise = trainingController.exercises[index];
+            return Obx(
+              () => ExerciseListItemWidget(
+                exercise: exercise,
+                isBeingEdited:
+                    editorController.editingExerciseIndex.value == index,
+                onEdit: () => _handleEditExercise(index),
+                onDelete: () => trainingController.removeExercise(index),
+              ),
+            );
+          }, childCount: trainingController.exercises.length),
         ),
       );
     });
