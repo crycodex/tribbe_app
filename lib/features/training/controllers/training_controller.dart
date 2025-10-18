@@ -283,12 +283,11 @@ class TrainingController extends GetxController {
     // Cancelar timer previo si existe
     _timer?.cancel();
 
-    // Crear nuevo timer
+    // Crear nuevo timer que actualiza cada segundo
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      // Solo incrementar si no está pausado y el entrenamiento está activo
       if (!isPaused.value && isTraining.value) {
         elapsedSeconds.value++;
-        // Forzar actualización de observables
-        elapsedSeconds.refresh();
       }
     });
   }

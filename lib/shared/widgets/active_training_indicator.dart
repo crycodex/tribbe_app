@@ -96,43 +96,48 @@ class ActiveTrainingIndicator extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        controller.isPaused.value
-                            ? 'Entrenamiento en pausa'
-                            : 'Entrenamiento activo',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
+                      // Contador de tiempo prominente
                       Row(
                         children: [
                           Icon(
-                            CupertinoIcons.time,
-                            size: 12,
-                            color: Colors.white.withOpacity(0.9),
+                            CupertinoIcons.time_solid,
+                            size: 16,
+                            color: Colors.white,
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 8),
                           // Observar explícitamente elapsedSeconds para actualizaciones en tiempo real
                           Obx(
                             () => Text(
                               _formatTime(controller.elapsedSeconds.value),
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.0,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Icon(
-                            CupertinoIcons.list_bullet,
-                            size: 12,
-                            color: Colors.white.withOpacity(0.9),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      // Estado y ejercicios
+                      Row(
+                        children: [
+                          Text(
+                            controller.isPaused.value ? 'En pausa' : 'Activo',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 8),
+                          Icon(
+                            CupertinoIcons.circle_fill,
+                            size: 4,
+                            color: Colors.white.withOpacity(0.5),
+                          ),
+                          const SizedBox(width: 8),
                           Obx(
                             () => Text(
                               '${controller.exercises.length} ejercicios',
