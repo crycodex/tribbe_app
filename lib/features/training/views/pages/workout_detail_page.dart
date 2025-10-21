@@ -48,7 +48,7 @@ class WorkoutDetailPage extends StatelessWidget {
                   child: Icon(
                     WorkoutUtils.getFocusIcon(workout.focus),
                     size: 80,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
               ),
@@ -218,7 +218,7 @@ class WorkoutDetailPage extends StatelessWidget {
               final index = entry.key;
               final exercise = entry.value;
               return _buildExerciseItem(exercise, index + 1, theme, isDark);
-            }).toList(),
+            }),
           ],
         ),
       ),

@@ -71,7 +71,7 @@ class StepPersonaje extends StatelessWidget {
               ),
               filled: true,
               fillColor: isDark
-                  ? Colors.grey.shade800.withOpacity(0.5)
+                  ? Colors.grey.shade800.withValues(alpha: 0.5)
                   : Colors.grey.shade100,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -335,7 +335,7 @@ class StepPersonaje extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
               : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
@@ -387,7 +387,7 @@ class StepPersonaje extends StatelessWidget {
                   color: Colors.white,
                   size: 24,
                   shadows: [
-                    Shadow(color: Colors.black.withOpacity(0.3), blurRadius: 4),
+                    Shadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 4),
                   ],
                 ),
               )

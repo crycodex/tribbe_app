@@ -126,18 +126,19 @@ class TrainingMenuSheet extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
-      onTap: () async {
+      onTap: () {
         if (label == 'Entrenar') {
           // Para la opción principal, primero mostrar selector de enfoque
-          final focus = await FocusSelectorModal.show(context: context);
-          if (focus != null) {
-            Navigator.pop(context);
-            // Navegar a selección de músculos/entrenamiento con el enfoque seleccionado
-            Get.toNamed(
-              RoutePaths.muscleSelection,
-              arguments: {'selectedFocus': focus},
-            );
-          }
+          FocusSelectorModal.show(context: context).then((focus) {
+            if (focus != null && context.mounted) {
+              Navigator.pop(context);
+              // Navegar a selección de músculos/entrenamiento con el enfoque seleccionado  
+              Get.toNamed(
+                RoutePaths.muscleSelection,
+                arguments: {'selectedFocus': focus},
+              );
+            }
+          });
         } else {
           Navigator.pop(context);
           // TODO: Navegar a otras opciones

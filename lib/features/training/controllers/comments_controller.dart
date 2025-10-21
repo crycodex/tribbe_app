@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/training/models/comment_model.dart';
 import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
@@ -45,7 +46,7 @@ class CommentsController extends GetxController {
             isLoadingComments.value = false;
           },
           onError: (error) {
-            print('Error al obtener comentarios: $error');
+            debugPrint('Error al obtener comentarios: $error');
             isLoadingComments.value = false;
             Get.snackbar(
               'Error',
@@ -109,7 +110,7 @@ class CommentsController extends GetxController {
       newCommentText.value = ''; // Limpiar el campo de texto
       // No es necesario recargar, el stream se encargará de actualizar la lista
     } catch (e) {
-      print('Error al enviar comentario: $e');
+      debugPrint('Error al enviar comentario: $e');
       Get.snackbar(
         'Error',
         'No se pudo enviar el comentario',

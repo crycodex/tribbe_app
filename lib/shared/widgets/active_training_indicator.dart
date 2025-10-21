@@ -47,12 +47,12 @@ class ActiveTrainingIndicator extends StatelessWidget {
               gradient: LinearGradient(
                 colors: controller.isPaused.value
                     ? [
-                        Colors.orange.withOpacity(0.95),
-                        Colors.deepOrange.withOpacity(0.95),
+                        Colors.orange.withValues(alpha: 0.95),
+                        Colors.deepOrange.withValues(alpha: 0.95),
                       ]
                     : [
-                        Colors.green.withOpacity(0.95),
-                        Colors.teal.withOpacity(0.95),
+                        Colors.green.withValues(alpha: 0.95),
+                        Colors.teal.withValues(alpha: 0.95),
                       ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -62,7 +62,7 @@ class ActiveTrainingIndicator extends StatelessWidget {
                 BoxShadow(
                   color:
                       (controller.isPaused.value ? Colors.orange : Colors.green)
-                          .withOpacity(0.4),
+                          .withValues(alpha: 0.4),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -75,7 +75,7 @@ class ActiveTrainingIndicator extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -126,7 +126,7 @@ class ActiveTrainingIndicator extends StatelessWidget {
                           Text(
                             controller.isPaused.value ? 'En pausa' : 'Activo',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
@@ -135,14 +135,14 @@ class ActiveTrainingIndicator extends StatelessWidget {
                           Icon(
                             CupertinoIcons.circle_fill,
                             size: 4,
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                           ),
                           const SizedBox(width: 8),
                           Obx(
                             () => Text(
                               '${controller.exercises.length} ejercicios',
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -157,7 +157,7 @@ class ActiveTrainingIndicator extends StatelessWidget {
                 // Flecha
                 Icon(
                   CupertinoIcons.chevron_right,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   size: 20,
                 ),
               ],

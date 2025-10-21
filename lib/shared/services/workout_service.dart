@@ -312,10 +312,10 @@ class WorkoutService {
       final totalWorkouts = workouts.length;
       final totalVolume = workouts.fold<double>(
         0.0,
-        (sum, w) => sum + w.totalVolume,
+        (double sum, WorkoutModel w) => sum + w.totalVolume,
       );
-      final totalDuration = workouts.fold<int>(0, (sum, w) => sum + w.duration);
-      final totalSets = workouts.fold<int>(0, (sum, w) => sum + w.totalSets);
+      final totalDuration = workouts.fold<int>(0, (int sum, w) => sum + w.duration);
+      final totalSets = workouts.fold<int>(0, (int sum, w) => sum + w.totalSets);
 
       return {
         'total_workouts': totalWorkouts,

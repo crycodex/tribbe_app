@@ -32,7 +32,7 @@ class ShareWorkoutUtil {
       final GlobalKey captureKey = GlobalKey();
 
       // Capturar el widget de resumen de entrenamiento con un retardo y timeout
-      final Uint8List? imageBytes = await _screenshotController
+      final Uint8List imageBytes = await _screenshotController
           .captureFromWidget(
             WorkoutSummaryImage(workout: workout, shareKey: captureKey),
             delay: const Duration(milliseconds: 300),
@@ -48,28 +48,23 @@ class ShareWorkoutUtil {
             },
           );
 
-      if (imageBytes != null) {
-        debugPrint(
-          '✅ Imagen capturada exitosamente. Guardando temporalmente...',
-        );
+      debugPrint('✅ Imagen capturada exitosamente. Guardando temporalmente...');
 
-        final directory = await getTemporaryDirectory();
-        final imagePath = await File(
-          '${directory.path}/tribbe_workout_${workout.id}.png',
-        ).create();
-        await imagePath.writeAsBytes(imageBytes);
+      final directory = await getTemporaryDirectory();
+      final imagePath = await File(
+        '${directory.path}/tribbe_workout_${workout.id}.png',
+      ).create();
+      await imagePath.writeAsBytes(imageBytes);
 
-        debugPrint('📄 Imagen guardada en: ${imagePath.path}');
+      debugPrint('📄 Imagen guardada en: ${imagePath.path}');
 
-        await Share.shareXFiles(
-          [XFile(imagePath.path)],
-          text: '¡Mira mi entrenamiento en Tribbe App!',
-          sharePositionOrigin: Rect.fromLTWH(0, 0, 100, 100),
-        );
-        debugPrint('🚀 Compartido exitosamente.');
-      } else {
-        throw Exception('No se pudo capturar la imagen. Bytes nulos.');
-      }
+      // ignore: deprecated_member_use
+      await Share.shareXFiles(
+        [XFile(imagePath.path)],
+        text: '¡Mira mi entrenamiento en Tribbe App!',
+        sharePositionOrigin: const Rect.fromLTWH(0, 0, 100, 100),
+      );
+      debugPrint('🚀 Compartido exitosamente.');
     } catch (e) {
       debugPrint('❌ Error al compartir entrenamiento: ${e.toString()}');
       Get.snackbar(

@@ -157,8 +157,8 @@ class ExercisesLibraryPage extends StatelessWidget {
                   // Botón limpiar todo
                   CupertinoButton(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
-                    minSize: 0,
                     onPressed: controller.clearFilters,
+                    minimumSize: Size(0, 0),
                     child: const Text(
                       'Limpiar todo',
                       style: TextStyle(
@@ -239,7 +239,7 @@ class ExercisesLibraryPage extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: _getMuscleGroupColor(
                       exercise.muscleGroup,
-                    ).withOpacity(0.15),
+                    ).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -313,7 +313,7 @@ class ExercisesLibraryPage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: isDark
-            ? Colors.grey.shade800.withOpacity(0.5)
+            ? Colors.grey.shade800.withValues(alpha: 0.5)
             : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(6),
       ),

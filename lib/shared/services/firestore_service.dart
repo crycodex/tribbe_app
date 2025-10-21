@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tribbe_app/features/auth/models/user_profile_model.dart';
+import 'package:flutter/material.dart';
 
 /// Servicio para manejar Firestore
 class FirestoreService {
@@ -321,7 +322,7 @@ class FirestoreService {
       }
     } catch (e) {
       // No lanzar error si la subcolección no existe
-      print('Error al eliminar subcolección $subcollection: $e');
+      debugPrint('Error al eliminar subcolección $subcollection: $e');
     }
   }
 

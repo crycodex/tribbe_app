@@ -112,7 +112,7 @@ class ExerciseListItemWidget extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [color, color.withOpacity(0.8)]),
+        gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.8)]),
         borderRadius: BorderRadius.circular(12),
       ),
       alignment: alignment,
@@ -164,8 +164,7 @@ class ExerciseListItemWidget extends StatelessWidget {
         ),
         // Botón de información del ejercicio
         CupertinoButton(
-          padding: EdgeInsets.zero,
-          minSize: 0,
+          padding: EdgeInsets.all(0),
           onPressed: () {
             // Buscar el ejercicio por nombre en la data
             final exerciseTemplate = ExercisesData.exercises.firstWhere(
@@ -177,12 +176,13 @@ class ExerciseListItemWidget extends StatelessWidget {
               arguments: {'exerciseId': exerciseTemplate.id},
             );
           },
+          minimumSize: Size(0, 0),
           child: Container(
             margin: const EdgeInsets.only(right: 8),
             child: Icon(
               CupertinoIcons.info_circle,
               size: 20,
-              color: CupertinoColors.activeBlue.withOpacity(0.7),
+              color: CupertinoColors.activeBlue.withValues(alpha: 0.7),
             ),
           ),
         ),
@@ -190,7 +190,7 @@ class ExerciseListItemWidget extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: CupertinoColors.activeBlue.withOpacity(0.1),
+            color: CupertinoColors.activeBlue.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(

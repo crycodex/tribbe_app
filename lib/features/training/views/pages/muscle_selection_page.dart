@@ -34,7 +34,7 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
     BodyParts currentBodyParts,
   ) {
     // Helper para determinar el estado espejado de un par de partes izquierda/derecha
-    bool _getMirroredState({
+    bool getMirroredState({
       required bool newLeft,
       required bool newRight,
       required bool oldLeft,
@@ -55,13 +55,13 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
 
     return updatedParts.copyWith(
       // Hombros
-      leftShoulder: _getMirroredState(
+      leftShoulder: getMirroredState(
         newLeft: updatedParts.leftShoulder,
         newRight: updatedParts.rightShoulder,
         oldLeft: currentBodyParts.leftShoulder,
         oldRight: currentBodyParts.rightShoulder,
       ),
-      rightShoulder: _getMirroredState(
+      rightShoulder: getMirroredState(
         newLeft: updatedParts.leftShoulder,
         newRight: updatedParts.rightShoulder,
         oldLeft: currentBodyParts.leftShoulder,
@@ -69,13 +69,13 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
       ),
 
       // Brazos superiores
-      leftUpperArm: _getMirroredState(
+      leftUpperArm: getMirroredState(
         newLeft: updatedParts.leftUpperArm,
         newRight: updatedParts.rightUpperArm,
         oldLeft: currentBodyParts.leftUpperArm,
         oldRight: currentBodyParts.rightUpperArm,
       ),
-      rightUpperArm: _getMirroredState(
+      rightUpperArm: getMirroredState(
         newLeft: updatedParts.leftUpperArm,
         newRight: updatedParts.rightUpperArm,
         oldLeft: currentBodyParts.leftUpperArm,
@@ -83,13 +83,13 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
       ),
 
       // Codos
-      leftElbow: _getMirroredState(
+      leftElbow: getMirroredState(
         newLeft: updatedParts.leftElbow,
         newRight: updatedParts.rightElbow,
         oldLeft: currentBodyParts.leftElbow,
         oldRight: currentBodyParts.rightElbow,
       ),
-      rightElbow: _getMirroredState(
+      rightElbow: getMirroredState(
         newLeft: updatedParts.leftElbow,
         newRight: updatedParts.rightElbow,
         oldLeft: currentBodyParts.leftElbow,
@@ -97,13 +97,13 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
       ),
 
       // Antebrazos
-      leftLowerArm: _getMirroredState(
+      leftLowerArm: getMirroredState(
         newLeft: updatedParts.leftLowerArm,
         newRight: updatedParts.rightLowerArm,
         oldLeft: currentBodyParts.leftLowerArm,
         oldRight: currentBodyParts.rightLowerArm,
       ),
-      rightLowerArm: _getMirroredState(
+      rightLowerArm: getMirroredState(
         newLeft: updatedParts.leftLowerArm,
         newRight: updatedParts.rightLowerArm,
         oldLeft: currentBodyParts.leftLowerArm,
@@ -111,13 +111,13 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
       ),
 
       // Manos
-      leftHand: _getMirroredState(
+      leftHand: getMirroredState(
         newLeft: updatedParts.leftHand,
         newRight: updatedParts.rightHand,
         oldLeft: currentBodyParts.leftHand,
         oldRight: currentBodyParts.rightHand,
       ),
-      rightHand: _getMirroredState(
+      rightHand: getMirroredState(
         newLeft: updatedParts.leftHand,
         newRight: updatedParts.rightHand,
         oldLeft: currentBodyParts.leftHand,
@@ -125,13 +125,13 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
       ),
 
       // Piernas superiores
-      leftUpperLeg: _getMirroredState(
+      leftUpperLeg: getMirroredState(
         newLeft: updatedParts.leftUpperLeg,
         newRight: updatedParts.rightUpperLeg,
         oldLeft: currentBodyParts.leftUpperLeg,
         oldRight: currentBodyParts.rightUpperLeg,
       ),
-      rightUpperLeg: _getMirroredState(
+      rightUpperLeg: getMirroredState(
         newLeft: updatedParts.leftUpperLeg,
         newRight: updatedParts.rightUpperLeg,
         oldLeft: currentBodyParts.leftUpperLeg,
@@ -139,13 +139,13 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
       ),
 
       // Rodillas
-      leftKnee: _getMirroredState(
+      leftKnee: getMirroredState(
         newLeft: updatedParts.leftKnee,
         newRight: updatedParts.rightKnee,
         oldLeft: currentBodyParts.leftKnee,
         oldRight: currentBodyParts.rightKnee,
       ),
-      rightKnee: _getMirroredState(
+      rightKnee: getMirroredState(
         newLeft: updatedParts.leftKnee,
         newRight: updatedParts.rightKnee,
         oldLeft: currentBodyParts.leftKnee,
@@ -153,13 +153,13 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
       ),
 
       // Pantorrillas
-      leftLowerLeg: _getMirroredState(
+      leftLowerLeg: getMirroredState(
         newLeft: updatedParts.leftLowerLeg,
         newRight: updatedParts.rightLowerLeg,
         oldLeft: currentBodyParts.leftLowerLeg,
         oldRight: currentBodyParts.rightLowerLeg,
       ),
-      rightLowerLeg: _getMirroredState(
+      rightLowerLeg: getMirroredState(
         newLeft: updatedParts.leftLowerLeg,
         newRight: updatedParts.rightLowerLeg,
         oldLeft: currentBodyParts.leftLowerLeg,
@@ -167,13 +167,13 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
       ),
 
       // Pies
-      leftFoot: _getMirroredState(
+      leftFoot: getMirroredState(
         newLeft: updatedParts.leftFoot,
         newRight: updatedParts.rightFoot,
         oldLeft: currentBodyParts.leftFoot,
         oldRight: currentBodyParts.rightFoot,
       ),
-      rightFoot: _getMirroredState(
+      rightFoot: getMirroredState(
         newLeft: updatedParts.leftFoot,
         newRight: updatedParts.rightFoot,
         oldLeft: currentBodyParts.leftFoot,
@@ -297,7 +297,7 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
                           vertical: 12,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.blueAccent.withOpacity(0.1),
+                          color: Colors.blueAccent.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: Colors.blueAccent,
@@ -314,7 +314,7 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
                                 (muscle) => Chip(
                                   label: Text(muscle),
                                   backgroundColor: Colors.blueAccent
-                                      .withOpacity(0.2),
+                                      .withValues(alpha: 0.2),
                                   labelStyle: const TextStyle(
                                     color: Colors.blueAccent,
                                     fontWeight: FontWeight.bold,
@@ -420,7 +420,7 @@ class _MuscleSelectionPageState extends State<MuscleSelectionPage> {
         color: isDark ? Colors.grey[900] : Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),

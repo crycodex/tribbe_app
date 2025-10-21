@@ -47,7 +47,7 @@ class WorkoutStatsHeader extends StatelessWidget {
               Container(
                 width: 1,
                 height: 50,
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
               ),
               _buildStatColumn(
                 'Volumen Total',
@@ -57,7 +57,7 @@ class WorkoutStatsHeader extends StatelessWidget {
               Container(
                 width: 1,
                 height: 50,
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
               ),
               _buildStatColumn(
                 'Tiempo Total',
@@ -89,7 +89,10 @@ class WorkoutStatsHeader extends StatelessWidget {
         Text(
           label,
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 11),
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.8),
+            fontSize: 11,
+          ),
         ),
       ],
     );

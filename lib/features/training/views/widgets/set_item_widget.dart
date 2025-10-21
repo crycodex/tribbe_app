@@ -140,7 +140,7 @@ class SetItemWidget extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color, color.withOpacity(0.8)],
+          colors: [color, color.withValues(alpha: 0.8)],
         ),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -176,11 +176,11 @@ class SetItemWidget extends StatelessWidget {
           colors: isEditing
               ? [
                   CupertinoColors.systemOrange,
-                  CupertinoColors.systemOrange.withOpacity(0.8),
+                  CupertinoColors.systemOrange.withValues(alpha: 0.8),
                 ]
               : [
                   CupertinoColors.activeBlue,
-                  CupertinoColors.activeBlue.withOpacity(0.8),
+                  CupertinoColors.activeBlue.withValues(alpha: 0.8),
                 ],
         ),
         shape: BoxShape.circle,

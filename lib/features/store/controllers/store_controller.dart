@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 /// Controlador de Tienda
@@ -7,6 +8,6 @@ class StoreController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    print('StoreController initialized');
+    debugPrint('StoreController initialized');
   }
 }

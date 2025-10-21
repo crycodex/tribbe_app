@@ -116,7 +116,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   border: Border.all(color: Colors.green),
                   borderRadius: BorderRadius.circular(8),
                 ),
