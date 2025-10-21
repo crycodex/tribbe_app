@@ -194,6 +194,7 @@ class DashboardPage extends StatelessWidget {
   ) {
     final now = DateTime.now();
     final currentDayIndex = now.weekday - 1;
+    final theme = Theme.of(context);
 
     // Calcular la fecha del lunes de esta semana
     final mondayOfWeek = now.subtract(Duration(days: currentDayIndex));
@@ -220,7 +221,49 @@ class DashboardPage extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(width: 4),
+            Text(
+              'días',
+              style: TextStyle(
+                fontSize: 16,
+                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
+              ),
+            ),
           ],
+        ),
+
+        const SizedBox(height: 8),
+
+        // Estado de la racha
+        Obx(
+          () => Text(
+            controller.streakStatusMessage,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: controller.isStreakInDanger
+                  ? Colors.orange[700]
+                  : controller.isStreakLost
+                  ? Colors.red[700]
+                  : controller.hasTrainedToday
+                  ? Colors.green[700]
+                  : theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+
+        const SizedBox(height: 4),
+
+        // Récord personal
+        Obx(
+          () => Text(
+            'Récord: ${controller.longestStreak} días',
+            style: TextStyle(
+              fontSize: 12,
+              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5),
+            ),
+          ),
         ),
 
         const SizedBox(height: 24),
@@ -231,7 +274,10 @@ class DashboardPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: List.generate(7, (index) {
               final dayDate = mondayOfWeek.add(Duration(days: index));
-              final isActive = controller.weeklyStreak[index];
+              // Usar las fechas reales entrenadas en lugar del array semanal
+              final isActive = controller.streak.value.hasTrainedOnDate(
+                dayDate,
+              );
               final isToday = index == currentDayIndex;
 
               return _buildDayStreak(

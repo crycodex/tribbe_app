@@ -66,11 +66,23 @@ class StreakService {
   }
 
   /// Registrar un entrenamiento (incrementar racha)
+  ///
+  /// Lógica mejorada:
+  /// - Si entrenó hoy: no hacer nada
+  /// - Si entrenó ayer: incrementar racha (+1 día)
+  /// - Si NO entrenó ayer pero la racha existe: mantener la racha actual (no incrementar)
+  /// - Si pasaron más de 3 días sin entrenar: resetear la racha a 1
   Future<StreakModel> registerWorkout() async {
     final currentStreak = await getStreak();
 
+    print('🏋️ registerWorkout called');
+    print('   - currentStreak: ${currentStreak.currentStreak}');
+    print('   - lastWorkoutDate: ${currentStreak.lastWorkoutDate}');
+    print('   - hasTrainedToday: ${currentStreak.hasTrainedToday()}');
+
     // Si ya entrenó hoy, no hacer nada
     if (currentStreak.hasTrainedToday()) {
+      print('   ⚠️ Ya entrenó hoy, no actualizar racha');
       return currentStreak;
     }
 
@@ -81,15 +93,62 @@ class StreakService {
     final newWeeklyStreak = List<bool>.from(currentStreak.weeklyStreak);
     newWeeklyStreak[dayIndex] = true;
 
-    // Calcular nueva racha
-    int newCurrentStreak;
-    if (currentStreak.isStreakActive()) {
-      // Continuar la racha
-      newCurrentStreak = currentStreak.currentStreak + 1;
-    } else {
-      // Resetear la racha (perdió días)
-      newCurrentStreak = 1;
+    // Agregar la fecha de hoy a las fechas entrenadas
+    final newTrainedDates = List<DateTime>.from(currentStreak.trainedDates);
+    final todayDate = DateTime(now.year, now.month, now.day);
+
+    // Solo agregar si no está ya en la lista
+    if (!newTrainedDates.any(
+      (date) =>
+          date.year == todayDate.year &&
+          date.month == todayDate.month &&
+          date.day == todayDate.day,
+    )) {
+      newTrainedDates.add(todayDate);
     }
+
+    // Calcular días desde el último entrenamiento (usando solo la fecha, sin hora)
+    int daysSinceLastWorkout;
+    if (currentStreak.lastWorkoutDate == null) {
+      // Primera vez que entrena
+      daysSinceLastWorkout = 999;
+      print('   - Primera vez entrenando');
+    } else {
+      // Normalizar fechas a medianoche para comparar solo días
+      final lastDate = DateTime(
+        currentStreak.lastWorkoutDate!.year,
+        currentStreak.lastWorkoutDate!.month,
+        currentStreak.lastWorkoutDate!.day,
+      );
+      final currentDate = DateTime(now.year, now.month, now.day);
+      daysSinceLastWorkout = currentDate.difference(lastDate).inDays;
+
+      print('   - lastDate (normalizado): $lastDate');
+      print('   - currentDate (normalizado): $currentDate');
+      print('   - daysSinceLastWorkout: $daysSinceLastWorkout');
+    }
+
+    // Calcular nueva racha con lógica mejorada
+    int newCurrentStreak;
+    if (daysSinceLastWorkout == 0) {
+      // Entrenó hoy (no debería pasar por el check anterior, pero por si acaso)
+      newCurrentStreak = currentStreak.currentStreak;
+      print('   - Caso: Entrenó hoy (duplicado)');
+    } else if (daysSinceLastWorkout == 1) {
+      // Entrenó ayer: incrementar racha (consecutiva)
+      newCurrentStreak = currentStreak.currentStreak + 1;
+      print('   - Caso: Entrenó ayer → Incrementar racha');
+    } else if (daysSinceLastWorkout >= 2 && daysSinceLastWorkout <= 3) {
+      // Perdió 1-2 días: mantener la racha actual (no incrementar, pero no resetear)
+      newCurrentStreak = currentStreak.currentStreak;
+      print('   - Caso: Perdió 1-2 días → Mantener racha');
+    } else {
+      // Perdió más de 3 días: RESETEAR la racha a 1 (empezar desde 1, no 0)
+      newCurrentStreak = 1;
+      print('   - Caso: Perdió 3+ días → Resetear a 1');
+    }
+
+    print('   - newCurrentStreak: $newCurrentStreak');
 
     // Actualizar racha más larga si es necesario
     final newLongestStreak = newCurrentStreak > currentStreak.longestStreak
@@ -101,12 +160,21 @@ class StreakService {
       longestStreak: newLongestStreak,
       lastWorkoutDate: now,
       weeklyStreak: newWeeklyStreak,
+      trainedDates: newTrainedDates,
     );
+
+    print('   - Guardando racha actualizada:');
+    print('     • current_streak: ${updatedStreak.currentStreak}');
+    print('     • longest_streak: ${updatedStreak.longestStreak}');
+    print('     • last_workout_date: ${updatedStreak.lastWorkoutDate}');
 
     await saveStreak(updatedStreak);
 
+    print('   ✅ Racha guardada exitosamente en Firestore');
+
     // Guardar en el historial si es un nuevo récord
     if (newCurrentStreak == newLongestStreak && newCurrentStreak > 1) {
+      print('   🏆 Nuevo récord! Guardando en historial');
       await _saveStreakHistory(updatedStreak);
     }
 

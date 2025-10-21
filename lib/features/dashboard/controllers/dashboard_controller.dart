@@ -19,27 +19,59 @@ class DashboardController extends GetxController {
   final RxBool isFeedLoading = false.obs;
   final RxList<WorkoutPostModel> feedPosts = <WorkoutPostModel>[].obs;
   StreamSubscription<List<WorkoutPostModel>>? _feedSubscription;
+  StreamSubscription<StreakModel>? _streakSubscription;
 
   // Getters
   bool get hasTrainedToday => streak.value.hasTrainedToday();
-  int get currentStreak => streak.value.currentStreak;
+  int get currentStreak {
+    final value = streak.value.currentStreak;
+    print('DEBUG getter currentStreak: $value');
+    return value;
+  }
+
   int get longestStreak => streak.value.longestStreak;
   List<bool> get weeklyStreak => streak.value.weeklyStreak;
+  List<DateTime> get trainedDates => streak.value.trainedDates;
+  bool get isStreakActive => streak.value.isStreakActive();
+  bool get isStreakInDanger => streak.value.isStreakInDanger();
+  bool get isStreakLost => streak.value.isStreakLost();
+  int get daysSinceLastWorkout => streak.value.getDaysSinceLastWorkout();
+  String get streakStatusMessage => streak.value.getStreakStatusMessage();
 
   @override
   void onInit() {
     super.onInit();
-    loadStreak();
+    _listenToStreak(); // Escuchar cambios de racha en tiempo real
     _listenToFeedPosts(); // Usar el stream aquí
   }
 
   @override
   void onClose() {
+    _streakSubscription?.cancel(); // Cancelar suscripción de racha
     _feedSubscription?.cancel(); // Cancelar suscripción al cerrar
     super.onClose();
   }
 
-  /// Cargar la racha desde Firestore
+  /// Escuchar cambios en la racha en tiempo real
+  void _listenToStreak() {
+    _streakSubscription?.cancel(); // Cancelar suscripción anterior si existe
+    isLoading.value = true;
+
+    _streakSubscription = _streakService.getStreakStream().listen(
+      (updatedStreak) {
+        streak.value = updatedStreak;
+        isLoading.value = false;
+      },
+      onError: (error) {
+        print('Error en el stream de racha: $error');
+        _showError('Error al cargar tu racha en tiempo real');
+        isLoading.value = false;
+      },
+      onDone: () => print('Stream de racha finalizado'),
+    );
+  }
+
+  /// Cargar la racha desde Firestore (método manual por si se necesita)
   Future<void> loadStreak() async {
     try {
       isLoading.value = true;
@@ -126,9 +158,9 @@ class DashboardController extends GetxController {
     }
   }
 
-  /// Actualizar manualmente la racha
+  /// Actualizar manualmente la racha (reiniciar el stream)
   Future<void> refreshStreak() async {
-    loadStreak();
+    _listenToStreak(); // Reiniciar la escucha del stream
   }
 
   /// Dar/quitar like a un post
