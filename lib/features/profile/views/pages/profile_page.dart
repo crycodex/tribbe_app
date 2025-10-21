@@ -12,7 +12,8 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final profileController = Get.put(ProfileController());
+    // Usar Get.find() porque HomeBinding ya registró el controller
+    final profileController = Get.find<ProfileController>();
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 

@@ -187,8 +187,9 @@ class TrainingController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
       );
 
-      // Volver atrás
-      Get.offAllNamed(RoutePaths.home);
+      // Volver al Home existente (no crear uno nuevo)
+      // Get.until() vuelve al Home sin recrear controladores
+      Get.until((route) => route.settings.name == RoutePaths.home);
 
       // Eliminar el controller después de finalizar
       WidgetsBinding.instance.addPostFrameCallback((_) {

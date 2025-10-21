@@ -10,7 +10,8 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(DashboardController());
+    // Usar Get.find() porque HomeBinding ya registró el controller
+    final controller = Get.find<DashboardController>();
     final theme = Theme.of(context);
 
     return Scaffold(

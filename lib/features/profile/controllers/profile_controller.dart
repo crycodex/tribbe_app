@@ -109,7 +109,9 @@ class ProfileController extends GetxController {
     porcentajeGrasaController = TextEditingController();
 
     // Escuchar cambios en el perfil del AuthController
+    // Este listener se encargará de actualizar la UI cuando cambie el perfil
     ever(_authController.userProfile, (_) {
+      if (_isDisposed) return;
       debugPrint('👂 ProfileController: Detectado cambio en userProfile');
       _loadUserProfile();
     });
@@ -129,15 +131,16 @@ class ProfileController extends GetxController {
           '✅ ProfileController: Perfil ya disponible en AuthController',
         );
         _loadUserProfile();
-        await loadUserWorkouts();
       } else {
         // Si no está disponible, forzar recarga desde Firestore
         debugPrint(
-          '🔄 ProfileController: Recargando perfil desde Firestore...',
+          '🔄 ProfileController: Perfil no disponible, recargando desde Firestore...',
         );
         await reloadUserProfile();
-        await loadUserWorkouts();
       }
+
+      // Cargar entrenamientos después de tener el perfil
+      await loadUserWorkouts();
     } catch (e) {
       debugPrint('❌ ProfileController: Error al inicializar perfil: $e');
     } finally {
@@ -286,7 +289,6 @@ class ProfileController extends GetxController {
 
       // Recargar perfil desde Firestore
       final profile = await _firestoreService.getUserProfile(userId);
-      _authController.userProfile.value = profile;
 
       debugPrint('✅ ProfileController: Perfil recargado desde Firestore');
 
@@ -299,8 +301,9 @@ class ProfileController extends GetxController {
         );
         await migratePersonalDataToMainDocument();
       } else {
-        // Cargar datos en el ProfileController
-        _loadUserProfile();
+        // Actualizar el perfil en AuthController
+        // El listener ever() se encargará de llamar _loadUserProfile()
+        _authController.userProfile.value = profile;
       }
     } catch (e) {
       debugPrint('❌ ProfileController: Error al recargar perfil: $e');

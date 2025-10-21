@@ -30,7 +30,9 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(HomeController());
+    // Usar Get.find() en lugar de Get.put() porque HomeBinding ya lo registró
+    // Esto evita crear múltiples instancias y el error de GlobalKey duplicado
+    final controller = Get.find<HomeController>();
 
     return Scaffold(
       key: homeScaffoldKey, // GlobalKey para acceder desde otras páginas

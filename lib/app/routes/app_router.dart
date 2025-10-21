@@ -7,6 +7,8 @@ import 'package:tribbe_app/features/training/views/pages/workout_detail_page.dar
 import 'package:tribbe_app/shared/views/pages/exercises_library_page.dart';
 import 'package:tribbe_app/shared/views/pages/exercise_detail_page.dart';
 import 'package:tribbe_app/shared/controllers/exercises_controller.dart';
+import 'package:tribbe_app/features/dashboard/controllers/dashboard_controller.dart';
+import 'package:tribbe_app/features/profile/controllers/profile_controller.dart';
 
 /// Configuración de rutas de la aplicación usando GetX
 class AppRouter {
@@ -203,8 +205,11 @@ class AuthBinding extends Bindings {
 class HomeBinding extends Bindings {
   @override
   void dependencies() {
+    // Controllers necesarios en HomePage y sus tabs
     Get.lazyPut<HomeController>(() => HomeController());
     Get.lazyPut<AuthController>(() => AuthController());
+    Get.lazyPut<DashboardController>(() => DashboardController());
+    Get.lazyPut<ProfileController>(() => ProfileController());
   }
 }
 
