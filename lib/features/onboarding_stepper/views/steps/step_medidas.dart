@@ -341,7 +341,7 @@ class StepMedidas extends StatelessWidget {
                   ),
                   filled: true,
                   fillColor: isDark
-                      ? Colors.grey.shade800.withOpacity(0.5)
+                      ? Colors.grey.shade800.withValues(alpha: 0.5)
                       : Colors.grey.shade100,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),

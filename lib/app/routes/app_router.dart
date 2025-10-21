@@ -8,7 +8,6 @@ import 'package:tribbe_app/shared/views/pages/exercises_library_page.dart';
 import 'package:tribbe_app/shared/views/pages/exercise_detail_page.dart';
 import 'package:tribbe_app/shared/controllers/exercises_controller.dart';
 import 'package:tribbe_app/features/dashboard/controllers/dashboard_controller.dart';
-import 'package:tribbe_app/features/profile/controllers/profile_controller.dart';
 
 /// Configuración de rutas de la aplicación usando GetX
 class AppRouter {

@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tribbe_app/features/dashboard/models/streak_model.dart';
-
+import 'package:flutter/material.dart';
 /// Servicio para manejar las rachas de entrenamiento en Firestore
 class StreakService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -40,7 +40,7 @@ class StreakService {
       // Verificar si necesitamos resetear la semana
       return _checkAndResetWeek(streak);
     } catch (e) {
-      print('Error al obtener racha: $e');
+      debugPrint('Error al obtener racha: $e');
       return StreakModel.empty();
     }
   }
@@ -60,7 +60,7 @@ class StreakService {
           .doc(streakDocId)
           .set(streak.toJson(), SetOptions(merge: true));
     } catch (e) {
-      print('Error al guardar racha: $e');
+      debugPrint('Error al guardar racha: $e');
       throw Exception('Error al guardar racha: ${e.toString()}');
     }
   }
@@ -75,14 +75,14 @@ class StreakService {
   Future<StreakModel> registerWorkout() async {
     final currentStreak = await getStreak();
 
-    print('🏋️ registerWorkout called');
-    print('   - currentStreak: ${currentStreak.currentStreak}');
-    print('   - lastWorkoutDate: ${currentStreak.lastWorkoutDate}');
-    print('   - hasTrainedToday: ${currentStreak.hasTrainedToday()}');
+    debugPrint('🏋️ registerWorkout called');
+    debugPrint('   - currentStreak: ${currentStreak.currentStreak}');
+    debugPrint('   - lastWorkoutDate: ${currentStreak.lastWorkoutDate}');
+    debugPrint('   - hasTrainedToday: ${currentStreak.hasTrainedToday()}');
 
     // Si ya entrenó hoy, no hacer nada
     if (currentStreak.hasTrainedToday()) {
-      print('   ⚠️ Ya entrenó hoy, no actualizar racha');
+      debugPrint('   ⚠️ Ya entrenó hoy, no actualizar racha');
       return currentStreak;
     }
 
@@ -112,7 +112,7 @@ class StreakService {
     if (currentStreak.lastWorkoutDate == null) {
       // Primera vez que entrena
       daysSinceLastWorkout = 999;
-      print('   - Primera vez entrenando');
+      debugPrint('   - Primera vez entrenando');
     } else {
       // Normalizar fechas a medianoche para comparar solo días
       final lastDate = DateTime(
@@ -123,9 +123,6 @@ class StreakService {
       final currentDate = DateTime(now.year, now.month, now.day);
       daysSinceLastWorkout = currentDate.difference(lastDate).inDays;
 
-      print('   - lastDate (normalizado): $lastDate');
-      print('   - currentDate (normalizado): $currentDate');
-      print('   - daysSinceLastWorkout: $daysSinceLastWorkout');
     }
 
     // Calcular nueva racha con lógica mejorada
@@ -133,22 +130,22 @@ class StreakService {
     if (daysSinceLastWorkout == 0) {
       // Entrenó hoy (no debería pasar por el check anterior, pero por si acaso)
       newCurrentStreak = currentStreak.currentStreak;
-      print('   - Caso: Entrenó hoy (duplicado)');
+      debugPrint('   - Caso: Entrenó hoy (duplicado)');
     } else if (daysSinceLastWorkout == 1) {
       // Entrenó ayer: incrementar racha (consecutiva)
       newCurrentStreak = currentStreak.currentStreak + 1;
-      print('   - Caso: Entrenó ayer → Incrementar racha');
+      debugPrint('   - Caso: Entrenó ayer → Incrementar racha');
     } else if (daysSinceLastWorkout >= 2 && daysSinceLastWorkout <= 3) {
       // Perdió 1-2 días: mantener la racha actual (no incrementar, pero no resetear)
       newCurrentStreak = currentStreak.currentStreak;
-      print('   - Caso: Perdió 1-2 días → Mantener racha');
+      debugPrint('   - Caso: Perdió 1-2 días → Mantener racha');
     } else {
       // Perdió más de 3 días: RESETEAR la racha a 1 (empezar desde 1, no 0)
       newCurrentStreak = 1;
-      print('   - Caso: Perdió 3+ días → Resetear a 1');
+      debugPrint('   - Caso: Perdió 3+ días → Resetear a 1');
     }
 
-    print('   - newCurrentStreak: $newCurrentStreak');
+    debugPrint('   - newCurrentStreak: $newCurrentStreak');
 
     // Actualizar racha más larga si es necesario
     final newLongestStreak = newCurrentStreak > currentStreak.longestStreak
@@ -163,18 +160,17 @@ class StreakService {
       trainedDates: newTrainedDates,
     );
 
-    print('   - Guardando racha actualizada:');
-    print('     • current_streak: ${updatedStreak.currentStreak}');
-    print('     • longest_streak: ${updatedStreak.longestStreak}');
-    print('     • last_workout_date: ${updatedStreak.lastWorkoutDate}');
+    debugPrint('     • current_streak: ${updatedStreak.currentStreak}');
+    debugPrint('     • longest_streak: ${updatedStreak.longestStreak}');
+    debugPrint('     • last_workout_date: ${updatedStreak.lastWorkoutDate}');
 
     await saveStreak(updatedStreak);
 
-    print('   ✅ Racha guardada exitosamente en Firestore');
+    debugPrint('   ✅ Racha guardada exitosamente en Firestore');
 
     // Guardar en el historial si es un nuevo récord
     if (newCurrentStreak == newLongestStreak && newCurrentStreak > 1) {
-      print('   🏆 Nuevo récord! Guardando en historial');
+      debugPrint('   🏆 Nuevo récord! Guardando en historial');
       await _saveStreakHistory(updatedStreak);
     }
 
@@ -231,7 +227,7 @@ class StreakService {
             'type': 'new_record',
           });
     } catch (e) {
-      print('Error al guardar historial de racha: $e');
+      debugPrint('Error al guardar historial de racha: $e');
     }
   }
 
@@ -252,7 +248,7 @@ class StreakService {
 
       return snapshot.docs.map((doc) => doc.data()).toList();
     } catch (e) {
-      print('Error al obtener historial de rachas: $e');
+      debugPrint('Error al obtener historial de rachas: $e');
       return [];
     }
   }
@@ -270,7 +266,7 @@ class StreakService {
           .doc(streakDocId)
           .delete();
     } catch (e) {
-      print('Error al resetear racha: $e');
+      debugPrint('Error al resetear racha: $e');
     }
   }
 

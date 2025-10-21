@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
@@ -142,15 +141,15 @@ class TrainingMenuSheet extends StatelessWidget {
         } else {
           Navigator.pop(context);
           // TODO: Navegar a otras opciones
-          print('Opción seleccionada: $label');
+          debugPrint('Opción seleccionada: $label');
         }
       },
       child: Container(
         decoration: BoxDecoration(
           color: isMain
-              ? color.withOpacity(0.2)
+              ? color.withValues(alpha: 0.2)
               : (isDark
-                    ? Colors.grey.shade800.withOpacity(0.5)
+                    ? Colors.grey.shade800.withValues(alpha: 0.5)
                     : Colors.grey.shade100),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(

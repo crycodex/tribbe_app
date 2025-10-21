@@ -577,9 +577,7 @@ class OnboardingStepperController extends GetxController {
         nombreUsuario: nombreCompleto.value.isEmpty
             ? null
             : nombreCompleto.value.split(' ')[0].toLowerCase(),
-        fechaNacimiento: fechaNacimiento.value != null
-            ? fechaNacimiento.value!.toIso8601String()
-            : null,
+        fechaNacimiento: fechaNacimiento.value?.toIso8601String(),
         bio: bioText,
         ubicacion: (pais.value.isNotEmpty || latitud.value != null)
             ? Ubicacion(

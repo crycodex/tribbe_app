@@ -194,7 +194,7 @@ class EditProfilePage extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? Colors.grey.shade800.withOpacity(0.5)
+                        ? Colors.grey.shade800.withValues(alpha: 0.5)
                         : Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
@@ -266,7 +266,7 @@ class EditProfilePage extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? Colors.grey.shade800.withOpacity(0.5)
+                        ? Colors.grey.shade800.withValues(alpha: 0.5)
                         : Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
@@ -342,7 +342,7 @@ class EditProfilePage extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? Colors.grey.shade800.withOpacity(0.5)
+                        ? Colors.grey.shade800.withValues(alpha: 0.5)
                         : Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
@@ -394,7 +394,7 @@ class EditProfilePage extends StatelessWidget {
                     onSelected: (selected) {
                       controller.toggleLesion(lesion);
                     },
-                    selectedColor: theme.colorScheme.primary.withOpacity(0.3),
+                    selectedColor: theme.colorScheme.primary.withValues(alpha: 0.3),
                     checkmarkColor: theme.colorScheme.primary,
                   );
                 }).toList(),
@@ -503,7 +503,7 @@ class EditProfilePage extends StatelessWidget {
         prefixIcon: Icon(icon),
         filled: true,
         fillColor: isDark
-            ? Colors.grey.shade800.withOpacity(0.5)
+            ? Colors.grey.shade800.withValues(alpha: 0.5)
             : Colors.grey.shade100,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),

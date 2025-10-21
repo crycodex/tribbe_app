@@ -227,7 +227,9 @@ class DashboardPage extends StatelessWidget {
               'días',
               style: TextStyle(
                 fontSize: 16,
-                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
+                color: theme.textTheme.bodyMedium?.color?.withValues(
+                  alpha: 0.6,
+                ),
               ),
             ),
           ],
@@ -248,7 +250,7 @@ class DashboardPage extends StatelessWidget {
                   ? Colors.red[700]
                   : controller.hasTrainedToday
                   ? Colors.green[700]
-                  : theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                  : theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
             ),
             textAlign: TextAlign.center,
           ),
@@ -262,7 +264,7 @@ class DashboardPage extends StatelessWidget {
             'Récord: ${controller.longestStreak} días',
             style: TextStyle(
               fontSize: 12,
-              color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5),
+              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
             ),
           ),
         ),
@@ -331,12 +333,12 @@ class DashboardPage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
           color: isToday
-              ? Colors.orange.withOpacity(isDark ? 0.15 : 0.1)
+              ? Colors.orange.withValues(alpha: isDark ? 0.15 : 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: isToday
               ? Border.all(
-                  color: Colors.orange.withOpacity(isDark ? 0.4 : 0.3),
+                  color: Colors.orange.withValues(alpha: isDark ? 0.4 : 0.3),
                   width: 1,
                 )
               : null,

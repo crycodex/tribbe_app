@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 
 /// Controlador de Gimnasios
 class GymController extends GetxController {
@@ -7,6 +8,6 @@ class GymController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    print('GymController initialized');
+    debugPrint('GymController initialized');
   }
 }

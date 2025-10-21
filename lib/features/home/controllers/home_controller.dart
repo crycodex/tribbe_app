@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 /// Controlador para el Home y navegación principal
@@ -13,6 +14,6 @@ class HomeController extends GetxController {
   /// Mostrar menú de opciones de entrenamiento
   void showTrainingMenu() {
     // El bottom sheet se manejará desde el widget
-    print('Mostrar menú de entrenamiento');
+    debugPrint('Mostrar menú de entrenamiento');
   }
 }

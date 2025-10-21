@@ -40,7 +40,7 @@ class WorkoutPostCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -130,7 +130,7 @@ class WorkoutPostCard extends StatelessWidget {
             ),
             child: CircleAvatar(
               radius: 20,
-              backgroundColor: Colors.white.withOpacity(0.2),
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
               backgroundImage: post.userPhotoUrl != null
                   ? NetworkImage(post.userPhotoUrl!)
                   : null,
@@ -162,7 +162,7 @@ class WorkoutPostCard extends StatelessWidget {
                   'completó un entrenamiento',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -185,9 +185,9 @@ class WorkoutPostCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: focusColor.withOpacity(0.05),
+          color: focusColor.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: focusColor.withOpacity(0.2), width: 1.5),
+          border: Border.all(color: focusColor.withValues(alpha: 0.2), width: 1.5),
         ),
         child: Column(
           children: [
@@ -197,7 +197,7 @@ class WorkoutPostCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: focusColor.withOpacity(0.1),
+                    color: focusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -220,7 +220,7 @@ class WorkoutPostCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: focusColor.withOpacity(0.1),
+                    color: focusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -260,7 +260,7 @@ class WorkoutPostCard extends StatelessWidget {
                   isDark,
                 ),
                 _buildStatItemModern(
-                  '${post.workout.totalVolume.toStringAsFixed(0)}',
+                  post.workout.totalVolume.toString(),
                   'kg',
                   Icons.scale,
                   focusColor,
@@ -287,7 +287,7 @@ class WorkoutPostCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: focusColor.withOpacity(0.1),
+            color: focusColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, size: 16, color: focusColor),
@@ -365,7 +365,7 @@ class WorkoutPostCard extends StatelessWidget {
                     width: 20,
                     height: 20,
                     decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
+                      color: Colors.blue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
@@ -396,7 +396,7 @@ class WorkoutPostCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
+                      color: Colors.blue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -417,7 +417,7 @@ class WorkoutPostCard extends StatelessWidget {
               margin: const EdgeInsets.only(top: 8),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: Colors.blue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(

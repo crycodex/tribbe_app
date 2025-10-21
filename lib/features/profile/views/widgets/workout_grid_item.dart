@@ -40,7 +40,7 @@ class WorkoutGridItem extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: focusColor.withOpacity(0.1),
+                      color: focusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(

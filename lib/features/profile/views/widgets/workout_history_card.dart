@@ -114,7 +114,7 @@ class WorkoutHistoryCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: WorkoutUtils.getFocusColor(
                         workout.focus,
-                      ).withOpacity(0.1),
+                      ).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Icon(

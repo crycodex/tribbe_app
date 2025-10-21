@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/dashboard/models/streak_model.dart';
 import 'package:tribbe_app/features/training/models/workout_post_model.dart';
@@ -25,7 +26,7 @@ class DashboardController extends GetxController {
   bool get hasTrainedToday => streak.value.hasTrainedToday();
   int get currentStreak {
     final value = streak.value.currentStreak;
-    print('DEBUG getter currentStreak: $value');
+    debugPrint('DEBUG getter currentStreak: $value');
     return value;
   }
 
@@ -63,11 +64,11 @@ class DashboardController extends GetxController {
         isLoading.value = false;
       },
       onError: (error) {
-        print('Error en el stream de racha: $error');
+        debugPrint('Error en el stream de racha: $error');
         _showError('Error al cargar tu racha en tiempo real');
         isLoading.value = false;
       },
-      onDone: () => print('Stream de racha finalizado'),
+      onDone: () => debugPrint('Stream de racha finalizado'),
     );
   }
 
@@ -78,7 +79,7 @@ class DashboardController extends GetxController {
       final loadedStreak = await _streakService.getStreak();
       streak.value = loadedStreak;
     } catch (e) {
-      print('Error al cargar racha: $e');
+      debugPrint('Error al cargar racha: $e');
       // _showError('No se pudo cargar tu racha'); // Puedes descomentar esto si prefieres un snackbar
     } finally {
       isLoading.value = false;
@@ -96,11 +97,11 @@ class DashboardController extends GetxController {
             isFeedLoading.value = false; // El stream ya indica que cargó
           },
           onError: (error) {
-            print('Error en el stream del feed: $error');
+            debugPrint('Error en el stream del feed: $error');
             _showError('Error al cargar el feed en tiempo real');
             isFeedLoading.value = false;
           },
-          onDone: () => print('Stream del feed finalizado'),
+          onDone: () => debugPrint('Stream del feed finalizado'),
         );
   }
 
@@ -151,7 +152,7 @@ class DashboardController extends GetxController {
         );
       }
     } catch (e) {
-      print('Error al registrar entrenamiento: $e');
+      debugPrint('Error al registrar entrenamiento: $e');
       _showError('No se pudo registrar el entrenamiento');
     } finally {
       isLoading.value = false;
@@ -178,7 +179,7 @@ class DashboardController extends GetxController {
       // Actualizar en Firebase
       await _workoutService.toggleLike(postId: postId, userId: userId);
     } catch (e) {
-      print('Error al dar like: $e');
+      debugPrint('Error al dar like: $e');
       _showError('No se pudo dar like');
       // Revertir cambio en caso de error
       loadFeed();
