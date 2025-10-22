@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -32,6 +33,10 @@ class ProfileController extends GetxController {
   final Rx<File?> selectedImage = Rx<File?>(null);
   final RxString photoUrl = ''.obs;
   final RxList<WorkoutModel> userWorkouts = <WorkoutModel>[].obs;
+
+  // Estadísticas sociales
+  final RxInt followersCount = 0.obs;
+  final RxInt followingCount = 0.obs;
 
   // Paginación de entrenamientos
   final RxInt currentPage = 0.obs;
@@ -247,6 +252,9 @@ class ProfileController extends GetxController {
         porcentajeGrasaController.text = porcentajeGrasa.value;
       }
 
+      // Cargar estadísticas sociales
+      _loadSocialStats();
+
       // Foto de perfil
       photoUrl.value = profile.personaje?.avatarUrl ?? '';
 
@@ -307,6 +315,32 @@ class ProfileController extends GetxController {
       }
     } catch (e) {
       debugPrint('❌ ProfileController: Error al recargar perfil: $e');
+    }
+  }
+
+  /// Cargar estadísticas sociales del usuario
+  Future<void> _loadSocialStats() async {
+    try {
+      final userId = _firebaseAuthService.currentUser?.uid;
+      if (userId == null) return;
+
+      // Obtener estadísticas de la colección users
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+
+      if (userDoc.exists) {
+        final data = userDoc.data();
+        if (data != null) {
+          followersCount.value = data['followers_count'] as int? ?? 0;
+          followingCount.value = data['following_count'] as int? ?? 0;
+        }
+      }
+    } catch (e) {
+      debugPrint(
+        '❌ ProfileController: Error al cargar estadísticas sociales: $e',
+      );
     }
   }
 

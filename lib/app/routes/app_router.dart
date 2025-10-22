@@ -8,6 +8,9 @@ import 'package:tribbe_app/shared/views/pages/exercises_library_page.dart';
 import 'package:tribbe_app/shared/views/pages/exercise_detail_page.dart';
 import 'package:tribbe_app/shared/controllers/exercises_controller.dart';
 import 'package:tribbe_app/features/dashboard/controllers/dashboard_controller.dart';
+import 'package:tribbe_app/features/social/views/pages/social_page.dart';
+import 'package:tribbe_app/features/social/controllers/social_controller.dart';
+import 'package:tribbe_app/shared/services/friendship_service.dart';
 
 /// Configuración de rutas de la aplicación usando GetX
 class AppRouter {
@@ -125,7 +128,15 @@ class AppRouter {
       transitionDuration: const Duration(milliseconds: 300),
     ),
 
-    // TODO: Social routes
+    // Social routes
+    GetPage<dynamic>(
+      name: RoutePaths.social,
+      page: () => const SocialPage(),
+      binding: SocialBinding(),
+      transition: Transition.rightToLeft,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+
     // TODO: Gym routes
   ];
 
@@ -142,6 +153,7 @@ class AppRouter {
     // Servicios de la aplicación
     Get.put(StreakService(), permanent: true);
     Get.put(WorkoutService(), permanent: true);
+    Get.put(FriendshipService(), permanent: true);
 
     // Controllers globales
     Get.put(SettingsController(), permanent: true);
@@ -250,5 +262,13 @@ class ExercisesBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<ExercisesController>(() => ExercisesController());
+  }
+}
+
+/// Binding para social
+class SocialBinding extends Bindings {
+  @override
+  void dependencies() {
+    Get.lazyPut<SocialController>(() => SocialController());
   }
 }

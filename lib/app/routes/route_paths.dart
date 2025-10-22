@@ -35,7 +35,7 @@ class RoutePaths {
 
   // Social
   static const String feed = '/feed';
-  static const String friends = '/friends';
+  static const String social = '/social';
 
   // Gym
   static const String gymList = '/gyms';

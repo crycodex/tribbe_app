@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/features/dashboard/controllers/dashboard_controller.dart';
 import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
 import 'package:tribbe_app/shared/widgets/workout_post_card.dart';
@@ -150,29 +151,51 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  /// Header con logo de Tribbe
+  /// Header con logo de Tribbe y botón de amigos
   Widget _buildHeader(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Stack(
+      alignment: Alignment.center,
       children: [
-        Text(
-          'tribbe',
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: theme.textTheme.bodyLarge?.color,
-            letterSpacing: -1,
-          ),
+        // Logo centrado
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'tribbe',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: theme.textTheme.bodyLarge?.color,
+                letterSpacing: -1,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Text(
+              '.',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueAccent,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 4),
-        const Text(
-          '.',
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Colors.blueAccent,
+
+        // Botón de amigos en la derecha
+        Positioned(
+          right: 0,
+          child: IconButton(
+            icon: Icon(
+              Icons.people_outline,
+              size: 24,
+              color: theme.textTheme.bodyLarge?.color,
+            ),
+            onPressed: () {
+              Get.toNamed(RoutePaths.social);
+            },
+            tooltip: 'Social',
           ),
         ),
       ],

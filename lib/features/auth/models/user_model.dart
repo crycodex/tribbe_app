@@ -16,6 +16,11 @@ class UserModel {
     this.isPremium = false,
     this.createdAt,
     this.updatedAt,
+    this.bio,
+    this.followersCount = 0,
+    this.followingCount = 0,
+    this.postsCount = 0,
+    this.isPrivate = false,
   });
 
   final String id;
@@ -33,6 +38,13 @@ class UserModel {
   final bool isPremium;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+
+  // Campos sociales
+  final String? bio;
+  final int followersCount; // Seguidores
+  final int followingCount; // Siguiendo
+  final int postsCount; // Posts publicados
+  final bool isPrivate; // Cuenta privada
 
   /// Crea una instancia de UserModel desde JSON
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -62,6 +74,11 @@ class UserModel {
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'] as String)
           : null,
+      bio: json['bio'] as String?,
+      followersCount: json['followers_count'] as int? ?? 0,
+      followingCount: json['following_count'] as int? ?? 0,
+      postsCount: json['posts_count'] as int? ?? 0,
+      isPrivate: json['is_private'] as bool? ?? false,
     );
   }
 
@@ -83,6 +100,11 @@ class UserModel {
       'is_premium': isPremium,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
+      'bio': bio,
+      'followers_count': followersCount,
+      'following_count': followingCount,
+      'posts_count': postsCount,
+      'is_private': isPrivate,
     };
   }
 
@@ -103,6 +125,11 @@ class UserModel {
     bool? isPremium,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? bio,
+    int? followersCount,
+    int? followingCount,
+    int? postsCount,
+    bool? isPrivate,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -120,6 +147,11 @@ class UserModel {
       isPremium: isPremium ?? this.isPremium,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      bio: bio ?? this.bio,
+      followersCount: followersCount ?? this.followersCount,
+      followingCount: followingCount ?? this.followingCount,
+      postsCount: postsCount ?? this.postsCount,
+      isPrivate: isPrivate ?? this.isPrivate,
     );
   }
 

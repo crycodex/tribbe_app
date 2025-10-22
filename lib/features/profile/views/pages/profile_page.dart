@@ -124,25 +124,27 @@ class ProfilePage extends StatelessWidget {
                                             .toString(),
                                         label: 'Posts',
                                         onTap: () {
-                                          // TODO: Mostrar todos los posts
+                                          Get.toNamed(
+                                            RoutePaths.workoutHistory,
+                                          );
                                         },
                                       ),
                                       _buildStatColumn(
                                         context,
-                                        value:
-                                            '0', // TODO: Implementar seguidores
+                                        value: profileController.followersCount
+                                            .toString(),
                                         label: 'Seguidores',
                                         onTap: () {
-                                          // TODO: Navegar a seguidores
+                                          Get.toNamed(RoutePaths.social);
                                         },
                                       ),
                                       _buildStatColumn(
                                         context,
-                                        value:
-                                            '0', // TODO: Implementar siguiendo
+                                        value: profileController.followingCount
+                                            .toString(),
                                         label: 'Siguiendo',
                                         onTap: () {
-                                          // TODO: Navegar a siguiendo
+                                          Get.toNamed(RoutePaths.social);
                                         },
                                       ),
                                     ],

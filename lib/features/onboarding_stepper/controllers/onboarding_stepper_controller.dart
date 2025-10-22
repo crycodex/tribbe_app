@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -6,11 +8,13 @@ import 'package:tribbe_app/core/enums/app_enums.dart';
 import 'package:tribbe_app/features/auth/models/user_profile_model.dart';
 import 'package:tribbe_app/shared/controllers/settings_controller.dart';
 import 'package:tribbe_app/shared/services/firestore_service.dart';
+import 'package:tribbe_app/shared/services/friendship_service.dart';
 
 /// Controlador para el stepper de personalización inicial
 class OnboardingStepperController extends GetxController {
   final FirestoreService _firestoreService = Get.find();
   final SettingsController _settingsController = Get.find();
+  final FriendshipService _friendshipService = Get.find();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // Estado del stepper
@@ -42,6 +46,11 @@ class OnboardingStepperController extends GetxController {
   final RxString nombreCompleto = ''.obs;
   final RxInt tonoPiel = 1.obs; // 1, 2, 3
   final RxString avatarUrl = ''.obs;
+
+  // Validación de username
+  final RxBool isCheckingUsername = false.obs;
+  final RxString usernameValidationError = ''.obs;
+  Timer? _usernameDebounce;
 
   // Step 4: Medidas
   final RxDouble alturaCm = 170.0.obs;
@@ -112,6 +121,70 @@ class OnboardingStepperController extends GetxController {
     else if (_auth.currentUser != null) {
       userId.value = _auth.currentUser!.uid;
     }
+  }
+
+  @override
+  void onClose() {
+    _usernameDebounce?.cancel();
+    super.onClose();
+  }
+
+  /// Verificar disponibilidad de username con debounce
+  void checkUsernameAvailability(String username) {
+    nombreCompleto.value = username;
+
+    // Cancelar el timer anterior
+    _usernameDebounce?.cancel();
+
+    // Limpiar error si el campo está vacío
+    if (username.trim().isEmpty) {
+      usernameValidationError.value = '';
+      isCheckingUsername.value = false;
+      return;
+    }
+
+    // Validación básica del formato
+    final normalizedUsername = username.toLowerCase().trim();
+
+    // Solo letras, números y guiones bajos
+    final validFormat = RegExp(r'^[a-z0-9_]+$');
+    if (!validFormat.hasMatch(normalizedUsername)) {
+      usernameValidationError.value = 'Solo letras, números y guiones bajos';
+      isCheckingUsername.value = false;
+      return;
+    }
+
+    // Mínimo 3 caracteres
+    if (normalizedUsername.length < 3) {
+      usernameValidationError.value = 'Mínimo 3 caracteres';
+      isCheckingUsername.value = false;
+      return;
+    }
+
+    // Máximo 20 caracteres
+    if (normalizedUsername.length > 20) {
+      usernameValidationError.value = 'Máximo 20 caracteres';
+      isCheckingUsername.value = false;
+      return;
+    }
+
+    // Iniciar debounce para verificar disponibilidad
+    isCheckingUsername.value = true;
+    usernameValidationError.value = '';
+
+    _usernameDebounce = Timer(const Duration(milliseconds: 500), () async {
+      final isAvailable = await _friendshipService.isUsernameAvailable(
+        normalizedUsername,
+      );
+
+      isCheckingUsername.value = false;
+
+      if (!isAvailable) {
+        usernameValidationError.value = 'Este nombre de usuario ya está en uso';
+      } else {
+        usernameValidationError.value = '';
+      }
+    });
   }
 
   /// Cargar preferencias existentes del usuario (desde SettingsController)
@@ -314,11 +387,11 @@ class OnboardingStepperController extends GetxController {
 
         return true;
 
-      case 2: // Personaje - nombre obligatorio
+      case 2: // Personaje - username obligatorio
         if (nombreCompleto.value.trim().isEmpty) {
           Get.snackbar(
             'Campo requerido',
-            'Por favor ingresa tu nombre completo',
+            'Por favor ingresa tu nombre de usuario',
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: Colors.orange,
             colorText: Colors.white,
@@ -327,11 +400,37 @@ class OnboardingStepperController extends GetxController {
           return false;
         }
 
-        // Validar que el nombre tenga al menos 2 caracteres
-        if (nombreCompleto.value.trim().length < 2) {
+        // Validar que el username tenga al menos 3 caracteres
+        if (nombreCompleto.value.trim().length < 3) {
           Get.snackbar(
-            'Nombre inválido',
-            'El nombre debe tener al menos 2 caracteres',
+            'Username inválido',
+            'El nombre de usuario debe tener al menos 3 caracteres',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.orange,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 2),
+          );
+          return false;
+        }
+
+        // Validar que no haya errores de validación
+        if (usernameValidationError.value.isNotEmpty) {
+          Get.snackbar(
+            'Username no válido',
+            usernameValidationError.value,
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.orange,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 2),
+          );
+          return false;
+        }
+
+        // Esperar a que termine la verificación si está en progreso
+        if (isCheckingUsername.value) {
+          Get.snackbar(
+            'Verificando',
+            'Por favor espera mientras verificamos la disponibilidad',
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: Colors.orange,
             colorText: Colors.white,
@@ -569,14 +668,35 @@ class OnboardingStepperController extends GetxController {
         medidas: medidas,
       );
 
-      // 5. Actualizar datos personales con ubicación
+      // 5. Reservar el username en la colección de usernames
+      if (nombreCompleto.value.isNotEmpty) {
+        final usernameReserved = await _friendshipService.reserveUsername(
+          nombreCompleto.value.toLowerCase().trim(),
+          userId.value,
+        );
+
+        if (!usernameReserved) {
+          Get.snackbar(
+            'Error',
+            'No se pudo reservar el nombre de usuario. Por favor intenta con otro.',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 3),
+          );
+          isLoading.value = false;
+          return;
+        }
+      }
+
+      // 6. Actualizar datos personales con ubicación
       final datosPersonales = DatosPersonales(
         nombreCompleto: nombreCompleto.value.isEmpty
             ? null
             : nombreCompleto.value,
         nombreUsuario: nombreCompleto.value.isEmpty
             ? null
-            : nombreCompleto.value.split(' ')[0].toLowerCase(),
+            : nombreCompleto.value.toLowerCase().trim(),
         fechaNacimiento: fechaNacimiento.value?.toIso8601String(),
         bio: bioText,
         ubicacion: (pais.value.isNotEmpty || latitud.value != null)
@@ -594,7 +714,7 @@ class OnboardingStepperController extends GetxController {
         datosPersonales: datosPersonales,
       );
 
-      // 6. Marcar personalización como completada
+      // 7. Marcar personalización como completada
       await _firestoreService.markPersonalizationComplete(userId.value);
 
       // Mostrar mensaje de éxito

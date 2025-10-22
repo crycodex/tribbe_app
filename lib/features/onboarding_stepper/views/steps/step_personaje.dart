@@ -40,13 +40,13 @@ class StepPersonaje extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // Nombre
+          // Username (Nombre de usuario)
           Align(
             alignment: Alignment.centerLeft,
             child: Row(
               children: [
                 const Text(
-                  '¿Cómo te llamas?',
+                  'Nombre de usuario',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(width: 4),
@@ -61,38 +61,82 @@ class StepPersonaje extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          TextFormField(
-            style: TextStyle(color: isDark ? Colors.white : Colors.black),
-            decoration: InputDecoration(
-              hintText: 'Ingresa tu nombre',
-              hintStyle: TextStyle(
-                color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
-              ),
-              filled: true,
-              fillColor: isDark
-                  ? Colors.grey.shade800.withValues(alpha: 0.5)
-                  : Colors.grey.shade100,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide.none,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                  color: isDark ? Colors.grey.shade700 : Colors.transparent,
-                  width: 1,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                  color: theme.colorScheme.primary,
-                  width: 2,
-                ),
-              ),
+          const SizedBox(height: 4),
+          Text(
+            'Este será tu identificador único para buscar y conectar con amigos',
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? Colors.grey.shade500 : Colors.grey.shade600,
             ),
-            onChanged: (value) => controller.nombreCompleto.value = value,
+          ),
+          const SizedBox(height: 12),
+          Obx(
+            () => TextFormField(
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+              decoration: InputDecoration(
+                hintText: 'usuario123',
+                hintStyle: TextStyle(
+                  color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+                ),
+                prefixText: '@',
+                prefixStyle: TextStyle(
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                  fontWeight: FontWeight.w600,
+                ),
+                filled: true,
+                fillColor: isDark
+                    ? Colors.grey.shade800.withValues(alpha: 0.5)
+                    : Colors.grey.shade100,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: controller.usernameValidationError.value.isEmpty
+                        ? (isDark ? Colors.grey.shade700 : Colors.transparent)
+                        : Colors.red,
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: controller.usernameValidationError.value.isEmpty
+                        ? theme.colorScheme.primary
+                        : Colors.red,
+                    width: 2,
+                  ),
+                ),
+                suffixIcon: controller.isCheckingUsername.value
+                    ? const Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : controller.usernameValidationError.value.isEmpty &&
+                          controller.nombreCompleto.value.isNotEmpty
+                    ? Icon(Icons.check_circle, color: Colors.green)
+                    : null,
+                errorText: controller.usernameValidationError.value.isEmpty
+                    ? null
+                    : controller.usernameValidationError.value,
+                errorMaxLines: 2,
+              ),
+              onChanged: (value) => controller.checkUsernameAvailability(value),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Mínimo 3 caracteres, solo letras, números y guiones bajos',
+            style: TextStyle(
+              fontSize: 11,
+              color: isDark ? Colors.grey.shade600 : Colors.grey.shade500,
+            ),
           ),
           const SizedBox(height: 24),
 
@@ -387,7 +431,10 @@ class StepPersonaje extends StatelessWidget {
                   color: Colors.white,
                   size: 24,
                   shadows: [
-                    Shadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 4),
+                    Shadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 4,
+                    ),
                   ],
                 ),
               )

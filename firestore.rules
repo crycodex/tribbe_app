@@ -20,8 +20,8 @@ service cloud.firestore {
     
     // === COLECCIÓN DE USUARIOS ===
     match /users/{userId} {
-      // Permitir lectura si es el dueño del documento
-      allow read: if isOwner(userId);
+      // Permitir lectura si es el dueño del documento O si está buscando usuarios (lectura limitada)
+      allow read: if isAuthenticated();
       
       // Permitir creación si:
       // - El usuario está autenticado Y
@@ -37,9 +37,13 @@ service cloud.firestore {
       // - Es el dueño del documento Y
       // - Si se incluye UID, debe coincidir con el existente Y
       // - Si se incluye email, debe coincidir con el existente
-      allow update: if isOwner(userId)
-                    && (!('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid)
-                    && (!('email' in request.resource.data) || request.resource.data.email == resource.data.email);
+      // O
+      // - Solo está actualizando contadores de amigos (para sistema de amistades)
+      allow update: if (isOwner(userId)
+                        && (!('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid)
+                        && (!('email' in request.resource.data) || request.resource.data.email == resource.data.email))
+                    || (isAuthenticated() 
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends_count']));
       
       // Permitir eliminación solo si es el dueño
       allow delete: if isOwner(userId);
@@ -81,6 +85,60 @@ service cloud.firestore {
       match /streaks/{streakId} {
         // El usuario puede leer, crear, actualizar y eliminar sus propias rachas
         allow read, write: if isOwner(userId);
+      }
+      
+      // === SUBCOLECCIÓN SOCIAL ===
+      match /social/{socialDoc} {
+        // Permitir lectura si es el dueño del documento padre
+        allow read: if isOwner(userId);
+        
+        // Subcolección de Amigos
+        match /friends/{friendId} {
+          // El usuario puede gestionar su lista de amigos
+          allow read, write: if isOwner(userId);
+          
+          // Otros usuarios autenticados pueden leer para verificar amistades
+          allow read: if isAuthenticated();
+          
+          // El amigo puede crear su documento cuando se acepta una solicitud
+          allow create: if isAuthenticated() && request.auth.uid == friendId;
+          
+          // El amigo puede eliminar la amistad
+          allow delete: if isAuthenticated() && request.auth.uid == friendId;
+        }
+        
+        // Subcolección de Solicitudes Enviadas
+        match /friend_requests_sent/{receiverId} {
+          // Solo el dueño puede leer y escribir sus solicitudes enviadas
+          allow read, write: if isOwner(userId);
+          
+          // El receptor puede leer la solicitud que le enviaron
+          allow read: if isAuthenticated() && request.auth.uid == receiverId;
+          
+          // El receptor puede actualizar cuando acepta/rechaza
+          allow update: if isAuthenticated() && request.auth.uid == receiverId;
+        }
+        
+        // Subcolección de Solicitudes Recibidas
+        match /friend_requests_received/{senderId} {
+          // Solo el dueño puede leer sus solicitudes recibidas
+          allow read: if isOwner(userId);
+          
+          // Solo el dueño puede actualizar (aceptar/rechazar)
+          allow update: if isOwner(userId);
+          
+          // El remitente puede crear la solicitud en el documento del receptor
+          allow create: if isAuthenticated() && request.auth.uid == senderId;
+          
+          // El remitente puede eliminar (cancelar) su propia solicitud
+          allow delete: if isAuthenticated() && request.auth.uid == senderId;
+        }
+        
+        // Subcolección de Usuarios Bloqueados
+        match /blocked_users/{blockedUserId} {
+          // Solo el dueño puede gestionar su lista de bloqueados
+          allow read, write: if isOwner(userId);
+        }
       }
     }
     
@@ -129,26 +187,23 @@ service cloud.firestore {
       }
     }
     
-    // === COLECCIÓN DE AMIGOS/SOCIAL (para el futuro) ===
-    match /friendships/{friendshipId} {
-      // Permitir lectura si el usuario es parte de la amistad
-      allow read: if isAuthenticated() 
-                  && (resource.data.user1_id == request.auth.uid 
-                      || resource.data.user2_id == request.auth.uid);
+    // === COLECCIÓN DE USERNAMES ===
+    match /usernames/{username} {
+      // Permitir lectura a todos los usuarios autenticados (para verificar disponibilidad)
+      allow read: if isAuthenticated();
       
-      // Permitir creación de solicitudes de amistad
+      // Permitir creación solo si el user_id del documento coincide con el UID del usuario autenticado
       allow create: if isAuthenticated() 
-                    && request.resource.data.user1_id == request.auth.uid;
+                    && request.resource.data.user_id == request.auth.uid;
       
-      // Permitir actualización (aceptar/rechazar) si es el destinatario
-      allow update: if isAuthenticated() 
-                    && resource.data.user2_id == request.auth.uid;
+      // No permitir actualización (los usernames son inmutables)
+      allow update: if false;
       
-      // Permitir eliminación si es parte de la amistad
+      // Permitir eliminación solo si el user_id coincide con el usuario autenticado
       allow delete: if isAuthenticated() 
-                    && (resource.data.user1_id == request.auth.uid 
-                        || resource.data.user2_id == request.auth.uid);
+                    && resource.data.user_id == request.auth.uid;
     }
+    
     
     // Denegar acceso a todo lo demás por defecto
     match /{document=**} {
