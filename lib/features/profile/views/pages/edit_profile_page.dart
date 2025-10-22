@@ -394,7 +394,9 @@ class EditProfilePage extends StatelessWidget {
                     onSelected: (selected) {
                       controller.toggleLesion(lesion);
                     },
-                    selectedColor: theme.colorScheme.primary.withValues(alpha: 0.3),
+                    selectedColor: theme.colorScheme.primary.withValues(
+                      alpha: 0.3,
+                    ),
                     checkmarkColor: theme.colorScheme.primary,
                   );
                 }).toList(),
@@ -472,6 +474,74 @@ class EditProfilePage extends StatelessWidget {
               keyboardType: TextInputType.number,
               onChanged: (value) => controller.porcentajeGrasa.value = value,
               controller: controller.porcentajeGrasaController,
+            ),
+            const SizedBox(height: 40),
+
+            // Sección: Zona de Peligro
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50.withValues(alpha: isDark ? 0.1 : 0.3),
+                border: Border.all(color: Colors.red.shade300, width: 2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.warning_rounded,
+                        color: Colors.red.shade700,
+                        size: 28,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Zona de Peligro',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Una vez que elimines tu cuenta, no hay vuelta atrás. Esta acción eliminará permanentemente todos tus datos y cerrará tu sesión.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark
+                          ? Colors.grey.shade300
+                          : Colors.grey.shade700,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: controller.showDeleteAccountDialog,
+                      icon: const Icon(Icons.delete_forever),
+                      label: const Text(
+                        'Eliminar mi cuenta',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade600,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 32),
           ],

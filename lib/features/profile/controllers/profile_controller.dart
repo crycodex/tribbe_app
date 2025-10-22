@@ -893,14 +893,30 @@ class ProfileController extends GetxController {
       await Future.delayed(const Duration(milliseconds: 500));
       Get.offAllNamed(RoutePaths.welcome);
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Error al eliminar cuenta: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 4),
-      );
+      // Manejar el error de reautenticación requerida
+      if (e.toString().contains('requires-recent-login')) {
+        Get.snackbar(
+          'Reautenticación requerida',
+          'Por seguridad, necesitas volver a iniciar sesión antes de eliminar tu cuenta.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+        );
+
+        // Cerrar sesión y redirigir al login
+        await _authController.logout();
+        Get.offAllNamed(RoutePaths.login);
+      } else {
+        Get.snackbar(
+          'Error',
+          'Error al eliminar cuenta: ${e.toString()}',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+        );
+      }
     } finally {
       isLoading.value = false;
     }
