@@ -256,7 +256,7 @@ class ProfileController extends GetxController {
       debugPrint('  - Bio: ${bio.value}');
       debugPrint('  - Meta Fitness: ${metaFitness.value}');
       debugPrint('  - Nivel: ${nivelExperiencia.value}');
-      debugPrint('  - Lesiones: ${lesiones}');
+      debugPrint('  - Lesiones: $lesiones');
       debugPrint('  - Altura: ${altura.value}');
       debugPrint('  - Peso: ${peso.value}');
       debugPrint('  - Foto: ${photoUrl.value}');
