@@ -1,11 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/social/controllers/social_controller.dart';
 import 'package:tribbe_app/features/social/views/widgets/search_tab.dart';
 import 'package:tribbe_app/features/social/views/widgets/followers_tab.dart';
 import 'package:tribbe_app/features/social/views/widgets/following_tab.dart';
+import 'package:tribbe_app/shared/widgets/credit_card_widget.dart';
+
 /// Página principal de funcionalidad social con diseño minimalista tipo tarjeta de crédito
 class SocialPage extends StatelessWidget {
   const SocialPage({super.key});
@@ -38,7 +39,17 @@ class SocialPage extends StatelessWidget {
       body: Column(
         children: [
           // Tarjeta de usuario tipo crédito
-          _buildCreditCard(context, controller, isDark),
+          Obx(() {
+            final user = controller.currentUser;
+            if (user == null) return const SizedBox.shrink();
+
+            return CreditCardWidget(
+              user: user,
+              followersCount: controller.followers.length,
+              followingCount: controller.following.length,
+              showShareButton: true,
+            );
+          }),
 
           const SizedBox(height: 24),
 
@@ -83,260 +94,6 @@ class SocialPage extends StatelessWidget {
           ),
 
           const SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCreditCard(
-    BuildContext context,
-    SocialController controller,
-    bool isDark,
-  ) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      height: 200,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [
-                  const Color(0xFF1A1A1A),
-                  const Color(0xFF2D2D2D),
-                  const Color(0xFF1A1A1A),
-                ]
-              : [
-                  const Color(0xFFFFFFFF),
-                  const Color(0xFFF8F9FA),
-                  const Color(0xFFFFFFFF),
-                ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.4)
-                : Colors.black.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.2)
-                : Colors.black.withValues(alpha: 0.04),
-            blurRadius: 40,
-            offset: const Offset(0, 16),
-          ),
-        ],
-      ),
-      child: Builder(
-        builder: (context) {
-          final user = controller.currentUser;
-          if (user == null) return const SizedBox.shrink();
-
-          return Stack(
-            children: [
-              // Patrón de fondo sutil
-              Positioned(
-                top: -20,
-                right: -20,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.02)
-                        : Colors.black.withValues(alpha: 0.02),
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: -30,
-                left: -30,
-                child: Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.01)
-                        : Colors.black.withValues(alpha: 0.01),
-                  ),
-                ),
-              ),
-
-              // Contenido de la tarjeta
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header con icono
-                    Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'TRIBBE',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white70 : Colors.black54,
-                            letterSpacing: 2,
-                          ),
-                        ),
-                        const Spacer(),
-                        Icon(
-                          Icons.credit_card,
-                          size: 20,
-                          color: isDark ? Colors.white70 : Colors.black54,
-                        ),
-                      ],
-                    ),
-
-                    const Spacer(),
-
-                    // Información del usuario
-                    Text(
-                      '@${user.username ?? "usuario"}',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.white : Colors.black87,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // UID como número de tarjeta
-                    Row(
-                      children: [
-                        Text(
-                          user.id.substring(0, 8).toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontFamily: 'monospace',
-                            fontWeight: FontWeight.w400,
-                            color: isDark ? Colors.white60 : Colors.black45,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '••••',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isDark ? Colors.white60 : Colors.black45,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                        const Spacer(),
-                        GestureDetector(
-                          onTap: () {
-                            Clipboard.setData(ClipboardData(text: user.id));
-                            Get.snackbar(
-                              'Copiado',
-                              'UID copiado al portapapeles',
-                              snackPosition: SnackPosition.BOTTOM,
-                              duration: const Duration(seconds: 1),
-                              backgroundColor: isDark
-                                  ? const Color(0xFF1A1A1A)
-                                  : Colors.white,
-                              colorText: isDark ? Colors.white : Colors.black,
-                              margin: const EdgeInsets.all(20),
-                              borderRadius: 12,
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.1)
-                                  : Colors.black.withValues(alpha: 0.05),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Icon(
-                              Icons.copy,
-                              size: 14,
-                              color: isDark ? Colors.white70 : Colors.black54,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Footer con estadísticas
-                    Row(
-                      children: [
-                        _buildStatChip(
-                          'Seguidores',
-                          controller.followers.length.toString(),
-                          isDark,
-                        ),
-                        const SizedBox(width: 12),
-                        _buildStatChip(
-                          'Siguiendo',
-                          controller.following.length.toString(),
-                          isDark,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildStatChip(String label, String value, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.08)
-            : Colors.black.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.black.withValues(alpha: 0.1),
-          width: 0.5,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: isDark ? Colors.white60 : Colors.black54,
-            ),
-          ),
         ],
       ),
     );

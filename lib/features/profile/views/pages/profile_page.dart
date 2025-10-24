@@ -2,9 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
+import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
+import 'package:tribbe_app/features/auth/models/user_model.dart';
 import 'package:tribbe_app/features/home/views/pages/home_page.dart';
 import 'package:tribbe_app/features/profile/controllers/profile_controller.dart';
 import 'package:tribbe_app/features/profile/views/widgets/workout_grid_item.dart';
+import 'package:tribbe_app/shared/widgets/credit_card_widget.dart';
 
 /// Página de Perfil - Estilo Instagram Minimalista
 class ProfilePage extends StatelessWidget {
@@ -222,7 +225,11 @@ class ProfilePage extends StatelessWidget {
                               const SizedBox(width: 8),
                               OutlinedButton(
                                 onPressed: () {
-                                  // TODO: Compartir perfil
+                                  _showCreditCard(
+                                    context,
+                                    profileController,
+                                    isDark,
+                                  );
                                 },
                                 style: OutlinedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
@@ -237,7 +244,7 @@ class ProfilePage extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
-                                child: const Icon(Icons.share, size: 18),
+                                child: const Icon(Icons.credit_card, size: 18),
                               ),
                             ],
                           ),
@@ -426,6 +433,49 @@ class ProfilePage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  /// Mostrar tarjeta de crédito en un diálogo
+  void _showCreditCard(
+    BuildContext context,
+    ProfileController profileController,
+    bool isDark,
+  ) {
+    final authController = Get.find<AuthController>();
+    final userProfile = authController.userProfile.value;
+
+    if (userProfile == null) {
+      Get.snackbar(
+        'Error',
+        'No se pudo cargar el perfil',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    // Crear UserModel para la tarjeta
+    final user = UserModel(
+      id: userProfile.uid,
+      email: userProfile.email,
+      username: userProfile.datosPersonales?.nombreUsuario ?? 'usuario',
+    );
+
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: CreditCardWidget(
+            user: user,
+            followersCount: profileController.followersCount.value,
+            followingCount: profileController.followingCount.value,
+            showShareButton: true,
+            onTap: () => Get.back(), // Cerrar al tocar la tarjeta
+          ),
+        ),
+      ),
+      barrierDismissible: true,
     );
   }
 }
