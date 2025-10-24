@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/social/controllers/social_controller.dart';
+import 'package:tribbe_app/features/social/views/pages/user_profile_page.dart';
 
 /// Tab de seguidores con diseño minimalista
 class FollowersTab extends StatelessWidget {
@@ -152,7 +153,14 @@ class FollowersTab extends StatelessWidget {
           // Botón de acción
           GestureDetector(
             onTap: () {
-              // TODO: Navegar al perfil del seguidor
+              Get.to(
+                () => UserProfilePage(
+                  userId: follower.followerId,
+                  username: follower.followerUsername ?? 'usuario',
+                  displayName: follower.followerDisplayName,
+                  photoUrl: follower.followerPhotoUrl,
+                ),
+              );
             },
             child: Container(
               padding: const EdgeInsets.all(8),

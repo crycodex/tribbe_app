@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/social/controllers/social_controller.dart';
+import 'package:tribbe_app/features/social/views/pages/user_profile_page.dart';
 
 /// Tab de búsqueda de usuarios
 class SearchTab extends StatelessWidget {
@@ -178,7 +179,14 @@ class SearchTab extends StatelessWidget {
                         controller,
                       ),
                       onTap: () {
-                        // TODO: Navegar al perfil del usuario
+                        Get.to(
+                          () => UserProfilePage(
+                            userId: user.id,
+                            username: user.username ?? 'usuario',
+                            displayName: user.displayName,
+                            photoUrl: user.photoUrl,
+                          ),
+                        );
                       },
                     );
                   },

@@ -6,7 +6,6 @@ import 'package:tribbe_app/features/social/controllers/social_controller.dart';
 import 'package:tribbe_app/features/social/views/widgets/search_tab.dart';
 import 'package:tribbe_app/features/social/views/widgets/followers_tab.dart';
 import 'package:tribbe_app/features/social/views/widgets/following_tab.dart';
-
 /// Página principal de funcionalidad social con diseño minimalista tipo tarjeta de crédito
 class SocialPage extends StatelessWidget {
   const SocialPage({super.key});

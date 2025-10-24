@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
 import 'package:tribbe_app/features/auth/models/user_model.dart';
 import 'package:tribbe_app/shared/models/social_models.dart';
 import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
@@ -11,6 +12,7 @@ class SocialController extends GetxController {
   final FriendshipService _friendshipService = Get.find();
   final SocialService _socialService = Get.find();
   final FirebaseAuthService _authService = Get.find();
+  final AuthController _authController = Get.find();
 
   // Estado de carga
   final RxBool isLoading = false.obs;
@@ -29,13 +31,21 @@ class SocialController extends GetxController {
   // Usuario actual
   UserModel? get currentUser {
     final uid = _authService.currentUser?.uid;
-    return uid != null
-        ? UserModel(
-            id: uid,
-            email: _authService.currentUser!.email!,
-            username: _authService.currentUser!.displayName,
-          )
-        : null;
+    final userProfile = _authController.userProfile.value;
+
+    if (uid == null) return null;
+
+    // Obtener username del perfil de Firestore (como ProfileController)
+    final username =
+        userProfile?.datosPersonales?.nombreUsuario ??
+        _authService.currentUser!.displayName ??
+        'usuario';
+
+    return UserModel(
+      id: uid,
+      email: _authService.currentUser!.email!,
+      username: username,
+    );
   }
 
   @override

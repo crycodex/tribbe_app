@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/social/controllers/social_controller.dart';
+import 'package:tribbe_app/features/social/views/pages/user_profile_page.dart';
 
 /// Tab de usuarios que sigues con diseño minimalista
 class FollowingTab extends StatelessWidget {
@@ -154,37 +155,75 @@ class FollowingTab extends StatelessWidget {
             ),
           ),
 
-          // Botón de dejar de seguir
-          GestureDetector(
-            onTap: () {
-              controller.unfollowUser(
-                following.followingId,
-                following.followingUsername ?? 'este usuario',
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.red.withValues(alpha: 0.1)
-                    : Colors.red.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.red.withValues(alpha: 0.2)
-                      : Colors.red.withValues(alpha: 0.1),
-                  width: 0.5,
+          // Botones de acción
+          Row(
+            children: [
+              // Botón para ver perfil
+              GestureDetector(
+                onTap: () {
+                  Get.to(
+                    () => UserProfilePage(
+                      userId: following.followingId,
+                      username: following.followingUsername ?? 'usuario',
+                      displayName: following.followingDisplayName,
+                      photoUrl: following.followingPhotoUrl,
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.black.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.person,
+                    size: 16,
+                    color: isDark ? Colors.white38 : Colors.black38,
+                  ),
                 ),
               ),
-              child: Text(
-                'Dejar de seguir',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: isDark ? Colors.red.shade300 : Colors.red.shade600,
+
+              const SizedBox(width: 8),
+
+              // Botón de dejar de seguir
+              GestureDetector(
+                onTap: () {
+                  controller.unfollowUser(
+                    following.followingId,
+                    following.followingUsername ?? 'este usuario',
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.red.withValues(alpha: 0.1)
+                        : Colors.red.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.red.withValues(alpha: 0.2)
+                          : Colors.red.withValues(alpha: 0.1),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Text(
+                    'Dejar de seguir',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.red.shade300 : Colors.red.shade600,
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ],
       ),
