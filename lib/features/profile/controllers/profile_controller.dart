@@ -319,27 +319,38 @@ class ProfileController extends GetxController {
   }
 
   /// Cargar estadísticas sociales del usuario
-  Future<void> _loadSocialStats() async {
+  void _loadSocialStats() {
     try {
       final userId = _firebaseAuthService.currentUser?.uid;
       if (userId == null) return;
 
-      // Obtener estadísticas de la colección users
-      final userDoc = await FirebaseFirestore.instance
+      // Escuchar cambios en estadísticas de la colección users
+      FirebaseFirestore.instance
           .collection('users')
           .doc(userId)
-          .get();
-
-      if (userDoc.exists) {
-        final data = userDoc.data();
-        if (data != null) {
-          followersCount.value = data['followers_count'] as int? ?? 0;
-          followingCount.value = data['following_count'] as int? ?? 0;
-        }
-      }
+          .snapshots()
+          .listen(
+            (doc) {
+              if (doc.exists) {
+                final data = doc.data();
+                if (data != null) {
+                  followersCount.value = data['followers_count'] as int? ?? 0;
+                  followingCount.value = data['following_count'] as int? ?? 0;
+                  debugPrint(
+                    '📊 ProfileController: Estadísticas actualizadas - Seguidores: ${followersCount.value}, Siguiendo: ${followingCount.value}',
+                  );
+                }
+              }
+            },
+            onError: (e) {
+              debugPrint(
+                '❌ ProfileController: Error al escuchar estadísticas sociales: $e',
+              );
+            },
+          );
     } catch (e) {
       debugPrint(
-        '❌ ProfileController: Error al cargar estadísticas sociales: $e',
+        '❌ ProfileController: Error al configurar listener de estadísticas sociales: $e',
       );
     }
   }

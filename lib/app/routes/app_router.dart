@@ -11,6 +11,7 @@ import 'package:tribbe_app/features/dashboard/controllers/dashboard_controller.d
 import 'package:tribbe_app/features/social/views/pages/social_page.dart';
 import 'package:tribbe_app/features/social/controllers/social_controller.dart';
 import 'package:tribbe_app/shared/services/friendship_service.dart';
+import 'package:tribbe_app/shared/services/social_service.dart';
 
 /// Configuración de rutas de la aplicación usando GetX
 class AppRouter {
@@ -154,6 +155,7 @@ class AppRouter {
     Get.put(StreakService(), permanent: true);
     Get.put(WorkoutService(), permanent: true);
     Get.put(FriendshipService(), permanent: true);
+    Get.put(SocialService(), permanent: true);
 
     // Controllers globales
     Get.put(SettingsController(), permanent: true);

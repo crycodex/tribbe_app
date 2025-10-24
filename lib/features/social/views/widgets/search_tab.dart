@@ -107,77 +107,80 @@ class SearchTab extends StatelessWidget {
               ),
               itemBuilder: (context, index) {
                 final user = controller.searchResults[index];
-                final isFriend = controller.isFriendWith(user.id);
-                final hasPendingRequest = controller.hasPendingRequestWith(
-                  user.id,
-                );
 
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  leading: CircleAvatar(
-                    radius: 24,
-                    backgroundColor: isDark
-                        ? Colors.grey.shade800
-                        : Colors.grey.shade300,
-                    backgroundImage: user.photoUrl != null
-                        ? NetworkImage(user.photoUrl!)
-                        : null,
-                    child: user.photoUrl == null
-                        ? Icon(
-                            Icons.person,
-                            color: isDark
-                                ? Colors.grey.shade600
-                                : Colors.grey.shade500,
-                          )
-                        : null,
-                  ),
-                  title: Text(
-                    user.displayName ?? '@${user.username ?? "usuario"}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                    ),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '@${user.username ?? ""}',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isDark
-                              ? Colors.grey.shade400
-                              : Colors.grey.shade600,
+                return FutureBuilder<bool>(
+                  future: controller.isFollowingUser(user.id),
+                  builder: (context, snapshot) {
+                    final isFollowing = snapshot.data ?? false;
+
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      leading: CircleAvatar(
+                        radius: 24,
+                        backgroundColor: isDark
+                            ? Colors.grey.shade800
+                            : Colors.grey.shade300,
+                        backgroundImage: user.photoUrl != null
+                            ? NetworkImage(user.photoUrl!)
+                            : null,
+                        child: user.photoUrl == null
+                            ? Icon(
+                                Icons.person,
+                                color: isDark
+                                    ? Colors.grey.shade600
+                                    : Colors.grey.shade500,
+                              )
+                            : null,
+                      ),
+                      title: Text(
+                        user.displayName ?? '@${user.username ?? "usuario"}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
                         ),
                       ),
-                      if (user.bio != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          user.bio!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark
-                                ? Colors.grey.shade500
-                                : Colors.grey.shade500,
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '@${user.username ?? ""}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: isDark
+                                  ? Colors.grey.shade400
+                                  : Colors.grey.shade600,
+                            ),
                           ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  trailing: _buildActionButton(
-                    context,
-                    user.id,
-                    isFriend,
-                    hasPendingRequest,
-                    controller,
-                  ),
-                  onTap: () {
-                    // TODO: Navegar al perfil del usuario
+                          if (user.bio != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              user.bio!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark
+                                    ? Colors.grey.shade500
+                                    : Colors.grey.shade500,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      trailing: _buildActionButton(
+                        context,
+                        user.id,
+                        isFollowing,
+                        user.username ?? 'usuario',
+                        controller,
+                      ),
+                      onTap: () {
+                        // TODO: Navegar al perfil del usuario
+                      },
+                    );
                   },
                 );
               },
@@ -191,61 +194,28 @@ class SearchTab extends StatelessWidget {
   Widget _buildActionButton(
     BuildContext context,
     String userId,
-    bool isFriend,
-    bool hasPendingRequest,
+    bool isFollowing,
+    String username,
     SocialController controller,
   ) {
-    final theme = Theme.of(context);
-
-    if (isFriend) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.green.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.green),
+    // Si ya lo sigue, mostrar botón para dejar de seguir
+    if (isFollowing) {
+      return OutlinedButton(
+        onPressed: () => controller.unfollowUser(userId, username),
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.check, size: 16, color: Colors.green),
-            const SizedBox(width: 4),
-            Text(
-              'Amigos',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.green,
-              ),
-            ),
-          ],
-        ),
+        child: const Text('Siguiendo', style: TextStyle(fontSize: 12)),
       );
     }
 
-    if (hasPendingRequest) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.orange.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.orange),
-        ),
-        child: Text(
-          'Pendiente',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Colors.orange.shade700,
-          ),
-        ),
-      );
-    }
-
+    // Botón para seguir
     return ElevatedButton.icon(
-      onPressed: () => controller.sendFriendRequest(userId),
-      icon: const Icon(Icons.person_add, size: 16),
-      label: const Text('Agregar'),
+      onPressed: () => controller.followUser(userId),
+      icon: const Icon(Icons.person_add_outlined, size: 16),
+      label: const Text('Seguir', style: TextStyle(fontSize: 12)),
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         minimumSize: Size.zero,

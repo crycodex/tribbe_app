@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/auth/models/user_model.dart';
-import 'package:tribbe_app/shared/models/friendship_models.dart';
+import 'package:tribbe_app/shared/models/social_models.dart';
 import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
 import 'package:tribbe_app/shared/services/friendship_service.dart';
+import 'package:tribbe_app/shared/services/social_service.dart';
 
-/// Controller para gestionar funcionalidad social
+/// Controller para gestionar funcionalidad social (solo followers/following)
 class SocialController extends GetxController {
   final FriendshipService _friendshipService = Get.find();
+  final SocialService _socialService = Get.find();
   final FirebaseAuthService _authService = Get.find();
 
   // Estado de carga
@@ -18,11 +20,11 @@ class SocialController extends GetxController {
   final RxInt currentTabIndex = 0.obs;
 
   // Listas de datos
-  final RxList<Friendship> friends = <Friendship>[].obs;
-  final RxList<FriendRequest> receivedRequests = <FriendRequest>[].obs;
-  final RxList<FriendRequest> sentRequests = <FriendRequest>[].obs;
-  final RxList<BlockedUser> blockedUsers = <BlockedUser>[].obs;
   final RxList<UserModel> searchResults = <UserModel>[].obs;
+
+  // Listas de followers/following
+  final RxList<FollowRelation> followers = <FollowRelation>[].obs;
+  final RxList<FollowRelation> following = <FollowRelation>[].obs;
 
   // Usuario actual
   UserModel? get currentUser {
@@ -44,37 +46,21 @@ class SocialController extends GetxController {
 
   /// Cargar todos los datos
   void loadData() {
-    loadFriends();
-    loadReceivedRequests();
-    loadSentRequests();
-    loadBlockedUsers();
+    loadFollowers();
+    loadFollowing();
   }
 
-  /// Cargar lista de amigos
-  void loadFriends() {
-    _friendshipService.getFriends().listen((friendshipList) {
-      friends.value = friendshipList;
+  /// Cargar lista de seguidores
+  void loadFollowers() {
+    _socialService.getFollowers().listen((followersList) {
+      followers.value = followersList;
     });
   }
 
-  /// Cargar solicitudes recibidas
-  void loadReceivedRequests() {
-    _friendshipService.getReceivedFriendRequests().listen((requests) {
-      receivedRequests.value = requests;
-    });
-  }
-
-  /// Cargar solicitudes enviadas
-  void loadSentRequests() {
-    _friendshipService.getSentFriendRequests().listen((requests) {
-      sentRequests.value = requests;
-    });
-  }
-
-  /// Cargar usuarios bloqueados
-  void loadBlockedUsers() {
-    _friendshipService.getBlockedUsers().listen((blocked) {
-      blockedUsers.value = blocked;
+  /// Cargar lista de usuarios que sigue
+  void loadFollowing() {
+    _socialService.getFollowing().listen((followingList) {
+      following.value = followingList;
     });
   }
 
@@ -97,74 +83,37 @@ class SocialController extends GetxController {
     }
   }
 
-  /// Enviar solicitud de amistad
-  Future<void> sendFriendRequest(String userId) async {
+  /// Seguir a un usuario
+  Future<void> followUser(String userId) async {
+    debugPrint('🔄 SocialController: Siguiendo usuario $userId');
     isLoading.value = true;
 
     try {
-      final success = await _friendshipService.sendFriendRequest(userId);
+      final success = await _socialService.followUser(userId);
+      debugPrint('📊 SocialController: Resultado de seguir usuario: $success');
 
       if (success) {
         Get.snackbar(
-          'Solicitud enviada',
-          'La solicitud de amistad ha sido enviada',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-
-        // Recargar solicitudes enviadas
-        loadSentRequests();
-      } else {
-        Get.snackbar(
-          'Error',
-          'No se pudo enviar la solicitud',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Ocurrió un error al enviar la solicitud',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  /// Aceptar solicitud de amistad
-  Future<void> acceptFriendRequest(String requestId) async {
-    debugPrint('🔄 SocialController: Aceptando solicitud $requestId');
-    isLoading.value = true;
-
-    try {
-      final success = await _friendshipService.acceptFriendRequest(requestId);
-      debugPrint(
-        '📊 SocialController: Resultado de aceptar solicitud: $success',
-      );
-
-      if (success) {
-        Get.snackbar(
-          '¡Nueva amistad!',
-          'Ahora son amigos',
+          '¡Usuario seguido!',
+          'Ahora sigues a este usuario',
           snackPosition: SnackPosition.BOTTOM,
         );
 
         // Recargar datos
-        loadFriends();
-        loadReceivedRequests();
+        loadFollowing();
       } else {
-        debugPrint('❌ SocialController: No se pudo aceptar la solicitud');
+        debugPrint('❌ SocialController: No se pudo seguir al usuario');
         Get.snackbar(
           'Error',
-          'No se pudo aceptar la solicitud',
+          'No se pudo seguir al usuario',
           snackPosition: SnackPosition.BOTTOM,
         );
       }
     } catch (e) {
-      debugPrint('❌ SocialController: Error al aceptar solicitud: $e');
+      debugPrint('❌ SocialController: Error al seguir usuario: $e');
       Get.snackbar(
         'Error',
-        'Ocurrió un error al aceptar la solicitud',
+        'Ocurrió un error al seguir al usuario',
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
@@ -172,81 +121,13 @@ class SocialController extends GetxController {
     }
   }
 
-  /// Rechazar solicitud de amistad
-  Future<void> rejectFriendRequest(String requestId) async {
-    isLoading.value = true;
-
-    try {
-      final success = await _friendshipService.rejectFriendRequest(requestId);
-
-      if (success) {
-        Get.snackbar(
-          'Solicitud rechazada',
-          'La solicitud ha sido rechazada',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-
-        // Recargar solicitudes
-        loadReceivedRequests();
-      } else {
-        Get.snackbar(
-          'Error',
-          'No se pudo rechazar la solicitud',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Ocurrió un error al rechazar la solicitud',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  /// Cancelar solicitud enviada
-  Future<void> cancelFriendRequest(String receiverId) async {
-    isLoading.value = true;
-
-    try {
-      final success = await _friendshipService.cancelFriendRequest(receiverId);
-
-      if (success) {
-        Get.snackbar(
-          'Solicitud cancelada',
-          'La solicitud ha sido cancelada',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-
-        // Recargar solicitudes
-        loadSentRequests();
-      } else {
-        Get.snackbar(
-          'Error',
-          'No se pudo cancelar la solicitud',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Ocurrió un error al cancelar la solicitud',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  /// Eliminar amistad
-  Future<void> removeFriend(String friendId, String friendName) async {
+  /// Dejar de seguir a un usuario
+  Future<void> unfollowUser(String userId, String username) async {
     // Confirmar con diálogo
     final confirmed = await Get.dialog<bool>(
       AlertDialog(
-        title: const Text('Eliminar amistad'),
-        content: Text('¿Estás seguro de eliminar a $friendName de tus amigos?'),
+        title: const Text('Dejar de seguir'),
+        content: Text('¿Estás seguro de dejar de seguir a @$username?'),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
@@ -255,7 +136,7 @@ class SocialController extends GetxController {
           TextButton(
             onPressed: () => Get.back(result: true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Eliminar'),
+            child: const Text('Dejar de seguir'),
           ),
         ],
       ),
@@ -266,86 +147,28 @@ class SocialController extends GetxController {
     isLoading.value = true;
 
     try {
-      final success = await _friendshipService.removeFriend(friendId);
+      final success = await _socialService.unfollowUser(userId);
 
       if (success) {
         Get.snackbar(
-          'Amistad eliminada',
-          'La amistad ha sido eliminada',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-
-        // Recargar amigos
-        loadFriends();
-      } else {
-        Get.snackbar(
-          'Error',
-          'No se pudo eliminar la amistad',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Ocurrió un error al eliminar la amistad',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  /// Bloquear usuario
-  Future<void> blockUser(String userId, String username) async {
-    // Confirmar con diálogo
-    final confirmed = await Get.dialog<bool>(
-      AlertDialog(
-        title: const Text('Bloquear usuario'),
-        content: Text(
-          '¿Estás seguro de bloquear a @$username? No podrán enviarte solicitudes ni ver tu contenido.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(result: false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Get.back(result: true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Bloquear'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true) return;
-
-    isLoading.value = true;
-
-    try {
-      final success = await _friendshipService.blockUser(userId);
-
-      if (success) {
-        Get.snackbar(
-          'Usuario bloqueado',
-          'El usuario ha sido bloqueado',
+          'Dejaste de seguir',
+          'Ya no sigues a este usuario',
           snackPosition: SnackPosition.BOTTOM,
         );
 
         // Recargar datos
-        loadFriends();
-        loadBlockedUsers();
+        loadFollowing();
       } else {
         Get.snackbar(
           'Error',
-          'No se pudo bloquear al usuario',
+          'No se pudo dejar de seguir al usuario',
           snackPosition: SnackPosition.BOTTOM,
         );
       }
     } catch (e) {
       Get.snackbar(
         'Error',
-        'Ocurrió un error al bloquear al usuario',
+        'Ocurrió un error al dejar de seguir al usuario',
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
@@ -353,68 +176,14 @@ class SocialController extends GetxController {
     }
   }
 
-  /// Desbloquear usuario
-  Future<void> unblockUser(String userId, String username) async {
-    // Confirmar con diálogo
-    final confirmed = await Get.dialog<bool>(
-      AlertDialog(
-        title: const Text('Desbloquear usuario'),
-        content: Text('¿Estás seguro de desbloquear a @$username?'),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(result: false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Get.back(result: true),
-            child: const Text('Desbloquear'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true) return;
-
-    isLoading.value = true;
-
-    try {
-      final success = await _friendshipService.unblockUser(userId);
-
-      if (success) {
-        Get.snackbar(
-          'Usuario desbloqueado',
-          'El usuario ha sido desbloqueado',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-
-        // Recargar bloqueados
-        loadBlockedUsers();
-      } else {
-        Get.snackbar(
-          'Error',
-          'No se pudo desbloquear al usuario',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
-    } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Ocurrió un error al desbloquear al usuario',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading.value = false;
-    }
+  /// Verificar si está siguiendo a un usuario
+  Future<bool> isFollowingUser(String userId) async {
+    return await _socialService.isFollowing(userId);
   }
 
-  /// Verificar si hay solicitudes pendientes con un usuario
-  bool hasPendingRequestWith(String userId) {
-    return sentRequests.any((request) => request.receiverId == userId);
-  }
-
-  /// Verificar si son amigos
-  bool isFriendWith(String userId) {
-    return friends.any((friendship) => friendship.friendId == userId);
+  /// Verificar si un usuario lo está siguiendo
+  Future<bool> isFollowedByUser(String userId) async {
+    return await _socialService.isFollowedBy(userId);
   }
 
   /// Cambiar tab actual
