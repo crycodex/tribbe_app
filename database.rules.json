@@ -1,0 +1,13 @@
+{
+  "rules": {
+    "messages": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "conversations": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}
+

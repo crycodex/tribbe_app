@@ -10,8 +10,11 @@ import 'package:tribbe_app/shared/controllers/exercises_controller.dart';
 import 'package:tribbe_app/features/dashboard/controllers/dashboard_controller.dart';
 import 'package:tribbe_app/features/social/views/pages/social_page.dart';
 import 'package:tribbe_app/features/social/controllers/social_controller.dart';
+import 'package:tribbe_app/features/messages/views/pages/messages_page.dart';
+import 'package:tribbe_app/features/messages/controllers/messages_controller.dart';
 import 'package:tribbe_app/shared/services/friendship_service.dart';
 import 'package:tribbe_app/shared/services/social_service.dart';
+import 'package:tribbe_app/shared/services/message_service.dart';
 
 /// Configuración de rutas de la aplicación usando GetX
 class AppRouter {
@@ -138,6 +141,15 @@ class AppRouter {
       transitionDuration: const Duration(milliseconds: 300),
     ),
 
+    // Messages routes
+    GetPage<dynamic>(
+      name: RoutePaths.messages,
+      page: () => const MessagesPage(),
+      binding: MessagesBinding(),
+      transition: Transition.rightToLeft,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+
     // TODO: Gym routes
   ];
 
@@ -156,6 +168,7 @@ class AppRouter {
     Get.put(WorkoutService(), permanent: true);
     Get.put(FriendshipService(), permanent: true);
     Get.put(SocialService(), permanent: true);
+    Get.put(MessageService(), permanent: true);
 
     // Controllers globales
     Get.put(SettingsController(), permanent: true);
@@ -272,5 +285,13 @@ class SocialBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut<SocialController>(() => SocialController());
+  }
+}
+
+/// Binding para mensajes
+class MessagesBinding extends Bindings {
+  @override
+  void dependencies() {
+    Get.lazyPut<MessagesController>(() => MessagesController());
   }
 }

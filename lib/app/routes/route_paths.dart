@@ -37,6 +37,10 @@ class RoutePaths {
   static const String feed = '/feed';
   static const String social = '/social';
 
+  // Messages
+  static const String messages = '/messages';
+  static const String chat = '/chat';
+
   // Gym
   static const String gymList = '/gyms';
   static const String gymDetail = '/gym/:id';

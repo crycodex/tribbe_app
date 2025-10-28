@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/social/controllers/social_controller.dart';
+import 'package:tribbe_app/features/messages/views/pages/chat_page.dart';
 
 /// Página de perfil de usuario - Estilo Instagram Minimalista
 class UserProfilePage extends StatelessWidget {
@@ -215,7 +216,17 @@ class UserProfilePage extends StatelessWidget {
                             Expanded(
                               child: OutlinedButton(
                                 onPressed: () {
-                                  // TODO: Enviar mensaje (si es amigo)
+                                  // Navegar a chat
+                                  Get.to(
+                                    () => ChatPage(
+                                      otherUserId: userId,
+                                      otherUsername: username,
+                                      otherUserPhotoUrl: photoUrl,
+                                      otherUserDisplayName: displayName,
+                                    ),
+                                    transition: Transition.cupertino,
+                                    duration: const Duration(milliseconds: 300),
+                                  );
                                 },
                                 style: OutlinedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
