@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:tribbe_app/features/messages/models/message_model.dart';
 import 'package:tribbe_app/features/messages/models/conversation_model.dart';
 
@@ -345,8 +346,32 @@ class MessageService {
     });
   }
 
-  /// Limpiar mensajes expirados (ejecutar periódicamente)
-  Future<void> cleanExpiredMessages() async {
+  /// Limpiar mensajes expirados usando Cloud Function
+  Future<Map<String, dynamic>> cleanExpiredMessages() async {
+    try {
+      final functions = FirebaseFunctions.instance;
+      final callable = functions.httpsCallable('cleanExpiredMessagesManual');
+
+      final result = await callable.call();
+      final data = result.data as Map<String, dynamic>;
+
+      print('✅ Mensajes expirados limpiados:');
+      print('   - Mensajes eliminados: ${data['deletedMessages']}');
+      print(
+        '   - Conversaciones procesadas: ${data['processedConversations']}',
+      );
+
+      return data;
+    } catch (e) {
+      print('Error calling cleanExpiredMessages Cloud Function: $e');
+      // Fallback a limpieza local si falla la Cloud Function
+      await _cleanExpiredMessagesLocal();
+      rethrow;
+    }
+  }
+
+  /// Limpiar mensajes expirados localmente (fallback)
+  Future<void> _cleanExpiredMessagesLocal() async {
     try {
       final now = DateTime.now().millisecondsSinceEpoch;
 
@@ -380,7 +405,7 @@ class MessageService {
         }
       }
     } catch (e) {
-      print('Error cleaning expired messages: $e');
+      print('Error cleaning expired messages locally: $e');
     }
   }
 }

@@ -308,3 +308,237 @@ exports.resetAllStreaks = functions.https.onCall({
     throw new functions.https.HttpsError('internal', error.message);
   }
 });
+
+/**
+ * Cloud Function para limpiar mensajes expirados (7 días)
+ * Se ejecuta cada día a las 02:00 UTC para limpiar mensajes antiguos
+ */
+exports.cleanExpiredMessages = functions.scheduler.onSchedule({
+  schedule: '0 2 * * *', // Cada día a las 2:00 AM UTC
+  timeZone: 'UTC',
+  memory: '512MiB',
+  timeoutSeconds: 540,
+}, async (event) => {
+  console.log('🧹 Iniciando limpieza de mensajes expirados...');
+  
+  try {
+    const db = admin.database();
+    const now = Date.now();
+    
+    // Limpiar mensajes expirados
+    console.log('📨 Limpiando mensajes expirados...');
+    const messagesRef = db.ref('messages');
+    const messagesSnapshot = await messagesRef.once('value');
+    
+    if (!messagesSnapshot.exists()) {
+      console.log('No hay mensajes para procesar');
+      return null;
+    }
+    
+    const messagesData = messagesSnapshot.val();
+    let deletedMessagesCount = 0;
+    let processedConversationsCount = 0;
+    
+    // Procesar cada conversación
+    for (const [conversationId, conversationMessages] of Object.entries(messagesData)) {
+      if (!conversationMessages || typeof conversationMessages !== 'object') {
+        continue;
+      }
+      
+      processedConversationsCount++;
+      console.log(`📞 Procesando conversación: ${conversationId}`);
+      
+      const updates = {};
+      let conversationHasExpiredMessages = false;
+      
+      // Verificar cada mensaje en la conversación
+      for (const [messageId, messageData] of Object.entries(conversationMessages)) {
+        if (!messageData || typeof messageData !== 'object') {
+          continue;
+        }
+        
+        const expiresAt = messageData.expiresAt;
+        if (expiresAt && expiresAt < now) {
+          // Marcar mensaje para eliminación
+          updates[`messages/${conversationId}/${messageId}`] = null;
+          deletedMessagesCount++;
+          conversationHasExpiredMessages = true;
+          console.log(`  🗑️ Mensaje expirado eliminado: ${messageId}`);
+        }
+      }
+      
+      // Si la conversación tiene mensajes expirados, verificar si quedan mensajes
+      if (conversationHasExpiredMessages) {
+        const remainingMessages = Object.keys(conversationMessages).filter(
+          messageId => !updates[`messages/${conversationId}/${messageId}`]
+        );
+        
+        // Si no quedan mensajes, eliminar la conversación completa
+        if (remainingMessages.length === 0) {
+          updates[`messages/${conversationId}`] = null;
+          console.log(`  🗑️ Conversación vacía eliminada: ${conversationId}`);
+        }
+      }
+      
+      // Aplicar actualizaciones si hay cambios
+      if (Object.keys(updates).length > 0) {
+        await db.ref().update(updates);
+        console.log(`  ✅ ${Object.keys(updates).length} cambios aplicados`);
+      }
+    }
+    
+    // Limpiar conversaciones vacías
+    console.log('💬 Limpiando conversaciones vacías...');
+    const conversationsRef = db.ref('conversations');
+    const conversationsSnapshot = await conversationsRef.once('value');
+    
+    if (conversationsSnapshot.exists()) {
+      const conversationsData = conversationsSnapshot.val();
+      let deletedConversationsCount = 0;
+      
+      for (const [userId, userConversations] of Object.entries(conversationsData)) {
+        if (!userConversations || typeof userConversations !== 'object') {
+          continue;
+        }
+        
+        const updates = {};
+        
+        for (const [conversationId, conversationData] of Object.entries(userConversations)) {
+          if (!conversationData || typeof conversationData !== 'object') {
+            continue;
+          }
+          
+          const expiresAt = conversationData.expiresAt;
+          if (expiresAt && expiresAt < now) {
+            // Verificar si la conversación aún existe en messages
+            const messageRef = db.ref(`messages/${conversationId}`);
+            const messageSnapshot = await messageRef.once('value');
+            
+            if (!messageSnapshot.exists()) {
+              updates[`conversations/${userId}/${conversationId}`] = null;
+              deletedConversationsCount++;
+              console.log(`  🗑️ Conversación expirada eliminada: ${conversationId} del usuario ${userId}`);
+            }
+          }
+        }
+        
+        // Aplicar actualizaciones si hay cambios
+        if (Object.keys(updates).length > 0) {
+          await db.ref().update(updates);
+        }
+      }
+      
+      console.log(`📊 Conversaciones eliminadas: ${deletedConversationsCount}`);
+    }
+    
+    console.log(`📊 Resumen de limpieza:`);
+    console.log(`   - Conversaciones procesadas: ${processedConversationsCount}`);
+    console.log(`   - Mensajes eliminados: ${deletedMessagesCount}`);
+    console.log(`   - Timestamp: ${new Date().toISOString()}`);
+    
+    return {
+      processedConversations: processedConversationsCount,
+      deletedMessages: deletedMessagesCount,
+      timestamp: new Date().toISOString(),
+    };
+    
+  } catch (error) {
+    console.error('❌ Error en limpieza de mensajes:', error);
+    throw error;
+  }
+});
+
+/**
+ * Cloud Function para limpiar mensajes expirados manualmente
+ * Se puede llamar desde la app o manualmente
+ */
+exports.cleanExpiredMessagesManual = functions.https.onCall({
+  memory: '512MiB',
+  timeoutSeconds: 120,
+}, async (request) => {
+  // Verificar autenticación
+  if (!request.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Usuario no autenticado');
+  }
+  
+  console.log(`🧹 Limpieza manual de mensajes expirados por usuario ${request.auth.uid}...`);
+  
+  try {
+    const db = admin.database();
+    const now = Date.now();
+    
+    // Limpiar mensajes expirados
+    const messagesRef = db.ref('messages');
+    const messagesSnapshot = await messagesRef.once('value');
+    
+    if (!messagesSnapshot.exists()) {
+      return {
+        success: true,
+        message: 'No hay mensajes para procesar',
+        deletedMessages: 0,
+        processedConversations: 0,
+      };
+    }
+    
+    const messagesData = messagesSnapshot.val();
+    let deletedMessagesCount = 0;
+    let processedConversationsCount = 0;
+    
+    // Procesar cada conversación
+    for (const [conversationId, conversationMessages] of Object.entries(messagesData)) {
+      if (!conversationMessages || typeof conversationMessages !== 'object') {
+        continue;
+      }
+      
+      processedConversationsCount++;
+      
+      const updates = {};
+      let conversationHasExpiredMessages = false;
+      
+      // Verificar cada mensaje en la conversación
+      for (const [messageId, messageData] of Object.entries(conversationMessages)) {
+        if (!messageData || typeof messageData !== 'object') {
+          continue;
+        }
+        
+        const expiresAt = messageData.expiresAt;
+        if (expiresAt && expiresAt < now) {
+          // Marcar mensaje para eliminación
+          updates[`messages/${conversationId}/${messageId}`] = null;
+          deletedMessagesCount++;
+          conversationHasExpiredMessages = true;
+        }
+      }
+      
+      // Si la conversación tiene mensajes expirados, verificar si quedan mensajes
+      if (conversationHasExpiredMessages) {
+        const remainingMessages = Object.keys(conversationMessages).filter(
+          messageId => !updates[`messages/${conversationId}/${messageId}`]
+        );
+        
+        // Si no quedan mensajes, eliminar la conversación completa
+        if (remainingMessages.length === 0) {
+          updates[`messages/${conversationId}`] = null;
+        }
+      }
+      
+      // Aplicar actualizaciones si hay cambios
+      if (Object.keys(updates).length > 0) {
+        await db.ref().update(updates);
+      }
+    }
+    
+    console.log(`✅ Limpieza manual completada: ${deletedMessagesCount} mensajes eliminados`);
+    
+    return {
+      success: true,
+      deletedMessages: deletedMessagesCount,
+      processedConversations: processedConversationsCount,
+      timestamp: new Date().toISOString(),
+    };
+    
+  } catch (error) {
+    console.error(`❌ Error en limpieza manual de mensajes:`, error);
+    throw new functions.https.HttpsError('internal', error.message);
+  }
+});

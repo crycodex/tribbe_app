@@ -110,12 +110,31 @@ class MessagesController extends GetxController {
     }
   }
 
-  /// Limpiar mensajes expirados
+  /// Limpiar mensajes expirados usando Cloud Function
   Future<void> cleanExpiredMessages() async {
     try {
-      await _messageService.cleanExpiredMessages();
+      isLoading.value = true;
+
+      final result = await _messageService.cleanExpiredMessages();
+
+      Get.snackbar(
+        'Limpieza completada',
+        'Se eliminaron ${result['deletedMessages']} mensajes expirados',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+      );
+
+      // Refrescar conversaciones después de la limpieza
+      await refreshConversations();
     } catch (e) {
       print('Error cleaning expired messages: $e');
+      Get.snackbar(
+        'Error',
+        'No se pudieron limpiar los mensajes expirados',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoading.value = false;
     }
   }
 }
