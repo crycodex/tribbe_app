@@ -148,7 +148,13 @@ class ChatPage extends StatelessWidget {
                   return Column(
                     children: [
                       if (showDate) _buildDateSeparator(message, isDark),
-                      _buildMessageBubble(message, isMyMessage, isDark, theme),
+                      _buildMessageBubble(
+                        message,
+                        isMyMessage,
+                        isDark,
+                        theme,
+                        context,
+                      ),
                     ],
                   );
                 },
@@ -239,6 +245,7 @@ class ChatPage extends StatelessWidget {
     bool isMyMessage,
     bool isDark,
     ThemeData theme,
+    BuildContext context,
   ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -277,69 +284,200 @@ class ChatPage extends StatelessWidget {
 
           // Burbuja de mensaje
           Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: isMyMessage
-                    ? theme.colorScheme.primary
-                    : (isDark ? const Color(0xFF0A0A0A) : Colors.white),
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(20),
-                  topRight: const Radius.circular(20),
-                  bottomLeft: Radius.circular(isMyMessage ? 20 : 4),
-                  bottomRight: Radius.circular(isMyMessage ? 4 : 20),
-                ),
-                border: isMyMessage
-                    ? null
-                    : Border.all(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.05)
-                            : Colors.black.withValues(alpha: 0.05),
-                        width: 0.5,
-                      ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.7,
+                minWidth: 50,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    message.text,
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: isMyMessage
-                          ? Colors.white
-                          : (isDark ? Colors.white : Colors.black87),
-                      height: 1.4,
-                    ),
+              child: GestureDetector(
+                onLongPress: () {
+                  final controller = Get.find<ChatController>();
+                  controller.showReactionSelector(message);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
                   ),
-                  const SizedBox(height: 2),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                  decoration: BoxDecoration(
+                    color: isMyMessage
+                        ? theme.colorScheme.primary
+                        : (isDark ? const Color(0xFF0A0A0A) : Colors.white),
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(20),
+                      topRight: const Radius.circular(20),
+                      bottomLeft: Radius.circular(isMyMessage ? 20 : 4),
+                      bottomRight: Radius.circular(isMyMessage ? 4 : 20),
+                    ),
+                    border: isMyMessage
+                        ? null
+                        : Border.all(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.05)
+                                : Colors.black.withValues(alpha: 0.05),
+                            width: 0.5,
+                          ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Reacciones (dentro de la burbuja, arriba del texto)
+                      if (message.reactions.isNotEmpty) ...[
+                        _buildReactions(message, isMyMessage, isDark, theme),
+                        const SizedBox(height: 3),
+                      ],
+
+                      // Texto del mensaje
                       Text(
-                        DateFormat.Hm().format(message.dateTime),
+                        message.displayText,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 15,
                           color: isMyMessage
-                              ? Colors.white.withValues(alpha: 0.7)
-                              : (isDark ? Colors.white38 : Colors.black38),
-                          fontWeight: FontWeight.w300,
+                              ? Colors.white
+                              : (isDark ? Colors.white : Colors.black87),
+                          height: 1.4,
+                          fontStyle: message.isDeleted
+                              ? FontStyle.italic
+                              : FontStyle.normal,
                         ),
                       ),
-                      if (isMyMessage) ...[
-                        const SizedBox(width: 4),
-                        Icon(
-                          message.isRead ? Icons.done_all : Icons.done,
-                          size: 14,
-                          color: Colors.white.withValues(alpha: 0.7),
+
+                      // Indicador de edición
+                      if (message.isEdited) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          'editado',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isMyMessage
+                                ? Colors.white.withValues(alpha: 0.5)
+                                : (isDark ? Colors.white38 : Colors.black38),
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ],
+
+                      const SizedBox(height: 2),
+
+                      // Timestamp y estado de lectura
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                DateFormat.Hm().format(message.dateTime),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: isMyMessage
+                                      ? Colors.white.withValues(alpha: 0.7)
+                                      : (isDark
+                                            ? Colors.white38
+                                            : Colors.black38),
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                              if (isMyMessage) ...[
+                                const SizedBox(width: 4),
+                                Icon(
+                                  message.isRead ? Icons.done_all : Icons.done,
+                                  size: 14,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                ),
+                              ],
+                            ],
+                          ),
+
+                          // Botón de opciones para mensajes propios
+                          if (isMyMessage)
+                            GestureDetector(
+                              onTap: () {
+                                final controller = Get.find<ChatController>();
+                                controller.showMessageOptions(message);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.more_horiz,
+                                  size: 16,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Widget para mostrar reacciones (simple y claro)
+  Widget _buildReactions(
+    MessageModel message,
+    bool isMyMessage,
+    bool isDark,
+    ThemeData theme,
+  ) {
+    if (message.reactions.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Wrap(
+        spacing: 4,
+        runSpacing: 2,
+        children: message.reactionEmojis.map((emoji) {
+          final count = message.getReactionCount(emoji);
+          final controller = Get.find<ChatController>();
+          final currentUserId = controller.authService.currentUser?.uid;
+          final hasReacted =
+              currentUserId != null &&
+              message.hasReaction(currentUserId) &&
+              message.getUserReaction(currentUserId) == emoji;
+
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: hasReacted
+                  ? (isMyMessage
+                        ? Colors.white.withValues(alpha: 0.3)
+                        : theme.colorScheme.primary.withValues(alpha: 0.2))
+                  : (isMyMessage
+                        ? Colors.white.withValues(alpha: 0.2)
+                        : theme.colorScheme.primary.withValues(alpha: 0.1)),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 14)),
+                if (count > 1) ...[
+                  const SizedBox(width: 4),
+                  Text(
+                    count.toString(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isMyMessage
+                          ? Colors.white.withValues(alpha: 0.8)
+                          : theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -365,71 +503,134 @@ class ChatPage extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: Row(
+        child: Column(
           children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.05)
-                      : Colors.black.withValues(alpha: 0.03),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.05)
-                        : Colors.black.withValues(alpha: 0.05),
-                    width: 0.5,
-                  ),
-                ),
-                child: TextField(
-                  controller: controller.textController,
-                  style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black87,
-                    fontSize: 15,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: 'Escribe un mensaje...',
-                    hintStyle: TextStyle(
-                      color: isDark ? Colors.white38 : Colors.black38,
-                      fontSize: 15,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
-                  ),
-                  maxLines: null,
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: (_) => controller.sendMessage(),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
+            // Indicador de edición
             Obx(() {
-              return GestureDetector(
-                onTap: controller.isSending.value
-                    ? null
-                    : controller.sendMessage,
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary,
-                    shape: BoxShape.circle,
+              if (controller.isEditing.value) {
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
                   ),
-                  child: controller.isSending.value
-                      ? const Padding(
-                          padding: EdgeInsets.all(12),
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.send, color: Colors.white, size: 22),
-                ),
-              );
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.edit,
+                        size: 14,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Editando mensaje',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: controller.cancelEdit,
+                        child: Icon(
+                          Icons.close,
+                          size: 14,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
             }),
+
+            // Campo de texto y botón
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.black.withValues(alpha: 0.03),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.black.withValues(alpha: 0.05),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: TextField(
+                      controller: controller.textController,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 15,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: controller.isEditing.value
+                            ? 'Edita tu mensaje...'
+                            : 'Escribe un mensaje...',
+                        hintStyle: TextStyle(
+                          color: isDark ? Colors.white38 : Colors.black38,
+                          fontSize: 15,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                      ),
+                      maxLines: null,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => controller.sendMessage(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Obx(() {
+                  return GestureDetector(
+                    onTap: controller.isSending.value
+                        ? null
+                        : controller.sendMessage,
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: controller.isSending.value
+                          ? const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Icon(
+                              controller.isEditing.value
+                                  ? Icons.check
+                                  : Icons.send,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                    ),
+                  );
+                }),
+              ],
+            ),
           ],
         ),
       ),

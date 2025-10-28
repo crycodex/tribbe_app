@@ -346,7 +346,103 @@ class MessageService {
     });
   }
 
-  /// Limpiar mensajes expirados usando Cloud Function
+  /// Agregar o quitar reacción a un mensaje
+  Future<void> toggleReaction({
+    required String conversationId,
+    required String messageId,
+    required String userId,
+    required String emoji,
+  }) async {
+    try {
+      final messageRef = _messagesRef.child(conversationId).child(messageId);
+      final snapshot = await messageRef.get();
+
+      if (!snapshot.exists) {
+        throw Exception('Mensaje no encontrado');
+      }
+
+      final messageData = Map<dynamic, dynamic>.from(
+        snapshot.value as Map<dynamic, dynamic>,
+      );
+
+      Map<String, String> reactions = {};
+      if (messageData['reactions'] != null) {
+        final reactionsData = messageData['reactions'] as Map<dynamic, dynamic>;
+        reactionsData.forEach((userIdKey, emojiValue) {
+          if (emojiValue is String) {
+            reactions[userIdKey as String] = emojiValue;
+          }
+        });
+      }
+
+      // Toggle reacción (una por usuario)
+      if (reactions.containsKey(userId)) {
+        // Si ya tiene reacción, quitarla
+        reactions.remove(userId);
+      } else {
+        // Agregar nueva reacción
+        reactions[userId] = emoji;
+      }
+
+      await messageRef.update({'reactions': reactions});
+    } catch (e) {
+      print('Error toggling reaction: $e');
+      rethrow;
+    }
+  }
+
+  /// Eliminar mensaje (soft delete)
+  Future<void> deleteMessage({
+    required String conversationId,
+    required String messageId,
+  }) async {
+    try {
+      final messageRef = _messagesRef.child(conversationId).child(messageId);
+
+      await messageRef.update({
+        'isDeleted': true,
+        'text': 'Este mensaje fue eliminado',
+      });
+    } catch (e) {
+      print('Error deleting message: $e');
+      rethrow;
+    }
+  }
+
+  /// Editar mensaje
+  Future<void> editMessage({
+    required String conversationId,
+    required String messageId,
+    required String newText,
+  }) async {
+    try {
+      final messageRef = _messagesRef.child(conversationId).child(messageId);
+      final snapshot = await messageRef.get();
+
+      if (!snapshot.exists) {
+        throw Exception('Mensaje no encontrado');
+      }
+
+      final messageData = Map<dynamic, dynamic>.from(
+        snapshot.value as Map<dynamic, dynamic>,
+      );
+
+      // Verificar que el mensaje no esté eliminado
+      if (messageData['isDeleted'] == true) {
+        throw Exception('No se puede editar un mensaje eliminado');
+      }
+
+      await messageRef.update({
+        'isEdited': true,
+        'editedText': newText,
+        'editedAt': DateTime.now().millisecondsSinceEpoch,
+      });
+    } catch (e) {
+      print('Error editing message: $e');
+      rethrow;
+    }
+  }
+
   Future<Map<String, dynamic>> cleanExpiredMessages() async {
     try {
       final functions = FirebaseFunctions.instance;

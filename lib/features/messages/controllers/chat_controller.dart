@@ -9,7 +9,7 @@ import 'package:tribbe_app/shared/services/firestore_service.dart';
 /// Controller para conversación individual
 class ChatController extends GetxController {
   final MessageService _messageService = Get.find();
-  final FirebaseAuthService _authService = Get.find();
+  final FirebaseAuthService authService = Get.find();
   final FirestoreService _firestoreService = Get.find();
 
   /// Información del otro usuario
@@ -30,8 +30,15 @@ class ChatController extends GetxController {
   /// Estado de envío
   final isSending = false.obs;
 
+  /// Estado de edición
+  final isEditing = false.obs;
+  final editingMessageId = RxString('');
+
   /// Controlador del campo de texto
   final textController = TextEditingController();
+
+  /// Controlador del campo de edición
+  final editTextController = TextEditingController();
 
   /// Controlador del scroll
   final scrollController = ScrollController();
@@ -56,13 +63,14 @@ class ChatController extends GetxController {
   void onClose() {
     _messagesSubscription?.cancel();
     textController.dispose();
+    editTextController.dispose();
     scrollController.dispose();
     super.onClose();
   }
 
   /// Inicializar chat
   void _initializeChat() {
-    final currentUserId = _authService.currentUser?.uid;
+    final currentUserId = authService.currentUser?.uid;
     if (currentUserId == null) return;
 
     // Crear ID de conversación
@@ -106,7 +114,13 @@ class ChatController extends GetxController {
     final text = textController.text.trim();
     if (text.isEmpty) return;
 
-    final currentUser = _authService.currentUser;
+    // Si está en modo edición, guardar la edición
+    if (isEditing.value) {
+      await saveEdit();
+      return;
+    }
+
+    final currentUser = authService.currentUser;
     if (currentUser == null) return;
 
     try {
@@ -149,7 +163,7 @@ class ChatController extends GetxController {
 
   /// Marcar mensajes como leídos
   Future<void> _markAsRead() async {
-    final currentUserId = _authService.currentUser?.uid;
+    final currentUserId = authService.currentUser?.uid;
     if (currentUserId == null) return;
 
     try {
@@ -175,7 +189,222 @@ class ChatController extends GetxController {
 
   /// Verificar si un mensaje es del usuario actual
   bool isMyMessage(MessageModel message) {
-    return message.senderId == _authService.currentUser?.uid;
+    return message.senderId == authService.currentUser?.uid;
+  }
+
+  /// Agregar o quitar reacción a un mensaje
+  Future<void> toggleReaction(MessageModel message, String emoji) async {
+    final currentUserId = authService.currentUser?.uid;
+    if (currentUserId == null) return;
+
+    try {
+      await _messageService.toggleReaction(
+        conversationId: conversationId,
+        messageId: message.id,
+        userId: currentUserId,
+        emoji: emoji,
+      );
+    } catch (e) {
+      print('Error toggling reaction: $e');
+      Get.snackbar(
+        'Error',
+        'No se pudo agregar la reacción',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  /// Eliminar mensaje
+  Future<void> deleteMessage(MessageModel message) async {
+    try {
+      await _messageService.deleteMessage(
+        conversationId: conversationId,
+        messageId: message.id,
+      );
+
+      Get.snackbar(
+        'Mensaje eliminado',
+        'El mensaje ha sido eliminado',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      print('Error deleting message: $e');
+      Get.snackbar(
+        'Error',
+        'No se pudo eliminar el mensaje',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  /// Editar mensaje
+  Future<void> editMessage(MessageModel message) async {
+    isEditing.value = true;
+    editingMessageId.value = message.id;
+    textController.text = message.displayText;
+    textController.selection = TextSelection.fromPosition(
+      TextPosition(offset: textController.text.length),
+    );
+
+    // Scroll al final para mostrar el campo de edición
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToBottom();
+    });
+  }
+
+  /// Cancelar edición
+  void cancelEdit() {
+    isEditing.value = false;
+    editingMessageId.value = '';
+    textController.clear();
+  }
+
+  /// Guardar edición
+  Future<void> saveEdit() async {
+    final text = textController.text.trim();
+    if (text.isEmpty) {
+      cancelEdit();
+      return;
+    }
+
+    try {
+      await _messageService.editMessage(
+        conversationId: conversationId,
+        messageId: editingMessageId.value,
+        newText: text,
+      );
+
+      Get.snackbar(
+        'Mensaje editado',
+        'El mensaje ha sido actualizado',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+
+      cancelEdit();
+    } catch (e) {
+      print('Error editing message: $e');
+      Get.snackbar(
+        'Error',
+        'No se pudo editar el mensaje',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  /// Mostrar selector de reacciones simple
+  void showReactionSelector(MessageModel message) {
+    final currentUserId = authService.currentUser?.uid;
+    if (currentUserId == null) return;
+
+    final reactions = ['👍', '❤️', '😂', '😮', '😢', '😡'];
+
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Get.theme.cardColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Barra de agarre
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Get.theme.dividerColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Título
+            Text('Reaccionar al mensaje', style: Get.textTheme.titleMedium),
+            const SizedBox(height: 20),
+
+            // Emojis
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: reactions.map((emoji) {
+                final hasReacted =
+                    message.hasReaction(currentUserId) &&
+                    message.getUserReaction(currentUserId) == emoji;
+                return GestureDetector(
+                  onTap: () {
+                    Get.back();
+                    toggleReaction(message, emoji);
+                  },
+                  child: Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: hasReacted
+                          ? Get.theme.colorScheme.primary.withValues(alpha: 0.1)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(
+                        color: hasReacted
+                            ? Get.theme.colorScheme.primary
+                            : Colors.transparent,
+                        width: 2,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(emoji, style: const TextStyle(fontSize: 28)),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  /// Mostrar opciones de mensaje (para editar/eliminar)
+  void showMessageOptions(MessageModel message) {
+    final currentUserId = authService.currentUser?.uid;
+    if (currentUserId == null) return;
+
+    final List<Map<String, dynamic>> options = [];
+
+    // Solo opciones del emisor
+    if (message.senderId == currentUserId) {
+      if (message.canBeEdited(currentUserId)) {
+        options.add({'title': 'Editar', 'action': () => editMessage(message)});
+      }
+      if (message.canBeDeleted(currentUserId)) {
+        options.add({
+          'title': 'Eliminar',
+          'action': () => deleteMessage(message),
+        });
+      }
+    }
+
+    if (options.isEmpty) return;
+
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: options.map((option) {
+            return ListTile(
+              title: Text(option['title']),
+              onTap: () {
+                Get.back();
+                option['action']();
+              },
+            );
+          }).toList(),
+        ),
+      ),
+      backgroundColor: Get.theme.cardColor,
+    );
   }
 
   /// Obtener tiempo restante de expiración del chat
