@@ -186,6 +186,8 @@ class SearchTab extends StatelessWidget {
                             displayName: user.displayName,
                             photoUrl: user.photoUrl,
                           ),
+                          transition: Transition.cupertino,
+                          duration: const Duration(milliseconds: 300),
                         );
                       },
                     );

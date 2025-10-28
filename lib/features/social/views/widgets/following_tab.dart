@@ -80,152 +80,132 @@ class FollowingTab extends StatelessWidget {
     int index,
     SocialController controller,
   ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0A0A0A) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.black.withValues(alpha: 0.05),
-          width: 0.5,
+    return GestureDetector(
+      onTap: () {
+        Get.to(
+          () => UserProfilePage(
+            userId: following.followingId,
+            username: following.followingUsername ?? 'usuario',
+            displayName: following.followingDisplayName,
+            photoUrl: following.followingPhotoUrl,
+          ),
+          transition: Transition.cupertino,
+          duration: const Duration(milliseconds: 300),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0A0A0A) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.05),
+            width: 0.5,
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          // Avatar
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : Colors.black.withValues(alpha: 0.05),
-              border: Border.all(
+        child: Row(
+          children: [
+            // Avatar
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
                 color: isDark
                     ? Colors.white.withValues(alpha: 0.1)
-                    : Colors.black.withValues(alpha: 0.1),
-                width: 0.5,
-              ),
-            ),
-            child: following.followingPhotoUrl != null
-                ? ClipOval(
-                    child: Image.network(
-                      following.followingPhotoUrl!,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : Icon(
-                    Icons.person,
-                    size: 24,
-                    color: isDark ? Colors.white38 : Colors.black38,
-                  ),
-          ),
-
-          const SizedBox(width: 16),
-
-          // Información
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  following.followingDisplayName ??
-                      '@${following.followingUsername ?? "usuario"}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white : Colors.black87,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '@${following.followingUsername ?? ""}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isDark ? Colors.white38 : Colors.black38,
-                    fontWeight: FontWeight.w300,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Botones de acción
-          Row(
-            children: [
-              // Botón para ver perfil
-              GestureDetector(
-                onTap: () {
-                  Get.to(
-                    () => UserProfilePage(
-                      userId: following.followingId,
-                      username: following.followingUsername ?? 'usuario',
-                      displayName: following.followingDisplayName,
-                      photoUrl: following.followingPhotoUrl,
-                    ),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.05)
-                        : Colors.black.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.person,
-                    size: 16,
-                    color: isDark ? Colors.white38 : Colors.black38,
-                  ),
+                    : Colors.black.withValues(alpha: 0.05),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.black.withValues(alpha: 0.1),
+                  width: 0.5,
                 ),
               ),
-
-              const SizedBox(width: 8),
-
-              // Botón de dejar de seguir
-              GestureDetector(
-                onTap: () {
-                  controller.unfollowUser(
-                    following.followingId,
-                    following.followingUsername ?? 'este usuario',
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.red.withValues(alpha: 0.1)
-                        : Colors.red.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.red.withValues(alpha: 0.2)
-                          : Colors.red.withValues(alpha: 0.1),
-                      width: 0.5,
+              child: following.followingPhotoUrl != null
+                  ? ClipOval(
+                      child: Image.network(
+                        following.followingPhotoUrl!,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : Icon(
+                      Icons.person,
+                      size: 24,
+                      color: isDark ? Colors.white38 : Colors.black38,
                     ),
-                  ),
-                  child: Text(
-                    'Dejar de seguir',
+            ),
+
+            const SizedBox(width: 16),
+
+            // Información
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    following.followingDisplayName ??
+                        '@${following.followingUsername ?? "usuario"}',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.red.shade300 : Colors.red.shade600,
+                      color: isDark ? Colors.white : Colors.black87,
+                      letterSpacing: 0.2,
                     ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '@${following.followingUsername ?? ""}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isDark ? Colors.white38 : Colors.black38,
+                      fontWeight: FontWeight.w300,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Botón de dejar de seguir
+            GestureDetector(
+              onTap: () {
+                // Prevenir navegación cuando se toca este botón
+                controller.unfollowUser(
+                  following.followingId,
+                  following.followingUsername ?? 'este usuario',
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.red.withValues(alpha: 0.1)
+                      : Colors.red.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.red.withValues(alpha: 0.2)
+                        : Colors.red.withValues(alpha: 0.1),
+                    width: 0.5,
+                  ),
+                ),
+                child: Text(
+                  'Dejar de seguir',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? Colors.red.shade300 : Colors.red.shade600,
                   ),
                 ),
               ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

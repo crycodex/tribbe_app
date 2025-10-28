@@ -75,94 +75,96 @@ class FollowersTab extends StatelessWidget {
   }
 
   Widget _buildFollowerCard(dynamic follower, bool isDark, int index) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0A0A0A) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.black.withValues(alpha: 0.05),
-          width: 0.5,
+    return GestureDetector(
+      onTap: () {
+        Get.to(
+          () => UserProfilePage(
+            userId: follower.followerId,
+            username: follower.followerUsername ?? 'usuario',
+            displayName: follower.followerDisplayName,
+            photoUrl: follower.followerPhotoUrl,
+          ),
+          transition: Transition.cupertino,
+          duration: const Duration(milliseconds: 300),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0A0A0A) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.05),
+            width: 0.5,
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          // Avatar
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : Colors.black.withValues(alpha: 0.05),
-              border: Border.all(
+        child: Row(
+          children: [
+            // Avatar
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
                 color: isDark
                     ? Colors.white.withValues(alpha: 0.1)
-                    : Colors.black.withValues(alpha: 0.1),
-                width: 0.5,
+                    : Colors.black.withValues(alpha: 0.05),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.black.withValues(alpha: 0.1),
+                  width: 0.5,
+                ),
+              ),
+              child: follower.followerPhotoUrl != null
+                  ? ClipOval(
+                      child: Image.network(
+                        follower.followerPhotoUrl!,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : Icon(
+                      Icons.person,
+                      size: 24,
+                      color: isDark ? Colors.white38 : Colors.black38,
+                    ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // Información
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    follower.followerDisplayName ??
+                        '@${follower.followerUsername ?? "usuario"}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white : Colors.black87,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '@${follower.followerUsername ?? ""}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isDark ? Colors.white38 : Colors.black38,
+                      fontWeight: FontWeight.w300,
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: follower.followerPhotoUrl != null
-                ? ClipOval(
-                    child: Image.network(
-                      follower.followerPhotoUrl!,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                : Icon(
-                    Icons.person,
-                    size: 24,
-                    color: isDark ? Colors.white38 : Colors.black38,
-                  ),
-          ),
 
-          const SizedBox(width: 16),
-
-          // Información
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  follower.followerDisplayName ??
-                      '@${follower.followerUsername ?? "usuario"}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white : Colors.black87,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '@${follower.followerUsername ?? ""}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isDark ? Colors.white38 : Colors.black38,
-                    fontWeight: FontWeight.w300,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Botón de acción
-          GestureDetector(
-            onTap: () {
-              Get.to(
-                () => UserProfilePage(
-                  userId: follower.followerId,
-                  username: follower.followerUsername ?? 'usuario',
-                  displayName: follower.followerDisplayName,
-                  photoUrl: follower.followerPhotoUrl,
-                ),
-              );
-            },
-            child: Container(
+            // Icono indicador
+            Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: isDark
@@ -176,8 +178,8 @@ class FollowersTab extends StatelessWidget {
                 color: isDark ? Colors.white38 : Colors.black38,
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
