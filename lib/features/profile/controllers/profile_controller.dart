@@ -498,11 +498,11 @@ class ProfileController extends GetxController {
   int get totalWorkouts => userWorkouts.length;
 
   double get totalVolume {
-    return userWorkouts.fold(0.0, (sum, workout) => sum + workout.totalVolume);
+    return userWorkouts.fold(0.0, (double sum, workout) => sum + workout.totalVolume);
   }
 
   int get totalDuration {
-    return userWorkouts.fold(0, (sum, workout) => sum + workout.duration);
+    return userWorkouts.fold(0, (int sum, workout) => sum + workout.duration);
   }
 
   Map<String, int> get workoutsByFocus {

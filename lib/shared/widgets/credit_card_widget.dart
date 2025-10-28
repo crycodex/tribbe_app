@@ -322,6 +322,9 @@ class _CreditCardWidgetState extends State<CreditCardWidget> {
   /// Compartir la tarjeta como imagen
   Future<void> _shareCard() async {
     try {
+      // Obtener dimensiones de pantalla ANTES de cualquier operación async
+      final screenSize = MediaQuery.of(context).size;
+
       // Mostrar loading
       Get.dialog(
         const Center(child: CircularProgressIndicator()),
@@ -339,15 +342,17 @@ class _CreditCardWidgetState extends State<CreditCardWidget> {
         );
         await file.writeAsBytes(imageBytes);
 
-        // Compartir la imagen
-        await Share.shareXFiles(
-          [XFile(file.path)],
-          text: 'Mi tarjeta Tribbe - @${widget.user.username ?? "usuario"}',
-          sharePositionOrigin: Rect.fromLTWH(
-            0,
-            0,
-            MediaQuery.of(context).size.width,
-            MediaQuery.of(context).size.height,
+        // Compartir la imagen usando la nueva API
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [XFile(file.path)],
+            text: 'Mi tarjeta Tribbe - @${widget.user.username ?? "usuario"}',
+            sharePositionOrigin: Rect.fromLTWH(
+              0,
+              0,
+              screenSize.width,
+              screenSize.height,
+            ),
           ),
         );
 

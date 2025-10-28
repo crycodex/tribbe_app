@@ -172,7 +172,7 @@ class FriendshipService extends GetxService {
       final querySnapshot = await _firestore
           .collection(_usersCollection)
           .where('username', isGreaterThanOrEqualTo: normalizedQuery)
-          .where('username', isLessThan: normalizedQuery + 'z')
+          .where('username', isLessThan: '${normalizedQuery}z')
           .limit(20)
           .get();
 
