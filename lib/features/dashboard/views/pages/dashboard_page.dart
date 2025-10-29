@@ -28,18 +28,19 @@ class DashboardPage extends StatelessWidget {
                     floating: false,
                     backgroundColor: theme.scaffoldBackgroundColor,
                     elevation: 0,
-                    expandedHeight: 100,
+                    expandedHeight: 90,
+                    collapsedHeight: 60,
                     flexibleSpace: FlexibleSpaceBar(
                       centerTitle: true,
                       title: _buildHeader(context),
-                      titlePadding: const EdgeInsets.only(bottom: 16),
+                      titlePadding: const EdgeInsets.only(bottom: 10),
                     ),
                   ),
 
                   // Contenido principal
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: Column(
                         children: [
                           const SizedBox(height: 40),
@@ -151,27 +152,28 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  /// Header con logo de Tribbe y botón de amigos
+  /// Header con logo de Tribbe y botones de mensajes y social
   Widget _buildHeader(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Stack(
-      alignment: Alignment.center,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Logo centrado
+        const SizedBox(width: 8),
+        // Logo a la izquierda
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               'tribbe',
               style: TextStyle(
-                fontSize: 32,
+                fontSize: 30,
                 fontWeight: FontWeight.bold,
                 color: theme.textTheme.bodyLarge?.color,
                 letterSpacing: -1,
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 2),
             const Text(
               '.',
               style: TextStyle(
@@ -183,20 +185,35 @@ class DashboardPage extends StatelessWidget {
           ],
         ),
 
-        // Botón de amigos en la derecha
-        Positioned(
-          right: 0,
-          child: IconButton(
-            icon: Icon(
-              Icons.people_outline,
-              size: 24,
-              color: theme.textTheme.bodyLarge?.color,
+        // Botones de social y mensajes a la derecha
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Botón de mensajes
+            IconButton(
+              icon: Icon(
+                Icons.message_outlined,
+                size: 20,
+                color: theme.textTheme.bodyLarge?.color,
+              ),
+              onPressed: () {
+                Get.toNamed(RoutePaths.messages);
+              },
+              tooltip: 'Mensajes',
             ),
-            onPressed: () {
-              Get.toNamed(RoutePaths.social);
-            },
-            tooltip: 'Social',
-          ),
+            // Botón de social
+            IconButton(
+              icon: Icon(
+                Icons.people_outline,
+                size: 20,
+                color: theme.textTheme.bodyLarge?.color,
+              ),
+              onPressed: () {
+                Get.toNamed(RoutePaths.social);
+              },
+              tooltip: 'Social',
+            ),
+          ],
         ),
       ],
     );
