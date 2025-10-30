@@ -6,6 +6,7 @@ import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/app/theme/theme_data.dart';
 import 'package:tribbe_app/shared/controllers/settings_controller.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 Future<void> main() async {
   // Asegurar inicialización de Flutter
@@ -13,6 +14,9 @@ Future<void> main() async {
 
   // Inicializar Firebase
   await Firebase.initializeApp();
+
+  // Inicializar localización de Intl para español
+  await initializeDateFormatting('es');
 
   // Inicializar dependencias globales
   await AppRouter.initDependencies();

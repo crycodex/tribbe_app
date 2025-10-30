@@ -34,6 +34,9 @@ class ChatController extends GetxController {
   final isEditing = false.obs;
   final editingMessageId = RxString('');
 
+  /// Estado de bloqueo del chat
+  final isBlocked = false.obs;
+
   /// Controlador del campo de texto
   final textController = TextEditingController();
 
@@ -107,6 +110,9 @@ class ChatController extends GetxController {
 
     // Marcar mensajes como leídos
     _markAsRead();
+
+    // Cargar estado de bloqueo
+    _loadBlockedState();
   }
 
   /// Enviar mensaje
@@ -183,6 +189,95 @@ class ChatController extends GetxController {
         scrollController.position.maxScrollExtent,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
+      );
+    }
+  }
+
+  /// Cargar estado bloqueado de la conversación
+  Future<void> _loadBlockedState() async {
+    final currentUserId = authService.currentUser?.uid;
+    if (currentUserId == null) return;
+    try {
+      final conversation = await _messageService.getConversation(
+        userId: currentUserId,
+        conversationId: conversationId,
+      );
+      if (conversation != null) {
+        isBlocked.value = conversation.isBlocked;
+      }
+    } catch (e) {
+      // noop
+    }
+  }
+
+  /// Bloquear conversación
+  Future<void> blockConversation() async {
+    final currentUserId = authService.currentUser?.uid;
+    if (currentUserId == null) return;
+    try {
+      await _messageService.blockConversation(
+        userId: currentUserId,
+        conversationId: conversationId,
+      );
+      isBlocked.value = true;
+      Get.snackbar(
+        'Chat bloqueado',
+        'Ya no recibirás notificaciones de este chat',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'No se pudo bloquear el chat',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  /// Desbloquear conversación
+  Future<void> unblockConversation() async {
+    final currentUserId = authService.currentUser?.uid;
+    if (currentUserId == null) return;
+    try {
+      await _messageService.unblockConversation(
+        userId: currentUserId,
+        conversationId: conversationId,
+      );
+      isBlocked.value = false;
+      Get.snackbar(
+        'Chat desbloqueado',
+        'Has reactivado este chat',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'No se pudo desbloquear el chat',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  /// Eliminar conversación (solo para el usuario actual)
+  Future<void> deleteConversation() async {
+    final currentUserId = authService.currentUser?.uid;
+    if (currentUserId == null) return;
+    try {
+      await _messageService.deleteConversation(
+        userId: currentUserId,
+        conversationId: conversationId,
+      );
+      Get.back();
+      Get.snackbar(
+        'Conversación eliminada',
+        'El chat ha sido eliminado para ti',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'No se pudo eliminar el chat',
+        snackPosition: SnackPosition.BOTTOM,
       );
     }
   }

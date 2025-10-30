@@ -11,6 +11,8 @@ class ConversationModel {
   final String lastMessageSenderId;
   final int unreadCount; // Mensajes no leídos
   final int expiresAt; // Cuando expira el último mensaje
+  final bool isBlocked; // Si el usuario actual bloqueó esta conversación
+  final int? blockedAt; // Timestamp de bloqueo
 
   ConversationModel({
     required this.id,
@@ -24,6 +26,8 @@ class ConversationModel {
     required this.lastMessageSenderId,
     this.unreadCount = 0,
     required this.expiresAt,
+    this.isBlocked = false,
+    this.blockedAt,
   });
 
   /// Crear conversación desde JSON (Realtime Database)
@@ -40,6 +44,8 @@ class ConversationModel {
       lastMessageSenderId: json['lastMessageSenderId'] as String? ?? '',
       unreadCount: json['unreadCount'] as int? ?? 0,
       expiresAt: json['expiresAt'] as int? ?? 0,
+      isBlocked: json['isBlocked'] as bool? ?? false,
+      blockedAt: json['blockedAt'] as int?,
     );
   }
 
@@ -56,6 +62,8 @@ class ConversationModel {
       'lastMessageSenderId': lastMessageSenderId,
       'unreadCount': unreadCount,
       'expiresAt': expiresAt,
+      'isBlocked': isBlocked,
+      'blockedAt': blockedAt,
     };
   }
 
@@ -72,6 +80,8 @@ class ConversationModel {
     String? lastMessageSenderId,
     int? unreadCount,
     int? expiresAt,
+    bool? isBlocked,
+    int? blockedAt,
   }) {
     return ConversationModel(
       id: id ?? this.id,
@@ -85,6 +95,8 @@ class ConversationModel {
       lastMessageSenderId: lastMessageSenderId ?? this.lastMessageSenderId,
       unreadCount: unreadCount ?? this.unreadCount,
       expiresAt: expiresAt ?? this.expiresAt,
+      isBlocked: isBlocked ?? this.isBlocked,
+      blockedAt: blockedAt ?? this.blockedAt,
     );
   }
 

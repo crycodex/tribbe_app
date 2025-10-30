@@ -15,83 +15,139 @@ class MessagesPage extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF000000)
-          : const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        title: Text(
-          'Mensajes',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w300,
-            color: isDark ? Colors.white : Colors.black87,
-            letterSpacing: 1.2,
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: isDark
+            ? const Color(0xFF000000)
+            : const Color(0xFFF5F5F5),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          title: Text(
+            'Mensajes',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w300,
+              color: isDark ? Colors.white : Colors.black87,
+              letterSpacing: 1.2,
+            ),
           ),
-        ),
-        centerTitle: false,
-        actions: [
-          // Badge de mensajes no leídos
-          Obx(() {
-            if (controller.totalUnreadCount.value == 0) {
-              return const SizedBox.shrink();
-            }
+          centerTitle: false,
+          actions: [
+            // Badge de mensajes no leídos
+            Obx(() {
+              if (controller.totalUnreadCount.value == 0) {
+                return const SizedBox.shrink();
+              }
 
-            return Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  controller.totalUnreadCount.value > 99
-                      ? '99+'
-                      : controller.totalUnreadCount.value.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+              return Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    controller.totalUnreadCount.value > 99
+                        ? '99+'
+                        : controller.totalUnreadCount.value.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              ),
-            );
-          }),
-        ],
-      ),
-      body: Obx(() {
-        if (controller.isLoading.value && controller.conversations.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (controller.conversations.isEmpty) {
-          return _buildEmptyState(isDark);
-        }
-
-        return RefreshIndicator(
-          onRefresh: controller.refreshConversations,
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            itemCount: controller.conversations.length,
-            itemBuilder: (context, index) {
-              final conversation = controller.conversations[index];
-              return _buildConversationCard(
-                conversation: conversation,
-                isDark: isDark,
-                theme: theme,
-                controller: controller,
               );
-            },
+            }),
+          ],
+          bottom: TabBar(
+            indicatorColor: theme.colorScheme.primary,
+            labelColor: isDark ? Colors.white : Colors.black,
+            tabs: const [
+              Tab(text: 'Chats'),
+              Tab(text: 'Bloqueados'),
+            ],
           ),
-        );
-      }),
+        ),
+        body: Obx(() {
+          if (controller.isLoading.value && controller.conversations.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (controller.conversations.isEmpty) {
+            return _buildEmptyState(isDark);
+          }
+
+          final normal = controller.normalConversations;
+          final blocked = controller.blockedConversations;
+
+          return TabBarView(
+            children: [
+              // Tab de Chats normales
+              RefreshIndicator(
+                onRefresh: controller.refreshConversations,
+                child: normal.isEmpty
+                    ? _buildEmptyState(isDark)
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                        itemCount: normal.length,
+                        itemBuilder: (context, index) {
+                          final conversation = normal[index];
+                          return _buildConversationCard(
+                            conversation: conversation,
+                            isDark: isDark,
+                            theme: theme,
+                            controller: controller,
+                          );
+                        },
+                      ),
+              ),
+
+              // Tab de Chats bloqueados
+              RefreshIndicator(
+                onRefresh: controller.refreshConversations,
+                child: blocked.isEmpty
+                    ? Center(
+                        child: Text(
+                          'Sin chats bloqueados',
+                          style: TextStyle(
+                            color: isDark ? Colors.white38 : Colors.black38,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                        itemCount: blocked.length,
+                        itemBuilder: (context, index) {
+                          final conversation = blocked[index];
+                          return _buildConversationCard(
+                            conversation: conversation,
+                            isDark: isDark,
+                            theme: theme,
+                            controller: controller,
+                            isBlocked: true,
+                          );
+                        },
+                      ),
+              ),
+            ],
+          );
+        }),
+      ),
     );
   }
 
@@ -147,6 +203,7 @@ class MessagesPage extends StatelessWidget {
     required bool isDark,
     required ThemeData theme,
     required MessagesController controller,
+    bool isBlocked = false,
   }) {
     // Obtener el ID del usuario actual a través de Get.find
     final authService = Get.find<FirebaseAuthService>();
@@ -184,6 +241,44 @@ class MessagesPage extends StatelessWidget {
             duration: const Duration(milliseconds: 300),
           );
         },
+        onLongPress: () {
+          // Opciones: bloquear/desbloquear y eliminar
+          final List<Map<String, dynamic>> options = [];
+          if (conversation.isBlocked == true) {
+            options.add({
+              'title': 'Desbloquear chat',
+              'action': () => controller.unblockConversation(conversation),
+            });
+          } else {
+            options.add({
+              'title': 'Bloquear chat',
+              'action': () => controller.blockConversation(conversation),
+            });
+          }
+          options.add({
+            'title': 'Eliminar chat',
+            'action': () => controller.deleteConversation(conversation),
+          });
+
+          Get.bottomSheet(
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: options.map((option) {
+                  return ListTile(
+                    title: Text(option['title'] as String),
+                    onTap: () {
+                      Get.back();
+                      (option['action'] as VoidCallback)();
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+            backgroundColor: Get.theme.cardColor,
+          );
+        },
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
@@ -191,12 +286,18 @@ class MessagesPage extends StatelessWidget {
             color: isDark ? const Color(0xFF0A0A0A) : Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: hasUnread
+              color: (conversation.isBlocked == true)
+                  ? Colors.red.withValues(alpha: 0.25)
+                  : hasUnread
                   ? theme.colorScheme.primary.withValues(alpha: 0.3)
                   : (isDark
                         ? Colors.white.withValues(alpha: 0.05)
                         : Colors.black.withValues(alpha: 0.05)),
-              width: hasUnread ? 1.5 : 0.5,
+              width: (conversation.isBlocked == true)
+                  ? 1.0
+                  : hasUnread
+                  ? 1.5
+                  : 0.5,
             ),
             boxShadow: hasUnread
                 ? [
@@ -222,7 +323,9 @@ class MessagesPage extends StatelessWidget {
                           ? Colors.white.withValues(alpha: 0.1)
                           : Colors.black.withValues(alpha: 0.05),
                       border: Border.all(
-                        color: hasUnread
+                        color: (conversation.isBlocked == true)
+                            ? Colors.red
+                            : hasUnread
                             ? theme.colorScheme.primary
                             : (isDark
                                   ? Colors.white.withValues(alpha: 0.1)
@@ -292,7 +395,9 @@ class MessagesPage extends StatelessWidget {
                             conversation.displayName,
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: hasUnread
+                              fontWeight: (conversation.isBlocked == true)
+                                  ? FontWeight.w500
+                                  : hasUnread
                                   ? FontWeight.w600
                                   : FontWeight.w500,
                               color: isDark ? Colors.white : Colors.black87,
@@ -307,7 +412,9 @@ class MessagesPage extends StatelessWidget {
                           _formatTimestamp(conversation.lastMessageTimestamp),
                           style: TextStyle(
                             fontSize: 12,
-                            color: hasUnread
+                            color: (conversation.isBlocked == true)
+                                ? Colors.red
+                                : hasUnread
                                 ? theme.colorScheme.primary
                                 : (isDark ? Colors.white38 : Colors.black38),
                             fontWeight: hasUnread
@@ -330,10 +437,14 @@ class MessagesPage extends StatelessWidget {
                         ],
                         Expanded(
                           child: Text(
-                            conversation.lastMessage,
+                            conversation.isBlocked == true
+                                ? 'Chat bloqueado'
+                                : conversation.lastMessage,
                             style: TextStyle(
                               fontSize: 14,
-                              color: hasUnread
+                              color: (conversation.isBlocked == true)
+                                  ? Colors.red.withValues(alpha: 0.8)
+                                  : hasUnread
                                   ? (isDark ? Colors.white : Colors.black87)
                                   : (isDark ? Colors.white38 : Colors.black38),
                               fontWeight: hasUnread
@@ -351,16 +462,24 @@ class MessagesPage extends StatelessWidget {
                     Row(
                       children: [
                         Icon(
-                          Icons.timer_outlined,
+                          conversation.isBlocked == true
+                              ? Icons.block
+                              : Icons.timer_outlined,
                           size: 12,
-                          color: isDark ? Colors.white24 : Colors.black26,
+                          color: conversation.isBlocked == true
+                              ? Colors.red.withValues(alpha: 0.6)
+                              : (isDark ? Colors.white24 : Colors.black26),
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'Expira en ${conversation.daysRemaining} ${conversation.daysRemaining == 1 ? "día" : "días"}',
+                          conversation.isBlocked == true
+                              ? 'Bloqueado'
+                              : 'Expira en ${conversation.daysRemaining} ${conversation.daysRemaining == 1 ? "día" : "días"}',
                           style: TextStyle(
                             fontSize: 11,
-                            color: isDark ? Colors.white24 : Colors.black26,
+                            color: conversation.isBlocked == true
+                                ? Colors.red.withValues(alpha: 0.6)
+                                : (isDark ? Colors.white24 : Colors.black26),
                             fontWeight: FontWeight.w300,
                           ),
                         ),

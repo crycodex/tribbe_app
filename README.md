@@ -48,7 +48,7 @@ El proyecto utiliza **Clean Architecture** con el patrón **MVC** adaptado para 
 lib/
 ├── main.dart
 ├── app/                          # Configuración principal
-│   ├── routes/                   # Gestión de rutas (AutoRoute)
+│   ├── routes/                   # Gestión de rutas (GetX Navigation)
 │   └── theme/                    # Tema y estilos
 │
 ├── core/                         # Funcionalidades core
@@ -221,19 +221,29 @@ Para más detalles, consulta el archivo `analysis_options.yaml`.
 
 ---
 
+## 🧭 Guías internas (resumen)
+
+- Arquitectura MVC estricta: `models` (datos), `controllers` (GetX, lógica), `views` (UI).
+- Nomenclatura: Clases en PascalCase, archivos en snake_case, variables/métodos en camelCase.
+- Imports ordenados: Dart SDK → Flutter → terceros → proyecto.
+- Estado con GetX: Controladores reactivos (`obs`, `Obx`) y DI con `Get.lazyPut`.
+- Networking: Cliente HTTP centralizado (timeouts, interceptores, manejo de errores).
+- Errores: Excepciones (`AppException`, `NetworkException`, etc.) y manejo en controllers.
+- Almacenamiento: `SharedPreferences`/seguro para tokens, claves en constantes.
+- Validaciones: Reglas en `core/utils` y validaciones básicas en modelos.
+- Rutas: Definidas en `app/routes`, navegación con GetX (`Get.toNamed`, `Get.offAllNamed`).
+- UI/UX: Material 3, `shared/widgets`, uso de `const` y estructura plana.
+- Testing: AAA para unit y widget tests; dobles de prueba para servicios.
+
+---
+
 ## 📚 Documentación Adicional
 
 ### 📖 **Documentación General:**
 - [📋 PRD (Product Requirements Document)](design/prd.md)
-- [🏗️ Arquitectura Detallada](design/prd.md#-arquitectura-de-flutter)
-- [🛠️ Stack Tecnológico Completo](design/prd.md#%EF%B8%8F-stack-tecnológico)
-
-### 🔐 **Autenticación y Release:**
-- [🔑 Google Sign-In Setup](GOOGLE_SIGNIN_SETUP.md) - Configuración completa de Google Sign-In
-- [📦 Release Setup Summary](RELEASE_SETUP_SUMMARY.md) - Resumen de configuración de producción
-- [✅ Implementation Complete](IMPLEMENTATION_COMPLETE.md) - Resumen de implementación
-- [🔒 Keystore Info](android/KEYSTORE_INFO.md) - Información del keystore (CONFIDENCIAL)
-- [📚 Setup Index](docs/SETUP_INDEX.md) - Índice de toda la documentación de configuración
+- [🏗️ Arquitectura Social](docs/SOCIAL_ARCHITECTURE.md)
+- [👥 Seguidores - Implementación](docs/SOCIAL_FOLLOWERS_IMPLEMENTATION.md)
+- [📚 Docs Index](docs/README.md)
 
 ### 🚀 **Quick Start para Desarrollo:**
 ```bash

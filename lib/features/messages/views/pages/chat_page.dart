@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:tribbe_app/features/messages/controllers/chat_controller.dart';
 import 'package:tribbe_app/features/messages/models/message_model.dart';
+import 'package:cupertino_native/cupertino_native.dart';
 
 /// Página de chat individual
 class ChatPage extends StatelessWidget {
@@ -103,6 +104,69 @@ class ChatPage extends StatelessWidget {
             ),
           ],
         ),
+        actions: [
+          Obx(() {
+            final isBlocked = controller.isBlocked.value;
+            final items = [
+              if (!isBlocked)
+                const CNPopupMenuItem(
+                  label: 'Bloquear chat',
+                  icon: CNSymbol('lock.slash', size: 18),
+                )
+              else
+                const CNPopupMenuItem(
+                  label: 'Desbloquear chat',
+                  icon: CNSymbol('lock.open', size: 18),
+                ),
+              const CNPopupMenuDivider(),
+              const CNPopupMenuItem(
+                label: 'Eliminar chat',
+                icon: CNSymbol('trash', size: 18),
+              ),
+            ];
+
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: CNPopupMenuButton(
+                buttonLabel: 'Acciones',
+                items: items,
+                onSelected: (index) async {
+                  if (index == 0) {
+                    if (!isBlocked) {
+                      controller.blockConversation();
+                    } else {
+                      controller.unblockConversation();
+                    }
+                  } else if (index == 2) {
+                    final confirmed =
+                        await Get.dialog<bool>(
+                          AlertDialog(
+                            title: const Text('Eliminar chat'),
+                            content: const Text(
+                              'Esta acción eliminará el chat para ti. ¿Deseas continuar?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Get.back(result: false),
+                                child: const Text('Cancelar'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => Get.back(result: true),
+                                child: const Text('Eliminar'),
+                              ),
+                            ],
+                          ),
+                        ) ??
+                        false;
+                    if (confirmed) {
+                      controller.deleteConversation();
+                    }
+                  }
+                },
+              ),
+            );
+          }),
+        ],
       ),
       body: Column(
         children: [

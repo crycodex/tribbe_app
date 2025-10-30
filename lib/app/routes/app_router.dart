@@ -15,6 +15,7 @@ import 'package:tribbe_app/features/messages/controllers/messages_controller.dar
 import 'package:tribbe_app/shared/services/friendship_service.dart';
 import 'package:tribbe_app/shared/services/social_service.dart';
 import 'package:tribbe_app/shared/services/message_service.dart';
+import 'package:tribbe_app/features/training/controllers/training_controller.dart';
 
 /// Configuración de rutas de la aplicación usando GetX
 class AppRouter {
@@ -172,6 +173,8 @@ class AppRouter {
 
     // Controllers globales
     Get.put(SettingsController(), permanent: true);
+    // Mantener estado de entrenamiento a nivel app (singleton permanente)
+    Get.put(TrainingController(), permanent: true);
   }
 
   /// Determina la ruta inicial basándose en el estado de autenticación

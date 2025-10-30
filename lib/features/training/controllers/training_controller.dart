@@ -12,10 +12,10 @@ import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
 
 /// Controlador para el modo entrenamiento
 class TrainingController extends GetxController {
-  final WorkoutService _workoutService = Get.find();
-  final FirebaseAuthService _authService = Get.find();
-  final StreakService _streakService = Get.find();
-  final AuthController _authController = Get.find<AuthController>();
+  final WorkoutService _workoutService = Get.put(WorkoutService());
+  final FirebaseAuthService _authService = Get.put(FirebaseAuthService());
+  final StreakService _streakService = Get.put(StreakService());
+  final AuthController _authController = Get.put(AuthController());
 
   // Estado del entrenamiento
   final isTraining = false.obs;

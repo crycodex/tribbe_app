@@ -185,12 +185,16 @@ class MessageService {
     // Obtener conversación actual para mantener unreadCount
     final snapshot = await conversationRef.get();
     int currentUnreadCount = 0;
+    bool currentIsBlocked = false;
+    int? currentBlockedAt;
 
     if (snapshot.exists) {
       final data = Map<dynamic, dynamic>.from(
         snapshot.value as Map<dynamic, dynamic>,
       );
       currentUnreadCount = data['unreadCount'] as int? ?? 0;
+      currentIsBlocked = data['isBlocked'] as bool? ?? false;
+      currentBlockedAt = data['blockedAt'] as int?;
     }
 
     final conversation = ConversationModel(
@@ -205,6 +209,8 @@ class MessageService {
       lastMessageSenderId: lastMessageSenderId,
       unreadCount: incrementUnread ? currentUnreadCount + 1 : 0,
       expiresAt: expiresAt,
+      isBlocked: currentIsBlocked,
+      blockedAt: currentBlockedAt,
     );
 
     await conversationRef.set(conversation.toJson());
@@ -339,11 +345,54 @@ class MessageService {
         final conversationData = Map<dynamic, dynamic>.from(
           value as Map<dynamic, dynamic>,
         );
-        total += conversationData['unreadCount'] as int? ?? 0;
+        // No contar no leídos de conversaciones bloqueadas
+        final isBlocked = conversationData['isBlocked'] as bool? ?? false;
+        if (!isBlocked) {
+          total += conversationData['unreadCount'] as int? ?? 0;
+        }
       });
 
       return total;
     });
+  }
+
+  /// Bloquear conversación para el usuario actual
+  Future<void> blockConversation({
+    required String userId,
+    required String conversationId,
+  }) async {
+    try {
+      await _conversationsRef
+          .child(userId)
+          .child(conversationId)
+          .update({
+        'isBlocked': true,
+        'blockedAt': DateTime.now().millisecondsSinceEpoch,
+        // Al bloquear, opcionalmente silenciamos no leídos
+        'unreadCount': 0,
+      });
+    } catch (e) {
+      print('Error blocking conversation: $e');
+      rethrow;
+    }
+  }
+
+  /// Desbloquear conversación para el usuario actual
+  Future<void> unblockConversation({
+    required String userId,
+    required String conversationId,
+  }) async {
+    try {
+      await _conversationsRef
+          .child(userId)
+          .child(conversationId)
+          .update({
+        'isBlocked': false,
+      });
+    } catch (e) {
+      print('Error unblocking conversation: $e');
+      rethrow;
+    }
   }
 
   /// Agregar o quitar reacción a un mensaje

@@ -75,6 +75,68 @@ class MessagesController extends GetxController {
     await Future.delayed(const Duration(milliseconds: 500));
   }
 
+  /// Conversaciones normales (no bloqueadas)
+  List<ConversationModel> get normalConversations {
+    return conversations.where((c) => !c.isBlocked).toList();
+  }
+
+  /// Conversaciones bloqueadas
+  List<ConversationModel> get blockedConversations {
+    return conversations.where((c) => c.isBlocked).toList();
+  }
+
+  /// Bloquear conversación
+  Future<void> blockConversation(ConversationModel conversation) async {
+    try {
+      final userId = _authService.currentUser?.uid;
+      if (userId == null) return;
+
+      await _messageService.blockConversation(
+        userId: userId,
+        conversationId: conversation.id,
+      );
+
+      Get.snackbar(
+        'Chat bloqueado',
+        'Ya no recibirás notificaciones de ${conversation.displayName}',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      print('Error blocking conversation: $e');
+      Get.snackbar(
+        'Error',
+        'No se pudo bloquear el chat',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  /// Desbloquear conversación
+  Future<void> unblockConversation(ConversationModel conversation) async {
+    try {
+      final userId = _authService.currentUser?.uid;
+      if (userId == null) return;
+
+      await _messageService.unblockConversation(
+        userId: userId,
+        conversationId: conversation.id,
+      );
+
+      Get.snackbar(
+        'Chat desbloqueado',
+        'Has reactivado el chat con ${conversation.displayName}',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      print('Error unblocking conversation: $e');
+      Get.snackbar(
+        'Error',
+        'No se pudo desbloquear el chat',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
   /// Eliminar conversación
   Future<void> deleteConversation(ConversationModel conversation) async {
     try {
