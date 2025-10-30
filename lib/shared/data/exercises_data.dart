@@ -1032,6 +1032,184 @@ class ExercisesData {
 5. Para mayor dificultad, puedes levantar la pierna superior.''',
       imageUrl: 'https://gymvisual.com/img/p/1/7/5/4/1/17541.gif',
     ),
+
+    // ========== PANTORRILLAS (EXTRA) ==========
+    ExerciseTemplate(
+      id: 'pantorrillas_5',
+      name: 'Press de Pantorrillas en Prensa',
+      muscleGroup: MuscleGroups.pantorrillas,
+      equipment: Equipment.maquina,
+      difficulty: Difficulty.principiante,
+      instructions:
+          '''1. Siéntate en la prensa y coloca solo la parte delantera del pie en la plataforma.
+2. Desbloquea el carro manteniendo las rodillas levemente flexionadas.
+3. Empuja la plataforma extendiendo los tobillos hasta elevar los talones.
+4. Desciende controlado hasta un estiramiento cómodo sin rebotar.
+5. Mantén el rango y la cadencia constantes.''',
+      imageUrl: 'https://gymvisual.com/img/p/1/7/5/0/3/17503.gif',
+    ),
+    ExerciseTemplate(
+      id: 'pantorrillas_6',
+      name: 'Elevación de Talón a Una Pierna',
+      muscleGroup: MuscleGroups.pantorrillas,
+      equipment: Equipment.pesoCorporal,
+      difficulty: Difficulty.intermedio,
+      instructions:
+          '''1. De pie en un escalón, apoya solo la punta del pie de trabajo.
+2. Sujétate para equilibrarte si es necesario.
+3. Eleva el talón lo más alto posible haciendo énfasis en la contracción.
+4. Baja de forma lenta por debajo de la línea del escalón para estirar.
+5. Completa todas las repeticiones y cambia de pierna.''',
+      imageUrl: 'https://gymvisual.com/img/p/1/7/5/0/5/17505.gif',
+    ),
+    ExerciseTemplate(
+      id: 'pantorrillas_7',
+      name: 'Elevación Tibial',
+      muscleGroup: MuscleGroups.pantorrillas,
+      secondaryMuscles: [MuscleGroups.piernas],
+      equipment: Equipment.maquina,
+      difficulty: Difficulty.principiante,
+      instructions:
+          '''1. Coloca los pies bajo el rodillo de la máquina de tibiales (o usa banda elástica).
+2. Dorsiflexiona los tobillos elevando la punta de los pies.
+3. Sostén un segundo arriba enfocando el tibial anterior.
+4. Desciende controlado manteniendo tensión.
+5. Mantén la espalda recta y no balancees el cuerpo.''',
+      imageUrl: 'https://gymvisual.com/img/p/2/1/1/9/9/21199.gif',
+    ),
+
+    // ========== GLÚTEOS (EXTRA) ==========
+    ExerciseTemplate(
+      id: 'gluteos_6',
+      name: 'Pull Through en Polea',
+      muscleGroup: MuscleGroups.gluteos,
+      secondaryMuscles: [MuscleGroups.piernas],
+      equipment: Equipment.polea,
+      difficulty: Difficulty.intermedio,
+      instructions:
+          '''1. Coloca una cuerda en una polea baja y pasa por encima el accesorio entre las piernas.
+2. Da unos pasos hacia adelante para generar tensión y separa los pies al ancho de hombros.
+3. Empuja las caderas hacia atrás manteniendo la espalda neutra.
+4. Extiende las caderas llevando la cuerda hacia el frente, contrayendo fuerte los glúteos.
+5. Controla el regreso sin redondear la espalda.''',
+      imageUrl: 'https://gymvisual.com/img/p/1/1/6/7/3/11673.gif',
+    ),
+    ExerciseTemplate(
+      id: 'gluteos_7',
+      name: 'Peso Muerto Sumo',
+      muscleGroup: MuscleGroups.gluteos,
+      secondaryMuscles: [MuscleGroups.piernas, MuscleGroups.espalda],
+      equipment: Equipment.barraOlimpica,
+      difficulty: Difficulty.intermedio,
+      instructions:
+          '''1. Coloca los pies más anchos que hombros con puntas hacia afuera y barra centrada.
+2. Toma la barra con agarre cerrado entre las piernas, espalda neutra y pecho arriba.
+3. Empuja el suelo con las piernas y extiende caderas hasta quedar erguido.
+4. Mantén la barra pegada al cuerpo durante todo el movimiento.
+5. Desciende controlado llevando caderas atrás.''',
+      imageUrl: 'https://gymvisual.com/img/p/1/7/3/8/9/17389.gif',
+    ),
+    ExerciseTemplate(
+      id: 'gluteos_8',
+      name: 'Abducción de Cadera en Máquina',
+      muscleGroup: MuscleGroups.gluteos,
+      equipment: Equipment.maquina,
+      difficulty: Difficulty.principiante,
+      instructions:
+          '''1. Siéntate en la máquina con la espalda apoyada y rodillas contra las almohadillas.
+2. Mantén pies alineados y abdomen activo.
+3. Abre las piernas contra la resistencia hasta sentir la contracción de glúteo medio.
+4. Sostén un segundo y regresa lento sin perder tensión.
+5. Evita impulsos y recorridos parciales rápidos.''',
+      imageUrl: 'https://gymvisual.com/img/p/1/7/4/9/9/17499.gif',
+    ),
+    ExerciseTemplate(
+      id: 'gluteos_9',
+      name: 'Fire Hydrant',
+      muscleGroup: MuscleGroups.gluteos,
+      secondaryMuscles: [MuscleGroups.abdomen],
+      equipment: Equipment.pesoCorporal,
+      difficulty: Difficulty.principiante,
+      instructions:
+          '''1. En posición cuadrúpeda, manos bajo hombros y rodillas bajo caderas.
+2. Mantén abdomen activo y espalda neutra.
+3. Eleva lateralmente la rodilla manteniendo la cadera alineada.
+4. Evita rotar el tronco; enfoca en glúteo medio.
+5. Baja controlado y repite; cambia de lado al finalizar.''',
+      imageUrl: 'https://gymvisual.com/img/p/1/7/5/2/9/17529.gif',
+    ),
+
+    // ========== ABDOMEN (EXTRA) ==========
+    ExerciseTemplate(
+      id: 'abdomen_11',
+      name: 'Elevación de Piernas Colgado',
+      muscleGroup: MuscleGroups.abdomen,
+      equipment: Equipment.pesoCorporal,
+      difficulty: Difficulty.avanzado,
+      instructions:
+          '''1. Cuelga de una barra con agarre prono y escápulas activas.
+2. Eleva las piernas estiradas hasta la altura de la cadera o más.
+3. Evita el balanceo; controla la fase excéntrica.
+4. Mantén pelvis en retroversión para mayor activación.
+5. Si es difícil, flexiona rodillas (regresión).''',
+      imageUrl: 'https://gymvisual.com/img/p/1/7/4/8/7/17487.gif',
+    ),
+    ExerciseTemplate(
+      id: 'abdomen_12',
+      name: 'V-Ups',
+      muscleGroup: MuscleGroups.abdomen,
+      equipment: Equipment.pesoCorporal,
+      difficulty: Difficulty.intermedio,
+      instructions:
+          '''1. Acuéstate supino con brazos extendidos por encima de la cabeza.
+2. Eleva simultáneamente torso y piernas formando una "V".
+3. Toca pies con manos manteniendo abdomen contraído.
+4. Desciende sin soltar tensión lumbar.
+5. Evita balancear y mantén respiración controlada.''',
+      imageUrl: 'https://gymvisual.com/img/p/1/7/5/2/7/17527.gif',
+    ),
+    ExerciseTemplate(
+      id: 'abdomen_13',
+      name: 'Dead Bug',
+      muscleGroup: MuscleGroups.abdomen,
+      equipment: Equipment.pesoCorporal,
+      difficulty: Difficulty.principiante,
+      instructions:
+          '''1. Acuéstate boca arriba con brazos hacia el techo y caderas y rodillas a 90°.
+2. Extiende pierna derecha y brazo izquierdo acercándolos al suelo sin arquear la espalda.
+3. Regresa al centro y alterna con el lado contrario.
+4. Mantén respiración diafragmática y zona lumbar pegada.
+5. Controla el ritmo para priorizar la técnica.''',
+      imageUrl: 'https://gymvisual.com/img/p/2/3/0/7/3/23073.gif',
+    ),
+    ExerciseTemplate(
+      id: 'abdomen_14',
+      name: 'Toes to Bar (Progresión en Suelo)',
+      muscleGroup: MuscleGroups.abdomen,
+      equipment: Equipment.pesoCorporal,
+      difficulty: Difficulty.intermedio,
+      instructions:
+          '''1. En el suelo, eleva piernas rectas hasta tocar las puntas de los pies con las manos.
+2. Mantén la pelvis en retroversión y el abdomen activo.
+3. Controla la bajada sin perder la alineación.
+4. Progresión útil antes de la versión colgada.
+5. Evita tirar del cuello; mira al techo.''',
+      imageUrl: 'https://gymvisual.com/img/p/1/7/5/2/3/17523.gif',
+    ),
+    ExerciseTemplate(
+      id: 'abdomen_15',
+      name: 'Hollow Body Hold',
+      muscleGroup: MuscleGroups.abdomen,
+      equipment: Equipment.pesoCorporal,
+      difficulty: Difficulty.intermedio,
+      instructions:
+          '''1. Acuéstate boca arriba, eleva ligeramente hombros y piernas manteniendo zona lumbar pegada.
+2. Extiende brazos por encima de la cabeza sin perder la retroversión pélvica.
+3. Mantén tensión isométrica respirando de forma controlada.
+4. Si es difícil, flexiona rodillas o baja brazos.
+5. Evita arquear la espalda en todo momento.''',
+      imageUrl: 'https://gymvisual.com/img/p/2/2/3/8/3/22383.gif',
+    ),
   ];
 
   /// Obtener ejercicios filtrados por grupo muscular y equipamiento
