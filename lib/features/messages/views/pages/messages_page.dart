@@ -4,6 +4,10 @@ import 'package:intl/intl.dart';
 import 'package:tribbe_app/features/messages/controllers/messages_controller.dart';
 import 'package:tribbe_app/features/messages/views/pages/chat_page.dart';
 import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
+import 'package:tribbe_app/shared/services/friendship_service.dart';
+import 'package:tribbe_app/features/auth/models/user_model.dart';
+import 'package:tribbe_app/shared/services/social_service.dart';
+import 'package:tribbe_app/shared/models/social_models.dart';
 
 /// Página principal de mensajes - Lista de conversaciones
 class MessagesPage extends StatelessWidget {
@@ -36,6 +40,12 @@ class MessagesPage extends StatelessWidget {
           ),
           centerTitle: false,
           actions: [
+            // Buscar usuarios para iniciar chat directo
+            IconButton(
+              onPressed: () => _showUserSearchSheet(context),
+              icon: const Icon(Icons.search),
+              tooltip: 'Buscar usuarios',
+            ),
             // Badge de mensajes no leídos
             Obx(() {
               if (controller.totalUnreadCount.value == 0) {
@@ -510,5 +520,278 @@ class MessagesPage extends StatelessWidget {
     } else {
       return DateFormat.MMMd('es').format(date);
     }
+  }
+
+  /// Hoja inferior para buscar usuarios y abrir chat directo
+  void _showUserSearchSheet(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final friendshipService = Get.find<FriendshipService>();
+    final socialService = Get.find<SocialService>();
+    final TextEditingController searchController = TextEditingController();
+    final RxList<UserModel> results = <UserModel>[].obs;
+    final RxBool isSearching = false.obs;
+    final RxList<FollowRelation> followingList = <FollowRelation>[].obs;
+    final RxList<FollowRelation> followersList = <FollowRelation>[].obs;
+
+    // Suscripciones para sugerencias iniciales
+    socialService.getFollowing().listen((list) => followingList.value = list);
+    socialService.getFollowers().listen((list) => followersList.value = list);
+
+    void performSearch(String query) async {
+      if (query.trim().length < 2) {
+        results.clear();
+        return;
+      }
+      isSearching.value = true;
+      final users = await friendshipService.searchUsers(query);
+      results.value = users;
+      isSearching.value = false;
+    }
+
+    Get.bottomSheet(
+      Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF0A0A0A) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.black.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Buscar usuarios',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Caja de búsqueda
+            Container(
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.black.withValues(alpha: 0.035),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.06),
+                  width: 0.5,
+                ),
+              ),
+              child: TextField(
+                controller: searchController,
+                autofocus: true,
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontSize: 15,
+                ),
+                decoration: InputDecoration(
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: isDark ? Colors.white38 : Colors.black38,
+                  ),
+                  hintText: 'Busca por @usuario...',
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.white38 : Colors.black38,
+                    fontSize: 15,
+                  ),
+                  border: InputBorder.none,
+                ),
+                onChanged: performSearch,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Resultados o sugerencias
+            Expanded(
+              child: Obx(() {
+                final hasQuery = searchController.text.trim().isNotEmpty;
+                if (hasQuery) {
+                  if (isSearching.value) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (results.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'Sin resultados',
+                        style: TextStyle(
+                          color: isDark ? Colors.white38 : Colors.black38,
+                        ),
+                      ),
+                    );
+                  }
+                  return _buildUsersList(
+                    context: context,
+                    isDark: isDark,
+                    users: results
+                        .map(
+                          (u) => (
+                            id: u.id,
+                            displayName:
+                                u.displayName ?? '@${u.username ?? 'usuario'}',
+                            username: u.username,
+                            photoUrl: u.photoUrl,
+                          ),
+                        )
+                        .toList(),
+                  );
+                }
+
+                // Sugerencias iniciales: unión de seguidos y seguidores
+                final Map<
+                  String,
+                  ({String? displayName, String? username, String? photoUrl})
+                >
+                suggestions = {};
+                for (final rel in followingList) {
+                  suggestions[rel.followingId] = (
+                    displayName:
+                        rel.followingDisplayName ??
+                        (rel.followingUsername != null
+                            ? '@${rel.followingUsername}'
+                            : null),
+                    username: rel.followingUsername,
+                    photoUrl: rel.followingPhotoUrl,
+                  );
+                }
+                for (final rel in followersList) {
+                  final existing = suggestions[rel.followerId];
+                  suggestions[rel.followerId] = (
+                    displayName:
+                        existing?.displayName ??
+                        rel.followerDisplayName ??
+                        (rel.followerUsername != null
+                            ? '@${rel.followerUsername}'
+                            : null),
+                    username: existing?.username ?? rel.followerUsername,
+                    photoUrl: existing?.photoUrl ?? rel.followerPhotoUrl,
+                  );
+                }
+
+                if (suggestions.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No hay seguidores ni seguidos aún',
+                      style: TextStyle(
+                        color: isDark ? Colors.white38 : Colors.black38,
+                      ),
+                    ),
+                  );
+                }
+
+                final list = suggestions.entries
+                    .map(
+                      (e) => (
+                        id: e.key,
+                        displayName: e.value.displayName ?? 'Usuario',
+                        username: e.value.username,
+                        photoUrl: e.value.photoUrl,
+                      ),
+                    )
+                    .toList();
+
+                return _buildUsersList(
+                  context: context,
+                  isDark: isDark,
+                  users: list,
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+    );
+  }
+
+  /// Lista reutilizable para mostrar usuarios y abrir chat
+  Widget _buildUsersList({
+    required BuildContext context,
+    required bool isDark,
+    required List<
+      ({String id, String displayName, String? username, String? photoUrl})
+    >
+    users,
+  }) {
+    return ListView.separated(
+      itemCount: users.length,
+      separatorBuilder: (_, __) => Divider(
+        height: 1,
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.06)
+            : Colors.black.withValues(alpha: 0.06),
+      ),
+      itemBuilder: (ctx, i) {
+        final user = users[i];
+        return ListTile(
+          onTap: () {
+            Get.back();
+            Get.to(
+              () => ChatPage(
+                otherUserId: user.id,
+                otherUsername: user.username ?? 'usuario',
+                otherUserPhotoUrl: user.photoUrl,
+                otherUserDisplayName: user.displayName,
+              ),
+              transition: Transition.cupertino,
+              duration: const Duration(milliseconds: 300),
+            );
+          },
+          leading: CircleAvatar(
+            backgroundColor: isDark
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.05),
+            backgroundImage: user.photoUrl != null
+                ? NetworkImage(user.photoUrl!)
+                : null,
+            child: user.photoUrl == null
+                ? Icon(
+                    Icons.person,
+                    color: isDark ? Colors.white38 : Colors.black38,
+                  )
+                : null,
+          ),
+          title: Text(
+            user.displayName,
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          subtitle: user.username != null
+              ? Text(
+                  '@${user.username}',
+                  style: TextStyle(
+                    color: isDark ? Colors.white38 : Colors.black38,
+                  ),
+                )
+              : null,
+          trailing: Icon(
+            Icons.arrow_forward_ios,
+            size: 16,
+            color: isDark ? Colors.white24 : Colors.black26,
+          ),
+        );
+      },
+    );
   }
 }

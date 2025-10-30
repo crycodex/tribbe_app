@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:tribbe_app/features/messages/controllers/chat_controller.dart';
@@ -553,7 +554,7 @@ class ChatPage extends StatelessWidget {
     ThemeData theme,
   ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF0A0A0A) : Colors.white,
         border: Border(
@@ -569,127 +570,130 @@ class ChatPage extends StatelessWidget {
         top: false,
         child: Column(
           children: [
-            // Indicador de edición
+            // Indicador de edición (Cupertino look)
             Obx(() {
-              if (controller.isEditing.value) {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                      width: 0.5,
+              if (!controller.isEditing.value) return const SizedBox.shrink();
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      CupertinoIcons.pencil,
+                      size: 14,
+                      color: theme.colorScheme.primary,
                     ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.edit,
-                        size: 14,
+                    const SizedBox(width: 6),
+                    Text(
+                      'Editando mensaje',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const Spacer(),
+                    CupertinoButton(
+                      padding: const EdgeInsets.all(4),
+                      minSize: 28,
+                      onPressed: controller.cancelEdit,
+                      child: Icon(
+                        CupertinoIcons.xmark_circle_fill,
+                        size: 16,
                         color: theme.colorScheme.primary,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Editando mensaje',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: controller.cancelEdit,
-                        child: Icon(
-                          Icons.close,
-                          size: 14,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
+                    ),
+                  ],
+                ),
+              );
             }),
 
-            // Campo de texto y botón
+            // Campo de texto y botón (Cupertino)
             Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : Colors.black.withValues(alpha: 0.03),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.05)
-                            : Colors.black.withValues(alpha: 0.05),
-                        width: 0.5,
-                      ),
-                    ),
-                    child: TextField(
+                  child: Semantics(
+                    textField: true,
+                    label: controller.isEditing.value
+                        ? 'Editar mensaje'
+                        : 'Escribir mensaje',
+                    child: CupertinoTextField(
                       controller: controller.textController,
+                      placeholder: controller.isEditing.value
+                          ? 'Edita tu mensaje...'
+                          : 'Escribe un mensaje...',
+                      placeholderStyle: TextStyle(
+                        color: isDark ? Colors.white38 : Colors.black38,
+                        fontSize: 15,
+                      ),
                       style: TextStyle(
                         color: isDark ? Colors.white : Colors.black87,
                         fontSize: 15,
                       ),
-                      decoration: InputDecoration(
-                        hintText: controller.isEditing.value
-                            ? 'Edita tu mensaje...'
-                            : 'Escribe un mensaje...',
-                        hintStyle: TextStyle(
-                          color: isDark ? Colors.white38 : Colors.black38,
-                          fontSize: 15,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      minLines: 1,
+                      maxLines: 6,
+                      cursorColor: theme.colorScheme.primary,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.06)
+                            : Colors.black.withValues(alpha: 0.035),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : Colors.black.withValues(alpha: 0.06),
+                          width: 0.5,
                         ),
                       ),
-                      maxLines: null,
-                      textInputAction: TextInputAction.send,
                       onSubmitted: (_) => controller.sendMessage(),
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Obx(() {
-                  return GestureDetector(
-                    onTap: controller.isSending.value
-                        ? null
-                        : controller.sendMessage,
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary,
-                        shape: BoxShape.circle,
+                  final bool isSending = controller.isSending.value;
+                  final bool isEditing = controller.isEditing.value;
+                  return Semantics(
+                    button: true,
+                    label: isEditing ? 'Guardar edición' : 'Enviar mensaje',
+                    enabled: !isSending,
+                    child: CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      minSize: 44,
+                      onPressed: isSending ? null : controller.sendMessage,
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: isSending
+                              ? const CupertinoActivityIndicator(
+                                  color: Colors.white,
+                                )
+                              : Icon(
+                                  isEditing
+                                      ? CupertinoIcons.check_mark
+                                      : CupertinoIcons.paperplane_fill,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                        ),
                       ),
-                      child: controller.isSending.value
-                          ? const Padding(
-                              padding: EdgeInsets.all(12),
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Icon(
-                              controller.isEditing.value
-                                  ? Icons.check
-                                  : Icons.send,
-                              color: Colors.white,
-                              size: 22,
-                            ),
                     ),
                   );
                 }),
