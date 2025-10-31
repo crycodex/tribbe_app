@@ -53,8 +53,21 @@ class DashboardPage extends StatelessWidget {
                         children: [
                           const SizedBox(height: 40),
 
-                          // Personaje del usuario
-                          const CharacterWidget(),
+                          // Área del personaje con botón de compartir
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              // Personaje del usuario
+                              const CharacterWidget(),
+
+                              // Botón de compartir en la esquina superior derecha del personaje
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: _buildShareButton(context, controller),
+                              ),
+                            ],
+                          ),
 
                           const SizedBox(height: 40),
 
@@ -74,6 +87,21 @@ class DashboardPage extends StatelessWidget {
                   const SliverToBoxAdapter(child: SizedBox(height: 100)),
                 ],
               ),
+      ),
+    );
+  }
+
+  /// Botón simple para compartir personaje y racha
+  Widget _buildShareButton(
+    BuildContext context,
+    DashboardController controller,
+  ) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => controller.shareCharacterAndStreak(),
+        borderRadius: BorderRadius.circular(20),
+        child: const Icon(Icons.share_outlined, color: Colors.orange, size: 18),
       ),
     );
   }

@@ -1,7 +1,13 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:tribbe_app/features/dashboard/models/streak_model.dart';
+import 'package:tribbe_app/features/dashboard/views/widgets/character_streak_share_image.dart';
 import 'package:tribbe_app/features/training/models/workout_post_model.dart';
 import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
 import 'package:tribbe_app/shared/services/streak_service.dart';
@@ -183,6 +189,92 @@ class DashboardController extends GetxController {
       _showError('No se pudo dar like');
       // Revertir cambio en caso de error
       loadFeed();
+    }
+  }
+
+  /// Compartir personaje y racha como imagen
+  Future<void> shareCharacterAndStreak() async {
+    try {
+      // Mostrar indicador de carga
+      Get.dialog(
+        const Center(child: CircularProgressIndicator()),
+        barrierDismissible: false,
+      );
+
+      debugPrint('🔄 Iniciando proceso de compartir personaje y racha.');
+
+      final screenshotController = ScreenshotController();
+      final captureKey = GlobalKey();
+
+      // Capturar el widget como imagen
+      final Uint8List imageBytes = await screenshotController
+          .captureFromWidget(
+            CharacterStreakShareImage(
+              currentStreak: currentStreak,
+              longestStreak: longestStreak,
+              shareKey: captureKey,
+            ),
+            delay: const Duration(milliseconds: 500),
+            pixelRatio: 3.0, // Alta resolución
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              debugPrint(
+                '❌ Timeout: La captura de imagen superó los 10 segundos.',
+              );
+              throw Exception('La captura de imagen tardó demasiado.');
+            },
+          );
+
+      debugPrint('✅ Imagen capturada exitosamente. Guardando temporalmente...');
+
+      // Guardar en directorio temporal
+      final directory = await getTemporaryDirectory();
+      final imagePath = File(
+        '${directory.path}/tribbe_character_streak_${DateTime.now().millisecondsSinceEpoch}.png',
+      );
+      await imagePath.writeAsBytes(imageBytes);
+
+      debugPrint('📄 Imagen guardada temporalmente en: ${imagePath.path}');
+
+      // Cerrar el diálogo de carga antes de abrir el diálogo de compartir
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+
+      // Compartir la imagen usando share_plus
+      // El usuario puede guardarla en su galería desde el diálogo de compartir
+      try {
+        // ignore: deprecated_member_use
+        await Share.shareXFiles(
+          [XFile(imagePath.path)],
+          text: '¡Mira mi personaje y racha en Tribbe App! 🔥',
+          sharePositionOrigin: const Rect.fromLTWH(0, 0, 100, 100),
+        );
+
+        debugPrint('✅ Imagen compartida exitosamente.');
+      } catch (e) {
+        debugPrint('❌ Error al compartir imagen: $e');
+        _showError('No se pudo compartir la imagen: ${e.toString()}');
+        return;
+      }
+
+      // Limpiar archivo temporal después de un delay
+      Future.delayed(const Duration(seconds: 5), () {
+        if (imagePath.existsSync()) {
+          imagePath.deleteSync();
+        }
+      });
+    } catch (e) {
+      debugPrint('❌ Error al compartir personaje y racha: ${e.toString()}');
+      _showError('No se pudo guardar la imagen: ${e.toString()}');
+    } finally {
+      // Asegurarse de cerrar el diálogo si aún está abierto
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+      debugPrint('🔚 Proceso de compartir personaje y racha finalizado.');
     }
   }
 
