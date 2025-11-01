@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/features/profile/controllers/profile_controller.dart';
-import 'package:tribbe_app/features/training/models/workout_model.dart';
+import 'package:tribbe_app/features/training/models/workout_post_model.dart';
 import 'package:tribbe_app/features/profile/views/widgets/workout_stats_header.dart';
 import 'package:tribbe_app/features/profile/views/widgets/workout_history_card.dart';
 import 'package:tribbe_app/shared/utils/share_workout_util.dart';
@@ -48,11 +49,12 @@ class WorkoutHistoryPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: controller.userWorkouts.length,
                   itemBuilder: (context, index) {
-                    final workout = controller.userWorkouts[index];
+                    final post = controller.userWorkouts[index];
                     return WorkoutHistoryCard(
-                      workout: workout.workout,
-                      onShare: () => ShareWorkoutUtil.shareWorkout(workout.workout),
-                      onTap: () => _navigateToWorkoutDetail(workout.workout),
+                      workout: post.workout,
+                      onShare: () =>
+                          ShareWorkoutUtil.shareWorkout(post.workout),
+                      onTap: () => _navigateToWorkoutDetail(post),
                     );
                   },
                 ),
@@ -98,7 +100,10 @@ class WorkoutHistoryPage extends StatelessWidget {
   }
 
   /// Navegar al detalle del entrenamiento
-  void _navigateToWorkoutDetail(WorkoutModel workout) {
-    Get.toNamed('/workout/${workout.id}', arguments: {'workout': workout});
+  void _navigateToWorkoutDetail(WorkoutPostModel post) {
+    Get.toNamed(
+      RoutePaths.workoutDetail.replaceAll(':id', post.workout.id),
+      arguments: {'workoutPost': post},
+    );
   }
 }

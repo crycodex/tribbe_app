@@ -15,29 +15,20 @@ class WorkoutFeedWidget extends StatelessWidget {
 
     return Column(
       children: [
-        // Título del feed
-        _buildFeedTitle(theme),
+        // Divider sutil antes del feed
+        Divider(
+          height: 1,
+          thickness: 0.5,
+          color: theme.brightness == Brightness.dark
+              ? Colors.grey[800]
+              : Colors.grey[300],
+        ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
 
         // Lista de posts
         _buildFeedContent(controller, theme),
       ],
-    );
-  }
-
-  /// Título del feed
-  Widget _buildFeedTitle(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Text(
-        'Feed de Entrenamientos',
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: theme.textTheme.bodyLarge?.color,
-        ),
-      ),
     );
   }
 

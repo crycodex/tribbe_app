@@ -1,67 +1,78 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/training/models/workout_model.dart';
+import 'package:tribbe_app/features/training/models/workout_post_model.dart';
 import 'package:tribbe_app/shared/utils/workout_utils.dart';
 import 'package:tribbe_app/shared/utils/share_workout_util.dart';
 
 /// Vista de detalle unificada para entrenamientos
 class WorkoutDetailPage extends StatelessWidget {
-  final WorkoutModel workout;
+  final WorkoutModel? workout;
+  final WorkoutPostModel? workoutPost;
 
-  const WorkoutDetailPage({super.key, required this.workout});
+  const WorkoutDetailPage({
+    super.key,
+    this.workout,
+    this.workoutPost,
+  }) : assert(workout != null || workoutPost != null, 'Debe proporcionar workout o workoutPost');
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final focusColor = WorkoutUtils.getFocusColor(workout.focus);
+    final currentWorkout = workout ?? workoutPost!.workout;
+    final focusColor = WorkoutUtils.getFocusColor(currentWorkout.focus);
+    final photoUrl = workoutPost?.workoutPhotoUrl;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: CustomScrollView(
         slivers: [
-          // AppBar con imagen de fondo
+          // AppBar con foto o gradiente
           SliverAppBar(
-            expandedHeight: 300,
+            expandedHeight: 400,
             pinned: true,
             backgroundColor: focusColor,
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
-                workout.focus,
+                currentWorkout.focus,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                ),
-              ),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: WorkoutUtils.getGradientColors(
-                      workout.focus,
-                      isDark: isDark,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black54,
+                      blurRadius: 8,
                     ),
-                  ),
-                ),
-                child: Center(
-                  child: Icon(
-                    WorkoutUtils.getFocusIcon(workout.focus),
-                    size: 80,
-                    color: Colors.white.withValues(alpha: 0.9),
-                  ),
+                  ],
                 ),
               ),
+              background: photoUrl != null && photoUrl.isNotEmpty
+                  ? _buildPhotoBackground(photoUrl, currentWorkout, focusColor)
+                  : _buildGradientBackground(currentWorkout, isDark),
             ),
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black45,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+              ),
               onPressed: () => Get.back(),
             ),
             actions: [
-              ShareWorkoutUtil.buildShareButton(
-                workout,
-                icon: Icons.share,
-                iconColor: Colors.white,
+              IconButton(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black45,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.share, color: Colors.white, size: 20),
+                ),
+                onPressed: () => ShareWorkoutUtil.shareWorkout(currentWorkout),
               ),
             ],
           ),
@@ -73,18 +84,17 @@ class WorkoutDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Información general
-                  _buildInfoCard(theme, isDark),
-
-                  const SizedBox(height: 16),
+                  // Caption si existe (solo para workoutPost)
+                  if (workoutPost?.caption != null && workoutPost!.caption!.isNotEmpty)
+                    _buildCaptionSection(workoutPost!.caption!, theme, isDark),
 
                   // Estadísticas del entrenamiento
-                  _buildStatsCard(theme, isDark),
+                  _buildStatsCard(currentWorkout, theme, isDark, focusColor),
 
                   const SizedBox(height: 16),
 
-                  // Lista de ejercicios
-                  _buildExercisesCard(theme, isDark),
+                  // Lista de ejercicios detallada
+                  _buildExercisesCard(currentWorkout, theme, isDark, focusColor),
 
                   const SizedBox(height: 32),
                 ],
@@ -96,155 +106,117 @@ class WorkoutDetailPage extends StatelessWidget {
     );
   }
 
-  /// Card con información general del entrenamiento
-  Widget _buildInfoCard(ThemeData theme, bool isDark) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Información General',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: theme.textTheme.bodyLarge?.color,
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildInfoRow(
-              'Fecha',
-              WorkoutUtils.formatRelativeDate(workout.createdAt),
-              Icons.calendar_today,
-            ),
-            _buildInfoRow(
-              'Duración',
-              '${workout.duration} minutos',
-              Icons.schedule,
-            ),
-            _buildInfoRow('Tipo', workout.focus, Icons.fitness_center),
-          ],
+  /// Background con foto del entrenamiento
+  Widget _buildPhotoBackground(String photoUrl, WorkoutModel currentWorkout, Color focusColor) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Foto de fondo
+        Image.network(
+          photoUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return _buildGradientBackground(currentWorkout, false);
+          },
         ),
-      ),
-    );
-  }
-
-  /// Card con estadísticas del entrenamiento
-  Widget _buildStatsCard(ThemeData theme, bool isDark) {
-    final totalSets = workout.exercises.fold(
-      0,
-      (sum, exercise) => sum + exercise.sets.length,
-    );
-    final totalReps = workout.exercises.fold(
-      0,
-      (sum, exercise) =>
-          sum + exercise.sets.fold(0, (setSum, set) => setSum + set.reps),
-    );
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Estadísticas',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: theme.textTheme.bodyLarge?.color,
-              ),
+        // Gradiente oscuro para legibilidad
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.transparent,
+                Colors.black.withValues(alpha: 0.7),
+              ],
             ),
-            const SizedBox(height: 16),
-            Row(
+          ),
+        ),
+        // Badge del tipo
+        Positioned(
+          bottom: 60,
+          left: 16,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: focusColor.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: _buildStatItem(
-                    '${workout.exercises.length}',
-                    'Ejercicios',
-                    Icons.fitness_center,
-                    theme,
-                  ),
+                Icon(
+                  WorkoutUtils.getFocusIcon(currentWorkout.focus),
+                  size: 18,
+                  color: Colors.white,
                 ),
-                Expanded(
-                  child: _buildStatItem(
-                    '$totalSets',
-                    'Series',
-                    Icons.repeat,
-                    theme,
-                  ),
-                ),
-                Expanded(
-                  child: _buildStatItem(
-                    '$totalReps',
-                    'Repeticiones',
-                    Icons.sports_gymnastics,
-                    theme,
+                const SizedBox(width: 8),
+                Text(
+                  '${currentWorkout.duration} min • ${currentWorkout.exercises.length} ejercicios',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Card con lista de ejercicios
-  Widget _buildExercisesCard(ThemeData theme, bool isDark) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Ejercicios (${workout.exercises.length})',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: theme.textTheme.bodyLarge?.color,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ...workout.exercises.asMap().entries.map((entry) {
-              final index = entry.key;
-              final exercise = entry.value;
-              return _buildExerciseItem(exercise, index + 1, theme, isDark);
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Widget para fila de información
-  Widget _buildInfoRow(String label, String value, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: Colors.grey[600]),
-          const SizedBox(width: 8),
-          Text(
-            '$label: ',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
-            ),
           ),
+        ),
+      ],
+    );
+  }
+
+  /// Background con gradiente (cuando no hay foto)
+  Widget _buildGradientBackground(WorkoutModel currentWorkout, bool isDark) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: WorkoutUtils.getGradientColors(
+            currentWorkout.focus,
+            isDark: isDark,
+          ),
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          WorkoutUtils.getFocusIcon(currentWorkout.focus),
+          size: 100,
+          color: Colors.white.withValues(alpha: 0.3),
+        ),
+      ),
+    );
+  }
+
+  /// Sección de caption
+  Widget _buildCaptionSection(String caption, ThemeData theme, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[850] : Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.format_quote,
+            color: isDark ? Colors.grey[600] : Colors.grey[400],
+            size: 20,
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
-              value,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              caption,
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.4,
+                color: isDark ? Colors.grey[300] : Colors.grey[800],
+                fontStyle: FontStyle.italic,
+              ),
             ),
           ),
         ],
@@ -252,46 +224,193 @@ class WorkoutDetailPage extends StatelessWidget {
     );
   }
 
-  /// Widget para item de estadística
-  Widget _buildStatItem(
-    String value,
-    String label,
-    IconData icon,
-    ThemeData theme,
-  ) {
-    return Column(
-      children: [
-        Icon(icon, size: 24, color: WorkoutUtils.getFocusColor(workout.focus)),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: theme.textTheme.bodyLarge?.color,
-          ),
+  /// Card con estadísticas mejorado
+  Widget _buildStatsCard(WorkoutModel currentWorkout, ThemeData theme, bool isDark, Color focusColor) {
+    final totalSets = currentWorkout.totalSets;
+    final totalReps = currentWorkout.totalReps;
+    final totalVolume = currentWorkout.totalVolume;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[850] : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: focusColor.withValues(alpha: 0.3),
+          width: 2,
         ),
-        const SizedBox(height: 4),
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-      ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.bar_chart, color: focusColor, size: 24),
+              const SizedBox(width: 12),
+              Text(
+                'Estadísticas',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: theme.textTheme.bodyLarge?.color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: _buildModernStatItem(
+                  '${currentWorkout.duration}',
+                  'min',
+                  Icons.schedule,
+                  focusColor,
+                  isDark,
+                ),
+              ),
+              Expanded(
+                child: _buildModernStatItem(
+                  '${currentWorkout.exercises.length}',
+                  'ejercicios',
+                  Icons.fitness_center,
+                  focusColor,
+                  isDark,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildModernStatItem(
+                  '$totalSets',
+                  'series',
+                  Icons.repeat,
+                  focusColor,
+                  isDark,
+                ),
+              ),
+              Expanded(
+                child: _buildModernStatItem(
+                  '$totalReps',
+                  'reps',
+                  Icons.sports_gymnastics,
+                  focusColor,
+                  isDark,
+                ),
+              ),
+            ],
+          ),
+          if (totalVolume > 0) ...[
+            const SizedBox(height: 16),
+            _buildModernStatItem(
+              totalVolume.toStringAsFixed(0),
+              'kg volumen total',
+              Icons.scale,
+              focusColor,
+              isDark,
+            ),
+          ],
+        ],
+      ),
     );
   }
 
-  /// Widget para item de ejercicio
-  Widget _buildExerciseItem(
+  Widget _buildModernStatItem(String value, String label, IconData icon, Color color, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 24, color: color),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
+              ),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Card con lista de ejercicios mejorado
+  Widget _buildExercisesCard(WorkoutModel currentWorkout, ThemeData theme, bool isDark, Color focusColor) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[850] : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: focusColor.withValues(alpha: 0.3),
+          width: 2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.list_alt, color: focusColor, size: 24),
+              const SizedBox(width: 12),
+              Text(
+                'Ejercicios (${currentWorkout.exercises.length})',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: theme.textTheme.bodyLarge?.color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          ...currentWorkout.exercises.asMap().entries.map((entry) {
+            final index = entry.key;
+            final exercise = entry.value;
+            return _buildModernExerciseItem(exercise, index + 1, theme, isDark, focusColor);
+          }),
+        ],
+      ),
+    );
+  }
+
+  /// Widget mejorado para item de ejercicio con detalles de series
+  Widget _buildModernExerciseItem(
     dynamic exercise,
     int index,
     ThemeData theme,
     bool isDark,
+    Color focusColor,
   ) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark ? Colors.grey[800] : Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
+          color: focusColor.withValues(alpha: 0.2),
+          width: 1.5,
         ),
       ),
       child: Column(
@@ -300,18 +419,18 @@ class WorkoutDetailPage extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 24,
-                height: 24,
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
-                  color: WorkoutUtils.getFocusColor(workout.focus),
-                  borderRadius: BorderRadius.circular(12),
+                  color: focusColor,
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Center(
                   child: Text(
                     '$index',
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 12,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -322,22 +441,56 @@ class WorkoutDetailPage extends StatelessWidget {
                 child: Text(
                   exercise.name,
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
                     color: theme.textTheme.bodyLarge?.color,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: focusColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${exercise.sets.length} series',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: focusColor,
                   ),
                 ),
               ),
             ],
           ),
           if (exercise.sets.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Series: ${exercise.sets.length}',
-              style: TextStyle(
-                fontSize: 14,
-                color: isDark ? Colors.grey[300] : Colors.grey[600],
-              ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: exercise.sets.asMap().entries.map<Widget>((entry) {
+                final setIndex = entry.key + 1;
+                final set = entry.value;
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[700] : Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
+                    ),
+                  ),
+                  child: Text(
+                    'S$setIndex: ${set.weight}kg × ${set.reps}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.grey[300] : Colors.grey[700],
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
           ],
         ],

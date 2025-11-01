@@ -30,74 +30,74 @@ class WorkoutPostCard extends StatelessWidget {
     final focusColor = WorkoutUtils.getFocusColor(post.workout.focus);
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: isDark ? Colors.grey[900] : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+        border: Border(
+          top: BorderSide(
+            color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+            width: 0.5,
           ),
-        ],
+          bottom: BorderSide(
+            color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+            width: 0.5,
+          ),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header con gradiente
-          _buildHeaderWithGradient(isDark, focusColor),
+          // Header estilo Instagram
+          _buildInstagramHeader(isDark),
 
           // Foto del entrenamiento si existe (estilo Instagram)
           if (post.workoutPhotoUrl != null && post.workoutPhotoUrl!.isNotEmpty)
             _buildWorkoutPhoto(),
 
+          // Acciones rápidas (Like, Comment) - Estilo Instagram
+          _buildQuickActions(isLiked, isDark),
+
+          // Información del entrenamiento
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Información del entrenamiento mejorada
-                _buildWorkoutInfoModern(isDark, focusColor),
-
-                const SizedBox(height: 16),
-
                 // Caption si existe
                 if (post.caption != null && post.caption!.isNotEmpty) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.grey[800] : Colors.grey[50],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      post.caption!,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: isDark ? Colors.grey[300] : Colors.grey[800],
-                        height: 1.4,
-                      ),
+                  RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '${post.userName} ',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : Colors.black,
+                          ),
+                        ),
+                        TextSpan(
+                          text: post.caption!,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDark ? Colors.white : Colors.black,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                 ],
 
-                // Ejercicios con mejor diseño
-                _buildExercisesListModern(isDark),
-
-                const SizedBox(height: 16),
-
-                // Acciones mejoradas
-                _buildActionsModern(isLiked, isDark),
+                // Stats compactas estilo gym
+                _buildCompactStats(isDark, focusColor),
 
                 const SizedBox(height: 12),
 
-                // Timestamp mejorado
+                // Timestamp
                 _buildTimestamp(isDark),
+
+                const SizedBox(height: 16),
               ],
             ),
           ),
@@ -106,474 +106,363 @@ class WorkoutPostCard extends StatelessWidget {
     );
   }
 
-  /// Header con gradiente y avatar
-  Widget _buildHeaderWithGradient(bool isDark, Color focusColor) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: WorkoutUtils.getGradientColors(
-            post.workout.focus,
-            isDark: isDark,
-          ),
-        ),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
+  /// Header estilo Instagram simple
+  Widget _buildInstagramHeader(bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.all(12),
       child: Row(
         children: [
-          // Avatar con borde
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-            ),
-            child: CircleAvatar(
-              radius: 20,
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
-              backgroundImage: post.userPhotoUrl != null
-                  ? NetworkImage(post.userPhotoUrl!)
-                  : null,
-              child: post.userPhotoUrl == null
-                  ? Text(
-                      post.userName[0].toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
-                  : null,
-            ),
+          // Avatar
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: Colors.grey[300],
+            backgroundImage: post.userPhotoUrl != null
+                ? NetworkImage(post.userPhotoUrl!)
+                : null,
+            child: post.userPhotoUrl == null
+                ? Text(
+                    post.userName[0].toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  )
+                : null,
           ),
           const SizedBox(width: 12),
+          // Nombre de usuario
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   post.userName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.white,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
                 Text(
-                  'completó un entrenamiento',
+                  _formatTimestamp(post.createdAt),
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
                   ),
                 ),
               ],
             ),
           ),
+          // Menú de opciones
           Icon(
-            WorkoutUtils.getFocusIcon(post.workout.focus),
-            color: Colors.white,
-            size: 24,
+            Icons.more_vert,
+            color: isDark ? Colors.grey[400] : Colors.grey[600],
+            size: 20,
           ),
         ],
       ),
     );
   }
 
-  /// Foto del entrenamiento (estilo Instagram)
-  Widget _buildWorkoutPhoto() {
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(
-        maxHeight: 400, // Altura máxima de la foto
-      ),
-      child: Image.network(
-        post.workoutPhotoUrl!,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            height: 300,
-            color: Colors.grey[300],
-            child: Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes!
-                    : null,
+  /// Acciones rápidas estilo Instagram con contadores
+  Widget _buildQuickActions(bool isLiked, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: Row(
+        children: [
+          // Like button con contador
+          Row(
+            children: [
+              IconButton(
+                onPressed: onLike,
+                icon: Icon(
+                  isLiked ? Icons.favorite : Icons.favorite_border,
+                  color: isLiked ? Colors.red : (isDark ? Colors.white : Colors.black),
+                  size: 28,
+                ),
               ),
+              if (post.likes.isNotEmpty)
+                Text(
+                  '${post.likes.length}',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 12),
+          // Comment button con contador
+          Row(
+            children: [
+              IconButton(
+                onPressed: () {
+                  if (onComment != null) {
+                    onComment!();
+                  }
+                  Get.bottomSheet(
+                    CommentsBottomSheet(postId: post.id),
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                  );
+                },
+                icon: Icon(
+                  Icons.chat_bubble_outline,
+                  color: isDark ? Colors.white : Colors.black,
+                  size: 26,
+                ),
+              ),
+              if (post.commentsCount > 0)
+                Text(
+                  '${post.commentsCount}',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+            ],
+          ),
+          const Spacer(),
+          // Ver detalle
+          IconButton(
+            onPressed: () => _navigateToWorkoutDetail(),
+            icon: Icon(
+              Icons.arrow_forward_ios,
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
+              size: 18,
             ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            height: 200,
-            color: Colors.grey[300],
-            child: const Center(
-              child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
-            ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
 
-  /// Información del entrenamiento moderna
-  Widget _buildWorkoutInfoModern(bool isDark, Color focusColor) {
-    return GestureDetector(
-      onTap: () => _navigateToWorkoutDetail(),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: focusColor.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: focusColor.withValues(alpha: 0.2), width: 1.5),
-        ),
-        child: Column(
-          children: [
-            // Enfoque con mejor diseño
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: focusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    WorkoutUtils.getFocusIcon(post.workout.focus),
-                    color: focusColor,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    post.workout.focus,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: focusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    size: 14,
-                    color: focusColor,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // Estadísticas con mejor diseño
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItemModern(
-                  '${post.workout.duration}',
-                  'min',
-                  Icons.schedule,
-                  focusColor,
-                  isDark,
-                ),
-                _buildStatItemModern(
-                  '${post.workout.exercises.length}',
-                  'ejercicios',
-                  Icons.fitness_center,
-                  focusColor,
-                  isDark,
-                ),
-                _buildStatItemModern(
-                  '${post.workout.totalSets}',
-                  'series',
-                  Icons.repeat,
-                  focusColor,
-                  isDark,
-                ),
-                _buildStatItemModern(
-                  post.workout.totalVolume.toString(),
-                  'kg',
-                  Icons.scale,
-                  focusColor,
-                  isDark,
-                ),
-              ],
-            ),
-          ],
-        ),
+  /// Stats compactas estilo gym
+  Widget _buildCompactStats(bool isDark, Color focusColor) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[850] : Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildStatItem(
+            Icons.schedule,
+            '${post.workout.duration} min',
+            isDark,
+          ),
+          _buildStatDivider(isDark),
+          _buildStatItem(
+            Icons.fitness_center,
+            '${post.workout.exercises.length} ejercicios',
+            isDark,
+          ),
+          _buildStatDivider(isDark),
+          _buildStatItem(
+            Icons.repeat,
+            '${post.workout.totalSets} series',
+            isDark,
+          ),
+        ],
       ),
     );
   }
 
-  /// Item de estadística moderno
-  Widget _buildStatItemModern(
-    String value,
-    String label,
-    IconData icon,
-    Color focusColor,
-    bool isDark,
-  ) {
-    return Column(
+  Widget _buildStatItem(IconData icon, String text, bool isDark) {
+    return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: focusColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, size: 16, color: focusColor),
+        Icon(
+          icon,
+          size: 16,
+          color: isDark ? Colors.grey[400] : Colors.grey[600],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(width: 6),
         Text(
-          value,
+          text,
           style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: isDark ? Colors.grey[400] : Colors.grey[600],
-            fontWeight: FontWeight.w500,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.grey[300] : Colors.grey[700],
           ),
         ),
       ],
     );
   }
 
-  /// Lista de ejercicios moderna
-  Widget _buildExercisesListModern(bool isDark) {
+  Widget _buildStatDivider(bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[800] : Colors.grey[50],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      width: 1,
+      height: 16,
+      color: isDark ? Colors.grey[700] : Colors.grey[300],
+    );
+  }
+
+
+  /// Foto del entrenamiento con overlay de info (estilo Instagram con AspectRatio fijo)
+  Widget _buildWorkoutPhoto() {
+    final focusColor = WorkoutUtils.getFocusColor(post.workout.focus);
+    
+    return AspectRatio(
+      aspectRatio: 4 / 5, // Mismo ratio que Instagram (4:5)
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          Row(
-            children: [
-              Icon(
-                Icons.list_alt,
-                size: 16,
-                color: isDark ? Colors.grey[400] : Colors.grey[600],
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Ejercicios',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.grey[300] : Colors.grey[700],
+          // Foto de fondo
+          Image.network(
+            post.workoutPhotoUrl!,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Container(
+                color: Colors.grey[300],
+                child: Center(
+                  child: CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
+                  ),
+                ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey[300],
+                child: const Center(
+                  child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                ),
+              );
+            },
+          ),
+
+          // Gradiente sutil en la parte inferior
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.7),
+                  ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ...post.workout.exercises.take(3).toList().asMap().entries.map((
-            entry,
-          ) {
-            final index = entry.key;
-            final exercise = entry.value;
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: isDark ? Colors.grey[700] : Colors.white,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Badge del tipo de entrenamiento
                   Container(
-                    width: 20,
-                    height: 20,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      color: focusColor.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Center(
-                      child: Text(
-                        '${index + 1}',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          WorkoutUtils.getFocusIcon(post.workout.focus),
+                          size: 14,
+                          color: Colors.white,
                         ),
-                      ),
+                        const SizedBox(width: 6),
+                        Text(
+                          post.workout.focus.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      exercise.name,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white : Colors.black,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${exercise.sets.length} series',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.blue,
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: 12),
+                  
+                  // Ejercicios sobre la foto
+                  ..._buildPhotoOverlayExercises(),
                 ],
               ),
-            );
-          }),
-          if (post.workout.exercises.length > 3)
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Lista de ejercicios sobre la foto
+  List<Widget> _buildPhotoOverlayExercises() {
+    final exercisesToShow = post.workout.exercises.take(3).toList();
+    final hasMore = post.workout.exercises.length > 3;
+
+    return [
+      ...exercisesToShow.map((exercise) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Row(
+          children: [
             Container(
-              margin: const EdgeInsets.only(top: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.more_horiz, size: 16, color: Colors.blue),
-                  const SizedBox(width: 8),
-                  Text(
-                    '+${post.workout.exercises.length - 3} ejercicios más',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.blue,
-                    ),
-                  ),
-                ],
+              width: 6,
+              height: 6,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
               ),
             ),
-        ],
-      ),
-    );
-  }
-
-  /// Acciones modernas
-  Widget _buildActionsModern(bool isLiked, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[800] : Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          // Like
-          Expanded(
-            child: InkWell(
-              onTap: onLike,
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      isLiked ? Icons.favorite : Icons.favorite_border,
-                      color: isLiked ? Colors.red : Colors.grey[600],
-                      size: 20,
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                '${exercise.name} • ${exercise.sets.length} series',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black,
+                      blurRadius: 4,
                     ),
-                    if (post.likes.isNotEmpty) ...[
-                      const SizedBox(width: 6),
-                      Text(
-                        '${post.likes.length}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: isLiked ? Colors.red : Colors.grey[600],
-                        ),
-                      ),
-                    ],
                   ],
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-          ),
-
-          Container(
-            width: 1,
-            height: 20,
-            color: isDark ? Colors.grey[700] : Colors.grey[300],
-          ),
-
-          // Comment
-          Expanded(
-            child: InkWell(
-              onTap: () {
-                if (onComment != null) {
-                  onComment!();
-                }
-                Get.bottomSheet(
-                  CommentsBottomSheet(postId: post.id),
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                );
-              },
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.chat_bubble_outline,
-                      color: Colors.grey[600],
-                      size: 20,
-                    ),
-                    if (post.commentsCount > 0) ...[
-                      const SizedBox(width: 6),
-                      Text(
-                        '${post.commentsCount}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ],
+          ],
+        ),
+      )),
+      if (hasMore)
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            '+${post.workout.exercises.length - 3} ejercicios más',
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.white70,
+              fontWeight: FontWeight.w600,
+              shadows: [
+                Shadow(
+                  color: Colors.black,
+                  blurRadius: 4,
                 ),
-              ),
+              ],
             ),
           ),
-        ],
-      ),
-    );
+        ),
+    ];
   }
+
 
   /// Timestamp mejorado
   Widget _buildTimestamp(bool isDark) {
@@ -619,7 +508,7 @@ class WorkoutPostCard extends StatelessWidget {
   void _navigateToWorkoutDetail() {
     Get.toNamed(
       RoutePaths.workoutDetail.replaceAll(':id', post.workout.id),
-      arguments: {'workout': post.workout},
+      arguments: {'workoutPost': post},
     );
   }
 }

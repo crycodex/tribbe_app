@@ -371,7 +371,7 @@ class ProfilePage extends StatelessWidget {
                                       ':id',
                                       post.workout.id,
                                     ),
-                                    arguments: {'workout': post.workout},
+                                    arguments: {'workoutPost': post},
                                   );
                                 },
                               );

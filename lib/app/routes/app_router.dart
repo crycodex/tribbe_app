@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/app/routes/routes.dart';
 import 'package:tribbe_app/features/training/models/workout_model.dart';
+import 'package:tribbe_app/features/training/models/workout_post_model.dart';
 import 'package:tribbe_app/features/training/views/pages/workout_detail_page.dart';
 import 'package:tribbe_app/shared/views/pages/exercises_library_page.dart';
 import 'package:tribbe_app/shared/views/pages/exercise_detail_page.dart';
@@ -110,8 +111,13 @@ class AppRouter {
       name: RoutePaths.workoutDetail,
       page: () {
         final args = Get.arguments as Map<String, dynamic>;
-        final workout = args['workout'] as WorkoutModel;
-        return WorkoutDetailPage(workout: workout);
+        // Aceptar tanto workout como workoutPost
+        final workout = args['workout'] as WorkoutModel?;
+        final workoutPost = args['workoutPost'] as WorkoutPostModel?;
+        return WorkoutDetailPage(
+          workout: workout,
+          workoutPost: workoutPost,
+        );
       },
       transition: Transition.rightToLeft,
       transitionDuration: const Duration(milliseconds: 300),

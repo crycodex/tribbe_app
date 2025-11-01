@@ -183,96 +183,152 @@ class WorkoutGridItem extends StatelessWidget {
     );
   }
 
-  /// Grid sin foto (diseño por defecto)
+  /// Grid sin foto (diseño con gradiente de color)
   Widget _buildDefaultGrid(WorkoutModel workout, Color focusColor, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          // Header con fecha
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: focusColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  WorkoutUtils.formatRelativeDate(post.createdAt),
-                  style: TextStyle(
-                    color: focusColor,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              Icon(
-                WorkoutUtils.getFocusIcon(workout.focus),
-                color: focusColor,
-                size: 16,
-              ),
-            ],
-          ),
-
-          // Información principal
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Foco del entrenamiento
-              Text(
-                workout.focus,
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-
-              // Estadísticas
-              Row(
-                children: [
-                  Icon(
-                    Icons.schedule,
-                    color: isDark ? Colors.grey[400] : Colors.grey[600],
-                    size: 12,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${workout.duration} min',
-                    style: TextStyle(
-                      color: isDark ? Colors.grey[300] : Colors.grey[700],
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Icon(
-                    Icons.repeat,
-                    color: isDark ? Colors.grey[400] : Colors.grey[600],
-                    size: 12,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${workout.exercises.length}',
-                    style: TextStyle(
-                      color: isDark ? Colors.grey[300] : Colors.grey[700],
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+          // Gradiente de fondo basado en el color del enfoque
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  focusColor.withValues(alpha: 0.3),
+                  focusColor.withValues(alpha: 0.6),
+                  focusColor.withValues(alpha: 0.8),
                 ],
               ),
-            ],
+            ),
+          ),
+
+          // Patrón de fondo opcional (círculos decorativos)
+          Positioned(
+            top: -20,
+            right: -20,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.1),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -30,
+            left: -30,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.08),
+              ),
+            ),
+          ),
+
+          // Contenido
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Header con fecha
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        WorkoutUtils.formatRelativeDate(post.createdAt),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      WorkoutUtils.getFocusIcon(workout.focus),
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ],
+                ),
+
+                // Información principal
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Foco del entrenamiento
+                    Text(
+                      workout.focus,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black26,
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+
+                    // Estadísticas
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.schedule,
+                          color: Colors.white,
+                          size: 12,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${workout.duration} min',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Icon(
+                          Icons.repeat,
+                          color: Colors.white,
+                          size: 12,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${workout.exercises.length}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
