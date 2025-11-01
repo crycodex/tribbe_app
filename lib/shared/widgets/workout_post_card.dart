@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/features/training/models/workout_post_model.dart';
 import 'package:tribbe_app/features/training/views/widgets/comments_bottom_sheet.dart';
 import 'package:tribbe_app/shared/utils/workout_utils.dart';
-import 'package:tribbe_app/app/routes/route_paths.dart';
-import 'package:get/get.dart';
 
 /// Card de post de entrenamiento para el feed
 class WorkoutPostCard extends StatelessWidget {
@@ -108,57 +108,70 @@ class WorkoutPostCard extends StatelessWidget {
 
   /// Header estilo Instagram simple
   Widget _buildInstagramHeader(bool isDark) {
+    final isOwnPost = currentUserId != null && currentUserId == post.userId;
+    
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Row(
         children: [
-          // Avatar
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: Colors.grey[300],
-            backgroundImage: post.userPhotoUrl != null
-                ? NetworkImage(post.userPhotoUrl!)
-                : null,
-            child: post.userPhotoUrl == null
-                ? Text(
-                    post.userName[0].toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  )
-                : null,
+          // Avatar - tap para ver perfil
+          GestureDetector(
+            onTap: () => _navigateToUserProfile(),
+            child: CircleAvatar(
+              radius: 18,
+              backgroundColor: Colors.grey[300],
+              backgroundImage: post.userPhotoUrl != null
+                  ? NetworkImage(post.userPhotoUrl!)
+                  : null,
+              child: post.userPhotoUrl == null
+                  ? Text(
+                      post.userName[0].toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    )
+                  : null,
+            ),
           ),
           const SizedBox(width: 12),
-          // Nombre de usuario
+          // Nombre de usuario - tap para ver perfil
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  post.userName,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: isDark ? Colors.white : Colors.black,
+            child: GestureDetector(
+              onTap: () => _navigateToUserProfile(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    post.userName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
                   ),
-                ),
-                Text(
-                  _formatTimestamp(post.createdAt),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  Text(
+                    _formatTimestamp(post.createdAt),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           // Menú de opciones
-          Icon(
-            Icons.more_vert,
-            color: isDark ? Colors.grey[400] : Colors.grey[600],
-            size: 20,
+          IconButton(
+            onPressed: () => _showPostOptions(isDark, isOwnPost),
+            icon: Icon(
+              Icons.more_vert,
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
+              size: 20,
+            ),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
           ),
         ],
       ),
@@ -509,6 +522,310 @@ class WorkoutPostCard extends StatelessWidget {
     Get.toNamed(
       RoutePaths.workoutDetail.replaceAll(':id', post.workout.id),
       arguments: {'workoutPost': post},
+    );
+  }
+
+  /// Navegar al perfil del usuario
+  void _navigateToUserProfile() {
+    // Si es el perfil propio, no navegar
+    if (currentUserId != null && currentUserId == post.userId) {
+      Get.toNamed(RoutePaths.profile);
+      return;
+    }
+
+    // TODO: Implementar navegación a perfil de otro usuario
+    // Por ahora solo mostramos un mensaje
+    Get.snackbar(
+      'Perfil',
+      'Ver perfil de ${post.userName}',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 1),
+    );
+  }
+
+  /// Mostrar menú de opciones del post
+  void _showPostOptions(bool isDark, bool isOwnPost) {
+    Get.bottomSheet(
+      Container(
+        decoration: BoxDecoration(
+          color: isDark ? Colors.grey[900] : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey[700] : Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              // Título
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                child: Text(
+                  isOwnPost ? 'Opciones' : 'Opciones del post',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+              ),
+
+              const Divider(height: 1),
+
+              // Opciones
+              if (!isOwnPost) ...[
+                _buildOptionTile(
+                  icon: Icons.person_outline,
+                  title: 'Ver perfil',
+                  isDark: isDark,
+                  onTap: () {
+                    Get.back();
+                    _navigateToUserProfile();
+                  },
+                ),
+                _buildOptionTile(
+                  icon: Icons.person_remove_outlined,
+                  title: 'Dejar de seguir',
+                  isDark: isDark,
+                  color: Colors.red,
+                  onTap: () {
+                    Get.back();
+                    _showUnfollowConfirmation(isDark);
+                  },
+                ),
+                _buildOptionTile(
+                  icon: Icons.visibility_off_outlined,
+                  title: 'Ocultar este post',
+                  isDark: isDark,
+                  onTap: () {
+                    Get.back();
+                    _hidePost();
+                  },
+                ),
+              ] else ...[
+                _buildOptionTile(
+                  icon: Icons.delete_outline,
+                  title: 'Eliminar entrenamiento',
+                  isDark: isDark,
+                  color: Colors.red,
+                  onTap: () {
+                    Get.back();
+                    _showDeleteConfirmation(isDark);
+                  },
+                ),
+              ],
+
+              _buildOptionTile(
+                icon: Icons.report_outlined,
+                title: 'Reportar',
+                isDark: isDark,
+                onTap: () {
+                  Get.back();
+                  _reportPost();
+                },
+              ),
+
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+      backgroundColor: Colors.transparent,
+      isDismissible: true,
+    );
+  }
+
+  /// Widget para item de opción del menú
+  Widget _buildOptionTile({
+    required IconData icon,
+    required String title,
+    required bool isDark,
+    Color? color,
+    required VoidCallback onTap,
+  }) {
+    final itemColor = color ?? (isDark ? Colors.white : Colors.black);
+
+    return ListTile(
+      leading: Icon(icon, color: itemColor, size: 24),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+          color: itemColor,
+        ),
+      ),
+      onTap: onTap,
+    );
+  }
+
+  /// Mostrar confirmación para dejar de seguir
+  void _showUnfollowConfirmation(bool isDark) {
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: isDark ? Colors.grey[900] : Colors.white,
+        title: Text(
+          'Dejar de seguir',
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black,
+          ),
+        ),
+        content: Text(
+          '¿Dejar de seguir a ${post.userName}?',
+          style: TextStyle(
+            color: isDark ? Colors.grey[300] : Colors.grey[700],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text(
+              'Cancelar',
+              style: TextStyle(
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back();
+              _unfollowUser();
+            },
+            child: const Text(
+              'Dejar de seguir',
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Mostrar confirmación para eliminar post
+  void _showDeleteConfirmation(bool isDark) {
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: isDark ? Colors.grey[900] : Colors.white,
+        title: Text(
+          'Eliminar entrenamiento',
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black,
+          ),
+        ),
+        content: Text(
+          '¿Estás seguro de que quieres eliminar este entrenamiento? Esta acción no se puede deshacer.',
+          style: TextStyle(
+            color: isDark ? Colors.grey[300] : Colors.grey[700],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text(
+              'Cancelar',
+              style: TextStyle(
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back();
+              _deletePost();
+            },
+            child: const Text(
+              'Eliminar',
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Dejar de seguir usuario
+  void _unfollowUser() {
+    // TODO: Implementar lógica de dejar de seguir
+    Get.snackbar(
+      'Dejaste de seguir',
+      'Ya no verás posts de ${post.userName}',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 2),
+      backgroundColor: Colors.grey[800],
+      colorText: Colors.white,
+    );
+  }
+
+  /// Ocultar post
+  void _hidePost() {
+    Get.snackbar(
+      'Post oculto',
+      'No volverás a ver este post',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 2),
+      backgroundColor: Colors.grey[800],
+      colorText: Colors.white,
+    );
+    // TODO: Implementar lógica de ocultar post
+  }
+
+  /// Eliminar post propio
+  void _deletePost() {
+    Get.snackbar(
+      'Entrenamiento eliminado',
+      'Tu entrenamiento ha sido eliminado',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 2),
+      backgroundColor: Colors.grey[800],
+      colorText: Colors.white,
+    );
+    // TODO: Implementar lógica de eliminar post
+  }
+
+  /// Reportar post
+  void _reportPost() {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Reportar post'),
+        content: const Text('¿Por qué deseas reportar este post?'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back();
+              Get.snackbar(
+                'Reporte enviado',
+                'Gracias por ayudarnos a mantener la comunidad segura',
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: Colors.green,
+                colorText: Colors.white,
+              );
+            },
+            child: const Text(
+              'Enviar reporte',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
