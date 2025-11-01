@@ -20,22 +20,22 @@ class TribbeTabBar extends StatelessWidget {
     return CNTabBar(
       items: const [
         CNTabBarItem(label: 'Home', icon: CNSymbol('house.fill')),
-        CNTabBarItem(label: 'Gimnasios', icon: CNSymbol('building.2.fill')),
+        // CNTabBarItem(label: 'Gimnasios', icon: CNSymbol('building.2.fill')),
         CNTabBarItem(
           label: 'Entrenar',
           icon: CNSymbol('figure.strengthtraining.traditional'),
         ),
-        CNTabBarItem(label: 'Store', icon: CNSymbol('bag.fill')),
+        // CNTabBarItem(label: 'Store', icon: CNSymbol('bag.fill')),
         CNTabBarItem(label: 'Perfil', icon: CNSymbol('person.circle.fill')),
       ],
       currentIndex: currentIndex,
       onTap: (index) {
-        // Solo para el botón central (índice 2) ejecuta acción especial
-        if (index == 2) {
+        // Solo para el botón de entrenar (índice 1) ejecuta acción especial
+        if (index == 1) {
           if (onTrainingTap != null) {
             onTrainingTap!();
           } else {
-            onTap(2);
+            onTap(1);
           }
           return;
         }

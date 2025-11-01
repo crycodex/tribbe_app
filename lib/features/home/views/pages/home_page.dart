@@ -4,9 +4,9 @@ import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/features/home/controllers/home_controller.dart';
 import 'package:tribbe_app/features/training/controllers/training_controller.dart';
 import 'package:tribbe_app/features/dashboard/views/pages/dashboard_page.dart';
-import 'package:tribbe_app/features/gym/views/pages/gym_page.dart';
+// import 'package:tribbe_app/features/gym/views/pages/gym_page.dart';
 import 'package:tribbe_app/features/profile/views/pages/profile_page.dart';
-import 'package:tribbe_app/features/store/views/pages/store_page.dart';
+// import 'package:tribbe_app/features/store/views/pages/store_page.dart';
 import 'package:tribbe_app/shared/widgets/tribbe_tab_bar.dart';
 import 'package:tribbe_app/shared/widgets/settings_drawer.dart';
 import 'package:tribbe_app/shared/widgets/active_training_indicator.dart';
@@ -22,9 +22,9 @@ class HomePage extends StatelessWidget {
   // Páginas para cada tab (features independientes)
   static const List<Widget> _pages = [
     DashboardPage(), // Home/Dashboard
-    GymPage(), // Gimnasios
+    // GymPage(), // Gimnasios (temporalmente oculto)
     DashboardPage(), // Placeholder (no usado, botón central abre training)
-    StorePage(), // Tienda
+    // StorePage(), // Tienda (temporalmente oculto)
     ProfilePage(), // Perfil
   ];
 
