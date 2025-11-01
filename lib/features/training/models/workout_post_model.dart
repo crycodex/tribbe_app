@@ -8,6 +8,7 @@ class WorkoutPostModel {
   final String? userPhotoUrl;
   final WorkoutModel workout;
   final String? caption;
+  final String? workoutPhotoUrl; // Foto del entrenamiento (opcional)
   final DateTime createdAt;
   final List<String> likes;
   final int commentsCount;
@@ -19,6 +20,7 @@ class WorkoutPostModel {
     this.userPhotoUrl,
     required this.workout,
     this.caption,
+    this.workoutPhotoUrl,
     required this.createdAt,
     this.likes = const [],
     this.commentsCount = 0,
@@ -33,6 +35,7 @@ class WorkoutPostModel {
       userPhotoUrl: json['user_photo_url'] as String?,
       workout: WorkoutModel.fromJson(json['workout'] as Map<String, dynamic>),
       caption: json['caption'] as String?,
+      workoutPhotoUrl: json['workout_photo_url'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       likes:
           (json['likes'] as List<dynamic>?)?.map((e) => e as String).toList() ??
@@ -50,6 +53,7 @@ class WorkoutPostModel {
       'user_photo_url': userPhotoUrl,
       'workout': workout.toJson(),
       'caption': caption,
+      'workout_photo_url': workoutPhotoUrl,
       'created_at': createdAt.toIso8601String(),
       'likes': likes,
       'comments_count': commentsCount,
@@ -64,6 +68,7 @@ class WorkoutPostModel {
     String? userPhotoUrl,
     WorkoutModel? workout,
     String? caption,
+    String? workoutPhotoUrl,
     DateTime? createdAt,
     List<String>? likes,
     int? commentsCount,
@@ -75,6 +80,7 @@ class WorkoutPostModel {
       userPhotoUrl: userPhotoUrl ?? this.userPhotoUrl,
       workout: workout ?? this.workout,
       caption: caption ?? this.caption,
+      workoutPhotoUrl: workoutPhotoUrl ?? this.workoutPhotoUrl,
       createdAt: createdAt ?? this.createdAt,
       likes: likes ?? this.likes,
       commentsCount: commentsCount ?? this.commentsCount,

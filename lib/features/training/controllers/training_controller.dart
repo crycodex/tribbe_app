@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/shared/data/exercises_data.dart';
 import 'package:tribbe_app/shared/models/exercise_model.dart';
 import 'package:tribbe_app/features/training/models/workout_model.dart';
 import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
+import 'package:tribbe_app/shared/services/firebase_storage_service.dart';
 import 'package:tribbe_app/shared/services/workout_service.dart';
 import 'package:tribbe_app/shared/services/streak_service.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
@@ -14,6 +16,7 @@ import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
 class TrainingController extends GetxController {
   final WorkoutService _workoutService = Get.put(WorkoutService());
   final FirebaseAuthService _authService = Get.put(FirebaseAuthService());
+  final FirebaseStorageService _storageService = Get.put(FirebaseStorageService());
   final StreakService _streakService = Get.put(StreakService());
   final AuthController _authController = Get.put(AuthController());
 
@@ -109,7 +112,10 @@ class TrainingController extends GetxController {
   }
 
   /// Finalizar entrenamiento
-  Future<void> finishTraining({String? caption}) async {
+  Future<void> finishTraining({
+    String? caption,
+    File? workoutPhoto,
+  }) async {
     if (!isTraining.value) return;
 
     try {
@@ -167,12 +173,32 @@ class TrainingController extends GetxController {
         exercises: exerciseModels,
       );
 
+      // Subir foto del entrenamiento si existe
+      String? workoutPhotoUrl;
+      if (workoutPhoto != null) {
+        try {
+          workoutPhotoUrl = await _storageService.uploadWorkoutPhoto(
+            userId: user.uid,
+            workoutId: workout.id,
+            imageFile: workoutPhoto,
+          );
+        } catch (e) {
+          // Si falla la subida de la foto, continuar sin ella
+          Get.snackbar(
+            'Advertencia',
+            'No se pudo subir la foto, pero tu entrenamiento se guardó.',
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        }
+      }
+
       // Crear post en el feed
       await _workoutService.createWorkoutPost(
         workout: workout,
         userName: userName,
         userPhotoUrl: userPhotoUrl,
         caption: caption,
+        workoutPhotoUrl: workoutPhotoUrl,
       );
 
       // Registrar entrenamiento para la racha

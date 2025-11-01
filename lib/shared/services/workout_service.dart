@@ -53,6 +53,7 @@ class WorkoutService {
     required String userName,
     String? userPhotoUrl,
     String? caption,
+    String? workoutPhotoUrl,
   }) async {
     try {
       final docRef = _firestore.collection(workoutPostsCollection).doc();
@@ -63,6 +64,7 @@ class WorkoutService {
         userPhotoUrl: userPhotoUrl,
         workout: workout,
         caption: caption,
+        workoutPhotoUrl: workoutPhotoUrl,
         createdAt: DateTime.now(),
       );
 

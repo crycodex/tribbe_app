@@ -52,6 +52,10 @@ class WorkoutPostCard extends StatelessWidget {
           // Header con gradiente
           _buildHeaderWithGradient(isDark, focusColor),
 
+          // Foto del entrenamiento si existe (estilo Instagram)
+          if (post.workoutPhotoUrl != null && post.workoutPhotoUrl!.isNotEmpty)
+            _buildWorkoutPhoto(),
+
           Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -174,6 +178,44 @@ class WorkoutPostCard extends StatelessWidget {
             size: 24,
           ),
         ],
+      ),
+    );
+  }
+
+  /// Foto del entrenamiento (estilo Instagram)
+  Widget _buildWorkoutPhoto() {
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(
+        maxHeight: 400, // Altura máxima de la foto
+      ),
+      child: Image.network(
+        post.workoutPhotoUrl!,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            height: 300,
+            color: Colors.grey[300],
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                        loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            height: 200,
+            color: Colors.grey[300],
+            child: const Center(
+              child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+            ),
+          );
+        },
       ),
     );
   }

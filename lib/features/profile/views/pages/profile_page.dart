@@ -361,17 +361,17 @@ class ProfilePage extends StatelessWidget {
                             }
 
                             if (index < profileController.userWorkouts.length) {
-                              final workout =
+                              final post =
                                   profileController.userWorkouts[index];
                               return WorkoutGridItem(
-                                workout: workout,
+                                post: post,
                                 onTap: () {
                                   Get.toNamed(
                                     RoutePaths.workoutDetail.replaceAll(
                                       ':id',
-                                      workout.id,
+                                      post.workout.id,
                                     ),
-                                    arguments: {'workout': workout},
+                                    arguments: {'workout': post.workout},
                                   );
                                 },
                               );

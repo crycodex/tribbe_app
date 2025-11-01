@@ -8,7 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
 import 'package:tribbe_app/features/auth/models/user_profile_model.dart';
-import 'package:tribbe_app/features/training/models/workout_model.dart';
+import 'package:tribbe_app/features/training/models/workout_post_model.dart';
 import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
 import 'package:tribbe_app/shared/services/firestore_service.dart';
 import 'package:tribbe_app/shared/services/storage_service.dart';
@@ -32,7 +32,7 @@ class ProfileController extends GetxController {
   final RxBool isLoadingMoreWorkouts = false.obs;
   final Rx<File?> selectedImage = Rx<File?>(null);
   final RxString photoUrl = ''.obs;
-  final RxList<WorkoutModel> userWorkouts = <WorkoutModel>[].obs;
+  final RxList<WorkoutPostModel> userWorkouts = <WorkoutPostModel>[].obs;
 
   // Estadísticas sociales
   final RxInt followersCount = 0.obs;
@@ -423,20 +423,21 @@ class ProfileController extends GetxController {
         return;
       }
 
-      final workouts = await _workoutService.getUserWorkouts(userId);
+      // Cambiar a getUserPosts para obtener las fotos de los entrenamientos
+      final posts = await _workoutService.getUserPosts(userId);
 
-      if (workouts.isNotEmpty) {
+      if (posts.isNotEmpty) {
         debugPrint(
-          '📊 ProfileController: Datos: ${workouts.map((w) => w.focus).toList()}',
+          '📊 ProfileController: Datos: ${posts.map((p) => p.workout.focus).toList()}',
         );
       } else {
         debugPrint('📭 ProfileController: No hay entrenamientos');
       }
 
       // Cargar solo la primera página
-      final firstPage = workouts.take(workoutsPerPage.value).toList();
+      final firstPage = posts.take(workoutsPerPage.value).toList();
       userWorkouts.value = firstPage;
-      hasMoreWorkouts.value = workouts.length > workoutsPerPage.value;
+      hasMoreWorkouts.value = posts.length > workoutsPerPage.value;
     } catch (e) {
       debugPrint('❌ Error al cargar entrenamientos: $e');
       Get.snackbar(
@@ -465,20 +466,20 @@ class ProfileController extends GetxController {
         return;
       }
 
-      final allWorkouts = await _workoutService.getUserWorkouts(userId);
+      final allPosts = await _workoutService.getUserPosts(userId);
       final nextPage = currentPage.value + 1;
       final startIndex = nextPage * workoutsPerPage.value;
       final endIndex = startIndex + workoutsPerPage.value;
 
-      if (startIndex < allWorkouts.length) {
-        final moreWorkouts = allWorkouts
+      if (startIndex < allPosts.length) {
+        final morePosts = allPosts
             .skip(startIndex)
             .take(workoutsPerPage.value)
             .toList();
 
-        userWorkouts.addAll(moreWorkouts);
+        userWorkouts.addAll(morePosts);
         currentPage.value = nextPage;
-        hasMoreWorkouts.value = endIndex < allWorkouts.length;
+        hasMoreWorkouts.value = endIndex < allPosts.length;
       } else {
         hasMoreWorkouts.value = false;
       }
@@ -498,17 +499,20 @@ class ProfileController extends GetxController {
   int get totalWorkouts => userWorkouts.length;
 
   double get totalVolume {
-    return userWorkouts.fold(0.0, (double sum, workout) => sum + workout.totalVolume);
+    return userWorkouts.fold(
+      0.0,
+      (double sum, post) => sum + post.workout.totalVolume,
+    );
   }
 
   int get totalDuration {
-    return userWorkouts.fold(0, (int sum, workout) => sum + workout.duration);
+    return userWorkouts.fold(0, (int sum, post) => sum + post.workout.duration);
   }
 
   Map<String, int> get workoutsByFocus {
     final Map<String, int> focusMap = {};
-    for (final workout in userWorkouts) {
-      focusMap[workout.focus] = (focusMap[workout.focus] ?? 0) + 1;
+    for (final post in userWorkouts) {
+      focusMap[post.workout.focus] = (focusMap[post.workout.focus] ?? 0) + 1;
     }
     return focusMap;
   }

@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/training/controllers/training_controller.dart';
+import 'package:tribbe_app/features/training/views/widgets/workout_photo_capture_modal.dart';
 
 /// Modal minimalista para finalizar entrenamiento
 class FinishTrainingModal extends StatefulWidget {
@@ -77,6 +79,31 @@ class _FinishTrainingModalState extends State<FinishTrainingModal> {
     );
   }
 
+  /// Manejar finalización - mostrar modal de foto
+  void _handleFinish(BuildContext context, TrainingController controller) {
+    // Cerrar este modal
+    Navigator.pop(context);
+
+    // Mostrar modal de captura de foto
+    WorkoutPhotoCaptureModal.show(
+      context: context,
+      onSkip: () {
+        // Usuario decidió no agregar foto
+        controller.finishTraining(
+          caption: captionController.text,
+          workoutPhoto: null,
+        );
+      },
+      onPhotoSelected: (File photo) {
+        // Usuario seleccionó una foto
+        controller.finishTraining(
+          caption: captionController.text,
+          workoutPhoto: photo,
+        );
+      },
+    );
+  }
+
   Widget _buildHeader(
     BuildContext context,
     bool isDark,
@@ -112,12 +139,9 @@ class _FinishTrainingModalState extends State<FinishTrainingModal> {
           ),
           CupertinoButton(
             padding: EdgeInsets.zero,
-            onPressed: () {
-              Navigator.pop(context);
-              controller.finishTraining(caption: captionController.text);
-            },
+            onPressed: () => _handleFinish(context, controller),
             child: const Text(
-              'Finalizar',
+              'Siguiente',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
