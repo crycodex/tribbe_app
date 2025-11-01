@@ -1,0 +1,195 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Función helper para verificar si el usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Función helper para verificar si el usuario es el dueño del documento
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Función helper para verificar si el email está verificado
+    function isEmailVerified() {
+      return isAuthenticated() && request.auth.token.email_verified == true;
+    }
+    
+    // === COLECCIÓN DE USUARIOS ===
+    match /users/{userId} {
+      // Permitir lectura si es el dueño del documento O si está buscando usuarios (lectura limitada)
+      allow read: if isAuthenticated();
+      
+      // Permitir creación si:
+      // - El usuario está autenticado Y
+      // - El UID del documento coincide con el UID del usuario autenticado Y
+      // - El email del documento coincide con el email del usuario autenticado
+      allow create: if isAuthenticated() 
+                    && request.auth.uid == userId
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.email == request.auth.token.email
+                    && request.resource.data.has_completed_personalization == false;
+      
+      // Permitir actualización si:
+      // - Es el dueño del documento Y
+      // - Si se incluye UID, debe coincidir con el existente Y
+      // - Si se incluye email, debe coincidir con el existente
+      // O
+      // - Solo está actualizando contadores sociales (friends_count, followers_count, following_count)
+      allow update: if (isOwner(userId)
+                        && (!('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid)
+                        && (!('email' in request.resource.data) || request.resource.data.email == resource.data.email))
+                    || (isAuthenticated() 
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends_count', 'followers_count', 'following_count']));
+      
+      // Permitir eliminación solo si es el dueño
+      allow delete: if isOwner(userId);
+      
+      // === SUBCOLECCIONES ===
+      
+      // Subcolección de Preferencias
+      match /preferencias/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Subcolección de Información Fitness
+      match /informacion/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Subcolección de Personaje/Avatar
+      match /personaje/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Subcolección de Medidas
+      match /medidas/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Historial de medidas (para tracking a lo largo del tiempo)
+      match /historial_medidas/{measurementId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Subcolección de Entrenamientos
+      match /workouts/{workoutId} {
+        // El usuario puede leer, crear, actualizar y eliminar sus propios entrenamientos
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Subcolección de Rachas
+      match /streaks/{streakId} {
+        // El usuario puede leer, crear, actualizar y eliminar sus propias rachas
+        allow read, write: if isOwner(userId);
+      }
+      
+      // === SUBCOLECCIÓN SOCIAL ===
+      match /social/{socialDoc} {
+        // Permitir lectura si es el dueño del documento padre
+        allow read: if isOwner(userId);
+        
+        // Subcolección de Seguidores
+        match /followers/{followerId} {
+          // El dueño puede ver sus seguidores
+          allow read: if isOwner(userId);
+          
+          // Otros usuarios pueden ver si siguen a este usuario
+          allow read: if isAuthenticated();
+          
+          // Cualquier usuario puede seguir (crear documento)
+          allow create: if isAuthenticated() && request.auth.uid == followerId;
+          
+          // Cualquier usuario puede dejar de seguir (eliminar su documento)
+          allow delete: if isAuthenticated() && request.auth.uid == followerId;
+        }
+        
+        // Subcolección de Siguiendo (Following)
+        match /following/{followingId} {
+          // El dueño puede ver a quién sigue
+          allow read: if isOwner(userId);
+          
+          // Otros usuarios pueden ver si son seguidos por este usuario
+          allow read: if isAuthenticated();
+          
+          // Solo el dueño puede crear registros de quién sigue
+          allow create: if isOwner(userId);
+          
+          // Solo el dueño puede eliminar (dejar de seguir)
+          allow delete: if isOwner(userId);
+        }
+      }
+    }
+    
+    // === COLECCIÓN DE GIMNASIOS (para el futuro) ===
+    match /gyms/{gymId} {
+      // Todos pueden leer los gimnasios públicos
+      allow read: if isAuthenticated();
+      
+      // Solo administradores pueden crear/actualizar/eliminar gimnasios
+      allow create, update, delete: if false; // Cambiar cuando implementes roles
+    }
+    
+    // === COLECCIÓN DE POSTS DE ENTRENAMIENTOS (FEED) ===
+    match /workout_posts/{postId} {
+      // Permitir lectura a todos los usuarios autenticados
+      // TODO: Filtrar solo por amigos cuando implementemos el sistema de amigos
+      allow read: if isAuthenticated();
+      
+      // Permitir creación solo si:
+      // - El usuario está autenticado Y
+      // - El user_id del post coincide con el UID del usuario autenticado
+      allow create: if isAuthenticated() 
+                    && request.resource.data.user_id == request.auth.uid;
+      
+      // Permitir actualización solo si:
+      // - Es el dueño del post O
+      // - Solo está modificando el array de likes
+      allow update: if isAuthenticated() 
+                    && (resource.data.user_id == request.auth.uid
+                        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes'])));
+      
+      // Permitir eliminación solo si es el dueño
+      allow delete: if isAuthenticated() 
+                    && resource.data.user_id == request.auth.uid;
+
+      // Subcolección de Comentarios para Posts de Entrenamientos
+      match /comments/{commentId} {
+        // Permitir lectura a todos los usuarios autenticados (quienes pueden ver el post)
+        allow read: if isAuthenticated();
+
+        // Permitir creación solo si el usuario está autenticado y el user_id del comentario coincide con su UID
+        allow create: if isAuthenticated() && request.resource.data.user_id == request.auth.uid;
+
+        // No permitir actualización ni eliminación de comentarios (los comentarios son inmutables por defecto)
+        allow update, delete: if false;
+      }
+    }
+    
+    // === COLECCIÓN DE USERNAMES ===
+    match /usernames/{username} {
+      // Permitir lectura a todos los usuarios autenticados (para verificar disponibilidad)
+      allow read: if isAuthenticated();
+      
+      // Permitir creación solo si el user_id del documento coincide con el UID del usuario autenticado
+      allow create: if isAuthenticated() 
+                    && request.resource.data.user_id == request.auth.uid;
+      
+      // No permitir actualización (los usernames son inmutables)
+      allow update: if false;
+      
+      // Permitir eliminación solo si el user_id coincide con el usuario autenticado
+      allow delete: if isAuthenticated() 
+                    && resource.data.user_id == request.auth.uid;
+    }
+    
+    
+    // Denegar acceso a todo lo demás por defecto
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

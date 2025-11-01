@@ -1,0 +1,1048 @@
+---
+alwaysApply: true
+---
+# 📋 Tribbe App - Custom Rules & Development Guidelines
+
+---
+
+## 🎯 1. CONTEXTO DEL PROYECTO
+
+**Nombre:** Tribbe App  
+**Stack:** Flutter 3.16+ (Dart 3.2+) + Firebase  
+**Arquitectura:** MVC con GetX  
+**Plataforma:** iOS/Android (Cross-platform)
+
+**Descripción:**  
+Aplicación móvil de fitness social que permite registrar entrenamientos, competir con amigos/gimnasios y mantener estadísticas en tiempo real.
+
+---
+
+## 🏗️ 2. ARQUITECTURA Y ESTRUCTURA
+
+### 2.1 Patrón MVC Estricto
+
+```
+features/
+├── [feature_name]/
+│   ├── models/          # Solo datos y serialización
+│   ├── controllers/     # Lógica de negocio (GetX)
+│   └── views/           # UI (pages + widgets)
+```
+
+**REGLAS:**
+- ✅ Models: SOLO propiedades, `fromJson`, `toJson`, `copyWith`
+- ✅ Controllers: Lógica de negocio, llamadas a servicios, state management
+- ✅ Views: SOLO UI, consumir controllers vía `GetX`
+- ❌ NO mezclar capas (UI en controllers, HTTP en models)
+
+### 2.2 Nomenclatura Obligatoria
+
+| Elemento | Formato | Ejemplo |
+|----------|---------|---------|
+| Archivos | `snake_case.dart` | `workout_controller.dart` |
+| Clases | `PascalCase` | `WorkoutController` |
+| Variables/Funciones | `camelCase` | `getUserName()` |
+| Constantes | `kCamelCase` | `kPrimaryColor` |
+| Constantes API | `SCREAMING_SNAKE_CASE` | `API_BASE_URL` |
+
+### 2.3 Estructura de Imports
+
+```dart
+// ✅ ORDEN CORRECTO:
+// 1. Dart SDK
+import 'dart:async';
+import 'dart:convert';
+
+// 2. Flutter packages
+import 'package:flutter/material.dart';
+
+// 3. Third-party packages
+import 'package:get/get.dart';
+import 'package:dio/dio.dart';
+
+// 4. Proyecto
+import 'package:tribbe/core/constants/api_constants.dart';
+import 'package:tribbe/features/auth/models/user_model.dart';
+import 'package:tribbe/shared/widgets/custom_button.dart';
+```
+
+---
+
+## 🎨 3. UI/UX GUIDELINES
+
+### 3.1 Material Design 3
+
+```dart
+// ✅ Usar tema consistente
+ThemeData(
+  useMaterial3: true,
+  colorScheme: ColorScheme.fromSeed(seedColor: kPrimaryColor),
+  textTheme: AppTextStyles.textTheme,
+);
+
+// ✅ Soportar modo claro/oscuro
+ThemeMode themeMode = Get.isDarkMode ? ThemeMode.dark : ThemeMode.light;
+```
+
+### 3.2 Componentes Compartidos
+
+**OBLIGATORIO usar widgets de `shared/widgets/`:**
+
+```dart
+// ✅ CORRECTO
+import 'package:tribbe/shared/widgets/custom_button.dart';
+import 'package:tribbe/shared/widgets/custom_text_field.dart';
+import 'package:tribbe/shared/widgets/loading_widget.dart';
+
+CustomButton(
+  text: 'Guardar Entrenamiento',
+  onPressed: () => controller.saveWorkout(),
+);
+
+// ❌ INCORRECTO - NO crear botones personalizados en cada página
+ElevatedButton(...) // NO usar directamente
+```
+
+### 3.3 Responsive Design
+
+```dart
+// ✅ Usar extensiones de context
+final width = context.screenWidth;
+final height = context.screenHeight;
+final isTablet = context.isTablet; // > 600px
+
+// ✅ Adaptar UI según tamaño
+if (context.isMobile) {
+  return SingleChildScrollView(...);
+} else {
+  return Row(...); // Tablet/Desktop
+}
+```
+
+### 3.4 Animaciones
+
+**Performance: 60 FPS mínimo**
+
+| Tipo | Uso | Herramienta |
+|------|-----|-------------|
+| Celebraciones | Logros, records | **Lottie** |
+| Progreso/Estados | Carga, estados | **Rive** |
+| Transiciones | Navegación | **Flutter Animations** |
+
+```dart
+// ✅ Lottie para animaciones complejas
+Lottie.asset('assets/animations/achievement.json')
+
+// ✅ Rive para interactivas
+RiveAnimation.asset('assets/animations/progress.riv')
+```
+
+---
+
+## 🔧 4. STATE MANAGEMENT (GetX)
+
+### 4.1 Estructura de Controllers
+
+```dart
+// ✅ PATRÓN CORRECTO
+class WorkoutController extends GetxController {
+  // 1. Dependencias (inyectadas)
+  final WorkoutService _workoutService = Get.find();
+  
+  // 2. Observables
+  final workouts = <Workout>[].obs;
+  final isLoading = false.obs;
+  final selectedWorkout = Rx<Workout?>(null);
+  
+  // 3. Getters computados
+  int get totalWorkouts => workouts.length;
+  double get totalWeight => workouts.fold(0, (sum, w) => sum + w.weight);
+  
+  // 4. Métodos públicos
+  Future<void> fetchWorkouts() async {
+    try {
+      isLoading.value = true;
+      final data = await _workoutService.getWorkouts();
+      workouts.value = data;
+    } on AppException catch (e) {
+      _handleError(e);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  
+  void selectWorkout(Workout workout) {
+    selectedWorkout.value = workout;
+  }
+  
+  // 5. Métodos privados
+  void _handleError(AppException e) {
+    Get.snackbar('Error', e.message, snackPosition: SnackPosition.BOTTOM);
+  }
+  
+  // 6. Lifecycle
+  @override
+  void onInit() {
+    super.onInit();
+    fetchWorkouts();
+  }
+  
+  @override
+  void onClose() {
+    // Limpiar recursos
+    super.onClose();
+  }
+}
+```
+
+### 4.2 Consumo en Views
+
+```dart
+// ✅ CORRECTO: Reactive UI
+class WorkoutPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.find<WorkoutController>();
+    
+    return Scaffold(
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return LoadingWidget();
+        }
+        
+        return ListView.builder(
+          itemCount: controller.workouts.length,
+          itemBuilder: (ctx, i) => WorkoutCard(
+            workout: controller.workouts[i],
+            onTap: () => controller.selectWorkout(controller.workouts[i]),
+          ),
+        );
+      }),
+    );
+  }
+}
+
+// ❌ INCORRECTO: Lógica en widget
+class WorkoutPage extends StatelessWidget {
+  Future<void> loadData() async {
+    // NO hacer llamadas HTTP aquí
+    final response = await http.get(...); // ❌
+  }
+}
+```
+
+### 4.3 Dependency Injection
+
+```dart
+// ✅ Registrar dependencias en app/routes/app_router.dart
+class AppRouter {
+  static void initDependencies() {
+    // Services (Lazy Singleton)
+    Get.lazyPut<StorageService>(() => StorageService());
+    Get.lazyPut<AuthService>(() => AuthService());
+    Get.lazyPut<WorkoutService>(() => WorkoutService());
+    
+    // Controllers (se crean cuando se necesitan)
+    Get.lazyPut<AuthController>(() => AuthController());
+    Get.lazyPut<WorkoutController>(() => WorkoutController());
+  }
+}
+```
+
+---
+
+## 🌐 5. NETWORKING Y API
+
+### 5.1 Cliente HTTP (Dio)
+
+```dart
+// ✅ Configuración en core/network/api_client.dart
+class ApiClient {
+  late final Dio _dio;
+  
+  ApiClient() {
+    _dio = Dio(BaseOptions(
+      baseUrl: ApiConstants.BASE_URL,
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    ));
+    
+    _dio.interceptors.add(AuthInterceptor());
+    _dio.interceptors.add(LoggingInterceptor());
+  }
+  
+  Future<Response> get(String path, {Map<String, dynamic>? params}) async {
+    try {
+      return await _dio.get(path, queryParameters: params);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+  
+  AppException _handleError(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+        return NetworkException('Conexión perdida');
+      case DioExceptionType.badResponse:
+        return ServerException('Error del servidor');
+      default:
+        return AppException('Error desconocido');
+    }
+  }
+}
+```
+
+### 5.2 Servicios
+
+```dart
+// ✅ PATRÓN: Servicios en shared/services/
+class WorkoutService {
+  final ApiClient _apiClient = Get.find();
+  
+  Future<List<Workout>> getWorkouts() async {
+    final response = await _apiClient.get('/workouts');
+    return (response.data as List)
+        .map((json) => Workout.fromJson(json))
+        .toList();
+  }
+  
+  Future<Workout> createWorkout(Workout workout) async {
+    final response = await _apiClient.post(
+      '/workouts',
+      data: workout.toJson(),
+    );
+    return Workout.fromJson(response.data);
+  }
+}
+```
+
+---
+
+## 💾 6. MODELOS Y DATOS
+
+### 6.1 Estructura de Models
+
+```dart
+// ✅ PATRÓN COMPLETO
+class Workout {
+  final String id;
+  final String userId;
+  final String exerciseName;
+  final double weight;
+  final int reps;
+  final DateTime date;
+  
+  Workout({
+    required this.id,
+    required this.userId,
+    required this.exerciseName,
+    required this.weight,
+    required this.reps,
+    required this.date,
+  });
+  
+  // 1. fromJson
+  factory Workout.fromJson(Map<String, dynamic> json) {
+    return Workout(
+      id: json['id'] as String,
+      userId: json['user_id'] as String,
+      exerciseName: json['exercise_name'] as String,
+      weight: (json['weight'] as num).toDouble(),
+      reps: json['reps'] as int,
+      date: DateTime.parse(json['date'] as String),
+    );
+  }
+  
+  // 2. toJson
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'exercise_name': exerciseName,
+      'weight': weight,
+      'reps': reps,
+      'date': date.toIso8601String(),
+    };
+  }
+  
+  // 3. copyWith
+  Workout copyWith({
+    String? id,
+    String? userId,
+    String? exerciseName,
+    double? weight,
+    int? reps,
+    DateTime? date,
+  }) {
+    return Workout(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      exerciseName: exerciseName ?? this.exerciseName,
+      weight: weight ?? this.weight,
+      reps: reps ?? this.reps,
+      date: date ?? this.date,
+    );
+  }
+  
+  // 4. toString para debugging
+  @override
+  String toString() => 'Workout($exerciseName, $weight kg x $reps)';
+}
+```
+
+### 6.2 Validaciones en Models
+
+```dart
+// ✅ Validaciones básicas en el constructor
+class Workout {
+  final double weight;
+  final int reps;
+  
+  Workout({required this.weight, required this.reps}) {
+    if (weight <= 0) throw ArgumentError('Peso debe ser positivo');
+    if (reps <= 0) throw ArgumentError('Reps deben ser positivas');
+  }
+}
+
+// ✅ Validaciones complejas en utils
+class WorkoutValidator {
+  static bool isValidWeight(double weight, double bodyWeight) {
+    return weight > 0 && weight <= bodyWeight * 3; // Límite razonable
+  }
+}
+```
+
+---
+
+## 🔐 7. MANEJO DE ERRORES
+
+### 7.1 Excepciones Personalizadas
+
+```dart
+// core/errors/exceptions.dart
+class AppException implements Exception {
+  final String message;
+  final String? code;
+  
+  AppException(this.message, {this.code});
+  
+  @override
+  String toString() => message;
+}
+
+class NetworkException extends AppException {
+  NetworkException(String message) : super(message, code: 'NETWORK_ERROR');
+}
+
+class AuthException extends AppException {
+  AuthException(String message) : super(message, code: 'AUTH_ERROR');
+}
+
+class ValidationException extends AppException {
+  ValidationException(String message) : super(message, code: 'VALIDATION_ERROR');
+}
+```
+
+### 7.2 Manejo Global de Errores
+
+```dart
+// ✅ Try-catch en controllers
+Future<void> fetchData() async {
+  try {
+    isLoading.value = true;
+    final data = await service.getData();
+    items.value = data;
+  } on NetworkException catch (e) {
+    Get.snackbar('Sin Conexión', e.message);
+  } on AuthException catch (e) {
+    Get.offAllNamed(RoutePaths.login);
+  } on AppException catch (e) {
+    Get.snackbar('Error', e.message);
+  } finally {
+    isLoading.value = false;
+  }
+}
+```
+
+---
+
+## 📦 8. ALMACENAMIENTO LOCAL
+
+### 8.1 SharedPreferences Service
+
+```dart
+// shared/services/storage_service.dart
+class StorageService {
+  final SharedPreferences _prefs = Get.find();
+  
+  // Token de autenticación
+  String? get token => _prefs.getString(StorageKeys.AUTH_TOKEN);
+  Future<void> saveToken(String token) => 
+      _prefs.setString(StorageKeys.AUTH_TOKEN, token);
+  
+  // Usuario
+  User? get currentUser {
+    final json = _prefs.getString(StorageKeys.USER_DATA);
+    return json != null ? User.fromJson(jsonDecode(json)) : null;
+  }
+  
+  Future<void> saveUser(User user) =>
+      _prefs.setString(StorageKeys.USER_DATA, jsonEncode(user.toJson()));
+  
+  // Limpiar datos
+  Future<void> clear() => _prefs.clear();
+}
+```
+
+### 8.2 Keys Centralizadas
+
+```dart
+// core/constants/storage_keys.dart
+class StorageKeys {
+  static const AUTH_TOKEN = 'auth_token';
+  static const USER_DATA = 'user_data';
+  static const THEME_MODE = 'theme_mode';
+  static const LANGUAGE = 'language';
+}
+```
+
+---
+
+## 🎯 9. VALIDACIONES Y FORMULARIOS
+
+### 9.1 Validadores Reutilizables
+
+```dart
+// core/utils/validators.dart
+class Validators {
+  static String? email(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Email requerido';
+    }
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Email inválido';
+    }
+    return null;
+  }
+  
+  static String? password(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Contraseña requerida';
+    }
+    if (value.length < 6) {
+      return 'Mínimo 6 caracteres';
+    }
+    return null;
+  }
+  
+  static String? required(String? value, {String fieldName = 'Campo'}) {
+    if (value == null || value.isEmpty) {
+      return '$fieldName requerido';
+    }
+    return null;
+  }
+  
+  static String? positiveNumber(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Número requerido';
+    }
+    final number = double.tryParse(value);
+    if (number == null || number <= 0) {
+      return 'Debe ser un número positivo';
+    }
+    return null;
+  }
+}
+```
+
+### 9.2 Uso en Formularios
+
+```dart
+// ✅ Form con validación
+class LoginForm extends StatelessWidget {
+  final _formKey = GlobalKey<FormState>();
+  final controller = Get.find<AuthController>();
+  
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          CustomTextField(
+            label: 'Email',
+            validator: Validators.email,
+            onSaved: (value) => controller.email.value = value!,
+          ),
+          CustomTextField(
+            label: 'Contraseña',
+            obscureText: true,
+            validator: Validators.password,
+            onSaved: (value) => controller.password.value = value!,
+          ),
+          CustomButton(
+            text: 'Iniciar Sesión',
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                _formKey.currentState!.save();
+                controller.login();
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+---
+
+## 🚀 10. NAVEGACIÓN Y RUTAS
+
+### 10.1 Definición de Rutas
+
+```dart
+// app/routes/route_paths.dart
+class RoutePaths {
+  static const splash = '/';
+  static const login = '/login';
+  static const register = '/register';
+  static const home = '/home';
+  static const workoutDetail = '/workout/:id';
+  static const profile = '/profile';
+  static const settings = '/settings';
+}
+```
+
+### 10.2 Configuración de Router
+
+```dart
+// app/routes/app_router.dart
+class AppRouter {
+  static final routes = [
+    GetPage(
+      name: RoutePaths.splash,
+      page: () => SplashPage(),
+    ),
+    GetPage(
+      name: RoutePaths.login,
+      page: () => LoginPage(),
+      transition: Transition.fade,
+    ),
+    GetPage(
+      name: RoutePaths.home,
+      page: () => HomePage(),
+      binding: HomeBinding(), // Inyectar dependencias
+    ),
+    GetPage(
+      name: RoutePaths.workoutDetail,
+      page: () => WorkoutDetailPage(),
+    ),
+  ];
+}
+
+// Binding para home
+class HomeBinding extends Bindings {
+  @override
+  void dependencies() {
+    Get.lazyPut(() => WorkoutController());
+    Get.lazyPut(() => SocialController());
+  }
+}
+```
+
+### 10.3 Navegación
+
+```dart
+// ✅ Navegación con GetX
+Get.toNamed(RoutePaths.home); // Push
+Get.offNamed(RoutePaths.login); // Replace
+Get.offAllNamed(RoutePaths.login); // Clear stack
+Get.back(); // Pop
+
+// ✅ Con parámetros
+Get.toNamed(RoutePaths.workoutDetail, arguments: {'id': '123'});
+
+// ✅ Recibir parámetros
+final args = Get.arguments as Map<String, dynamic>;
+final workoutId = args['id'];
+```
+
+---
+
+## 🔔 11. NOTIFICACIONES Y FEEDBACK
+
+### 11.1 Snackbars
+
+```dart
+// shared/utils/snackbar_utils.dart
+class SnackbarUtils {
+  static void showSuccess(String message) {
+    Get.snackbar(
+      'Éxito',
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+      icon: Icon(Icons.check_circle, color: Colors.white),
+      duration: Duration(seconds: 2),
+    );
+  }
+  
+  static void showError(String message) {
+    Get.snackbar(
+      'Error',
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+      icon: Icon(Icons.error, color: Colors.white),
+      duration: Duration(seconds: 3),
+    );
+  }
+  
+  static void showInfo(String message) {
+    Get.snackbar(
+      'Info',
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.blue,
+      colorText: Colors.white,
+      icon: Icon(Icons.info, color: Colors.white),
+    );
+  }
+}
+
+// ✅ Uso
+SnackbarUtils.showSuccess('Entrenamiento guardado');
+```
+
+### 11.2 Diálogos
+
+```dart
+// shared/utils/dialog_utils.dart
+class DialogUtils {
+  static Future<bool> showConfirmation({
+    required String title,
+    required String message,
+  }) async {
+    return await Get.dialog<bool>(
+      AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Get.back(result: true),
+            child: Text('Confirmar'),
+          ),
+        ],
+      ),
+    ) ?? false;
+  }
+  
+  static void showLoading({String message = 'Cargando...'}) {
+    Get.dialog(
+      WillPopScope(
+        onWillPop: () async => false,
+        child: Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text(message),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+  
+  static void hideLoading() {
+    if (Get.isDialogOpen ?? false) {
+      Get.back();
+    }
+  }
+}
+```
+
+---
+
+## 🎨 12. CONSTANTES Y CONFIGURACIÓN
+
+### 12.1 Constantes de API
+
+```dart
+// core/constants/api_constants.dart
+class ApiConstants {
+  static const BASE_URL = 'https://api.tribbe.com/v1';
+  
+  // Endpoints
+  static const LOGIN = '/auth/login';
+  static const REGISTER = '/auth/register';
+  static const WORKOUTS = '/workouts';
+  static const PROFILE = '/profile';
+  static const FRIENDS = '/friends';
+  static const GYMS = '/gyms';
+  
+  // Timeouts
+  static const CONNECT_TIMEOUT = Duration(seconds: 30);
+  static const RECEIVE_TIMEOUT = Duration(seconds: 30);
+}
+```
+
+### 12.2 Constantes de App
+
+```dart
+// core/constants/app_constants.dart
+class AppConstants {
+  static const APP_NAME = 'Tribbe';
+  static const VERSION = '1.0.0';
+  
+  // Límites
+  static const MAX_FRIENDS_FREE = 5;
+  static const MAX_GYMS_FREE = 1;
+  
+  // Validaciones
+  static const MAX_WEIGHT_MULTIPLIER = 3.0; // 3x peso corporal
+  static const MIN_REPS = 1;
+  static const MAX_REPS = 100;
+  
+  // Paginación
+  static const PAGE_SIZE = 20;
+}
+```
+
+### 12.3 Colores
+
+```dart
+// app/theme/colors.dart
+class AppColors {
+  // Primary
+  static const kPrimaryColor = Color(0xFF2196F3);
+  static const kPrimaryLight = Color(0xFF64B5F6);
+  static const kPrimaryDark = Color(0xFF1976D2);
+  
+  // Secondary
+  static const kSecondaryColor = Color(0xFFFF9800);
+  static const kSecondaryLight = Color(0xFFFFB74D);
+  static const kSecondaryDark = Color(0xFFF57C00);
+  
+  // Neutral
+  static const kBackgroundLight = Color(0xFFFAFAFA);
+  static const kBackgroundDark = Color(0xFF121212);
+  static const kSurfaceLight = Color(0xFFFFFFFF);
+  static const kSurfaceDark = Color(0xFF1E1E1E);
+  
+  // Status
+  static const kSuccess = Color(0xFF4CAF50);
+  static const kError = Color(0xFFF44336);
+  static const kWarning = Color(0xFFFFC107);
+  static const kInfo = Color(0xFF2196F3);
+}
+```
+
+---
+
+## 🧪 13. TESTING
+
+### 13.1 Unit Tests
+
+```dart
+// test/features/workout/controllers/workout_controller_test.dart
+void main() {
+  late WorkoutController controller;
+  late MockWorkoutService mockService;
+  
+  setUp(() {
+    mockService = MockWorkoutService();
+    Get.put<WorkoutService>(mockService);
+    controller = WorkoutController();
+  });
+  
+  tearDown(() {
+    Get.reset();
+  });
+  
+  group('WorkoutController', () {
+    test('fetchWorkouts carga datos correctamente', () async {
+      // Arrange
+      final mockData = [Workout(id: '1', ...)];
+      when(mockService.getWorkouts()).thenAnswer((_) async => mockData);
+      
+      // Act
+      await controller.fetchWorkouts();
+      
+      // Assert
+      expect(controller.workouts.length, 1);
+      expect(controller.isLoading.value, false);
+    });
+    
+    test('fetchWorkouts maneja errores', () async {
+      // Arrange
+      when(mockService.getWorkouts()).thenThrow(NetworkException('Error'));
+      
+      // Act
+      await controller.fetchWorkouts();
+      
+      // Assert
+      expect(controller.workouts.isEmpty, true);
+      expect(controller.isLoading.value, false);
+    });
+  });
+}
+```
+
+### 13.2 Widget Tests
+
+```dart
+// test/features/workout/views/widgets/workout_card_test.dart
+void main() {
+  testWidgets('WorkoutCard muestra información correcta', (tester) async {
+    // Arrange
+    final workout = Workout(
+      id: '1',
+      exerciseName: 'Bench Press',
+      weight: 80.0,
+      reps: 10,
+    );
+    
+    // Act
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: WorkoutCard(workout: workout),
+        ),
+      ),
+    );
+    
+    // Assert
+    expect(find.text('Bench Press'), findsOneWidget);
+    expect(find.text('80.0 kg'), findsOneWidget);
+    expect(find.text('10 reps'), findsOneWidget);
+  });
+}
+```
+
+---
+
+## 📱 14. PERFORMANCE Y OPTIMIZACIÓN
+
+### 14.1 Lazy Loading
+
+```dart
+// ✅ Usar GetX lazy loading para controllers
+Get.lazyPut(() => WorkoutController());
+
+// ✅ ListView con builder para listas grandes
+ListView.builder(
+  itemCount: items.length,
+  itemBuilder: (context, index) => ItemWidget(items[index]),
+)
+
+// ❌ NO cargar toda la lista en memoria
+ListView(children: items.map((i) => ItemWidget(i)).toList())
+```
+
+### 14.2 Imágenes
+
+```dart
+// ✅ Usar cached_network_image para imágenes remotas
+CachedNetworkImage(
+  imageUrl: user.photoUrl,
+  placeholder: (context, url) => CircularProgressIndicator(),
+  errorWidget: (context, url, error) => Icon(Icons.error),
+)
+
+// ✅ Optimizar assets
+// Usar WebP cuando sea posible
+// Proveer múltiples resoluciones (1x, 2x, 3x)
+```
+
+### 14.3 Estado y Memoria
+
+```dart
+// ✅ Limpiar recursos en onClose
+@override
+void onClose() {
+  streamSubscription?.cancel();
+  textController.dispose();
+  super.onClose();
+}
+
+// ✅ Usar const constructors cuando sea posible
+const Text('Hello')
+const SizedBox(height: 16)
+```
+
+---
+
+## 🔒 15. SEGURIDAD
+
+### 15.1 Almacenamiento Seguro
+
+```dart
+// ✅ NO almacenar datos sensibles en SharedPreferences
+// ❌ NUNCA almacenar contraseñas en texto plano
+
+// ✅ Para tokens, considerar flutter_secure_storage
+final storage = FlutterSecureStorage();
+await storage.write(key: 'token', value: token);
+final token = await storage.read(key: 'token');
+```
+
+### 15.2 Validación de Datos
+
+```dart
+// ✅ SIEMPRE validar entrada del usuario
+if (!Validators.isValidWeight(weight, userBodyWeight)) {
+  throw ValidationException('Peso no válido');
+}
+
+// ✅ Sanitizar datos antes de enviar al backend
+final sanitized = input.trim().replaceAll(RegExp(r'[<>]'), '');
+```
+
+---
+
+## 📊 16. ANALYTICS Y LOGGING
+
+### 16.1 Logging
+
+```dart
+// ✅ Usar logger package
+final logger = Logger();
+
+logger.d('Debug message');
+logger.i('Info message');
+logger.w('Warning message');
+logger.e('Error message', error, stackTrace);
+
+// ✅ En producción, enviar logs críticos a Crashlytics
+FirebaseCrashlytics.instance.recordError(error, stackTrace);
+```
+
+### 16.2 Analytics
+
+```dart
+// shared/services/analytics_service.dart
+class AnalyticsService {
+  Future<void> logEvent(String name, {Map<String, dynamic>? parameters}) async {
+    await FirebaseAnalytics.instance.logEvent(
+      name: name,
+      parameters:

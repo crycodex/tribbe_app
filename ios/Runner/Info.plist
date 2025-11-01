@@ -5,7 +5,7 @@
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
-		<string>Tribbe App</string>
+		<string>Tribbe</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
@@ -45,7 +45,30 @@
 		<true/>
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
-		<key>UIStatusBarHidden</key>
-		<false/>
-	</dict>
+	<key>UIStatusBarHidden</key>
+	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.757582300195-iib5avs87rc1sd9jk93oat9hia3mbq6d</string>
+			</array>
+		</dict>
+	</array>
+	<key>GIDClientID</key>
+	<string>757582300195-iib5avs87rc1sd9jk93oat9hia3mbq6d.apps.googleusercontent.com</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Tribbe necesita acceso a tu ubicación para mostrarte gimnasios cercanos y conectarte con atletas de tu zona.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Tribbe necesita acceso a tu ubicación para mostrarte gimnasios cercanos y conectarte con atletas de tu zona.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Tribbe necesita acceso a tus fotos para que puedas seleccionar una imagen de perfil.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Tribbe necesita acceso a tu cámara para que puedas tomar una foto de perfil.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Tribbe necesita permiso para guardar fotos en tu galería.</string>
+</dict>
 </plist>
