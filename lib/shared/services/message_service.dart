@@ -292,13 +292,42 @@ class MessageService {
     }
   }
 
-  /// Eliminar conversación (solo para el usuario actual)
+  /// Eliminar conversación y mensajes para AMBOS usuarios
   Future<void> deleteConversation({
     required String userId,
     required String conversationId,
   }) async {
     try {
-      await _conversationsRef.child(userId).child(conversationId).remove();
+      // Obtener todos los usuarios que tienen esta conversación
+      final allUsersSnapshot = await _conversationsRef.once();
+      final List<String> usersWithConversation = [];
+
+      if (allUsersSnapshot.snapshot.value != null) {
+        final data = Map<String, dynamic>.from(
+          allUsersSnapshot.snapshot.value as Map<dynamic, dynamic>,
+        );
+
+        data.forEach((userIdKey, conversations) {
+          if (conversations is Map) {
+            final conversationsMap = Map<String, dynamic>.from(
+              conversations,
+            );
+            if (conversationsMap.containsKey(conversationId)) {
+              usersWithConversation.add(userIdKey);
+            }
+          }
+        });
+      }
+
+      // Eliminar conversación para TODOS los usuarios que la tienen
+      for (final userIdKey in usersWithConversation) {
+        await _conversationsRef.child(userIdKey).child(conversationId).remove();
+        print('🗑️ Conversación eliminada para usuario: $userIdKey');
+      }
+
+      // Eliminar TODOS los mensajes de esta conversación
+      await _messagesRef.child(conversationId).remove();
+      print('✅ Todos los mensajes eliminados de: $conversationId');
     } catch (e) {
       print('Error deleting conversation: $e');
       rethrow;
@@ -362,10 +391,7 @@ class MessageService {
     required String conversationId,
   }) async {
     try {
-      await _conversationsRef
-          .child(userId)
-          .child(conversationId)
-          .update({
+      await _conversationsRef.child(userId).child(conversationId).update({
         'isBlocked': true,
         'blockedAt': DateTime.now().millisecondsSinceEpoch,
         // Al bloquear, opcionalmente silenciamos no leídos
@@ -383,10 +409,7 @@ class MessageService {
     required String conversationId,
   }) async {
     try {
-      await _conversationsRef
-          .child(userId)
-          .child(conversationId)
-          .update({
+      await _conversationsRef.child(userId).child(conversationId).update({
         'isBlocked': false,
       });
     } catch (e) {

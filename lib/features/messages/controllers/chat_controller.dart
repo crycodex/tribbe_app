@@ -262,22 +262,50 @@ class ChatController extends GetxController {
   Future<void> deleteConversation() async {
     final currentUserId = authService.currentUser?.uid;
     if (currentUserId == null) return;
+    
     try {
+      // Mostrar loading
+      Get.dialog(
+        const Center(child: CircularProgressIndicator()),
+        barrierDismissible: false,
+      );
+
+      // Eliminar conversación de la lista del usuario
       await _messageService.deleteConversation(
         userId: currentUserId,
         conversationId: conversationId,
       );
+
+      // Cerrar loading
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+
+      // Volver a la página anterior
       Get.back();
+
+      // Mostrar mensaje de éxito
       Get.snackbar(
-        'Conversación eliminada',
-        'El chat ha sido eliminado para ti',
+        'Chat eliminado',
+        'La conversación ha sido eliminada',
         snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Get.theme.colorScheme.primary,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
       );
     } catch (e) {
+      // Cerrar loading si hay error
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+
+      print('Error deleting conversation: $e');
       Get.snackbar(
         'Error',
-        'No se pudo eliminar el chat',
+        'No se pudo eliminar el chat. Intenta de nuevo.',
         snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
       );
     }
   }
