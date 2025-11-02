@@ -156,10 +156,24 @@ class WorkoutService {
     }
   }
 
-  /// Stream de feed de posts
-  Stream<List<WorkoutPostModel>> getFeedPostsStream({int limit = 20}) {
+  /// Stream de feed de posts (solo de usuarios seguidos)
+  Stream<List<WorkoutPostModel>> getFeedPostsStream({
+    required String currentUserId,
+    required List<String> followingUserIds,
+    int limit = 20,
+  }) {
+    // Si no sigue a nadie, retornar lista vacía
+    if (followingUserIds.isEmpty) {
+      return Stream.value([]);
+    }
+
+    // Firestore whereIn tiene un límite de 10 elementos
+    // Si sigue a más de 10 usuarios, usar solo los primeros 10
+    final userIdsToQuery = followingUserIds.take(10).toList();
+
     return _firestore
         .collection(workoutPostsCollection)
+        .where('user_id', whereIn: userIdsToQuery)
         .orderBy('created_at', descending: true)
         .limit(limit)
         .snapshots()
@@ -168,6 +182,23 @@ class WorkoutService {
               .map((doc) => WorkoutPostModel.fromJson(doc.data()))
               .toList(),
         );
+  }
+
+  /// Obtener IDs de usuarios que sigue (para usar en el feed)
+  Future<List<String>> getFollowingUserIds(String userId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('social')
+          .doc('following')
+          .collection('following')
+          .get();
+
+      return snapshot.docs.map((doc) => doc.id).toList();
+    } catch (e) {
+      throw Exception('Error al obtener usuarios seguidos: ${e.toString()}');
+    }
   }
 
   /// Añadir un comentario a un post

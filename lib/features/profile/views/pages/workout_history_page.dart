@@ -51,7 +51,7 @@ class WorkoutHistoryPage extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final post = controller.userWorkouts[index];
                     return WorkoutHistoryCard(
-                      workout: post.workout,
+                      workoutPost: post,
                       onShare: () =>
                           ShareWorkoutUtil.shareWorkout(post.workout),
                       onTap: () => _navigateToWorkoutDetail(post),

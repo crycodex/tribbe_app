@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/training/models/workout_model.dart';
@@ -10,11 +11,20 @@ class WorkoutDetailPage extends StatelessWidget {
   final WorkoutModel? workout;
   final WorkoutPostModel? workoutPost;
 
-  const WorkoutDetailPage({
-    super.key,
-    this.workout,
-    this.workoutPost,
-  }) : assert(workout != null || workoutPost != null, 'Debe proporcionar workout o workoutPost');
+  const WorkoutDetailPage({super.key, this.workout, this.workoutPost})
+    : assert(
+        workout != null || workoutPost != null,
+        'Debe proporcionar workout o workoutPost',
+      );
+
+  /// Verificar si el usuario actual es el dueño del entrenamiento
+  bool get _isOwner {
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+    if (currentUserId == null) return false;
+
+    final workoutUserId = workout?.userId ?? workoutPost?.userId;
+    return currentUserId == workoutUserId;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,12 +49,7 @@ class WorkoutDetailPage extends StatelessWidget {
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black54,
-                      blurRadius: 8,
-                    ),
-                  ],
+                  shadows: [Shadow(color: Colors.black54, blurRadius: 8)],
                 ),
               ),
               background: photoUrl != null && photoUrl.isNotEmpty
@@ -58,22 +63,33 @@ class WorkoutDetailPage extends StatelessWidget {
                   color: Colors.black45,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                child: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
               onPressed: () => Get.back(),
             ),
             actions: [
-              IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black45,
-                    shape: BoxShape.circle,
+              // Solo mostrar botón de compartir si el usuario es el dueño
+              if (_isOwner)
+                IconButton(
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.black45,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.share,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
-                  child: const Icon(Icons.share, color: Colors.white, size: 20),
+                  onPressed: () =>
+                      ShareWorkoutUtil.shareWorkout(currentWorkout),
                 ),
-                onPressed: () => ShareWorkoutUtil.shareWorkout(currentWorkout),
-              ),
             ],
           ),
 
@@ -85,7 +101,8 @@ class WorkoutDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Caption si existe (solo para workoutPost)
-                  if (workoutPost?.caption != null && workoutPost!.caption!.isNotEmpty)
+                  if (workoutPost?.caption != null &&
+                      workoutPost!.caption!.isNotEmpty)
                     _buildCaptionSection(workoutPost!.caption!, theme, isDark),
 
                   // Estadísticas del entrenamiento
@@ -94,7 +111,12 @@ class WorkoutDetailPage extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // Lista de ejercicios detallada
-                  _buildExercisesCard(currentWorkout, theme, isDark, focusColor),
+                  _buildExercisesCard(
+                    currentWorkout,
+                    theme,
+                    isDark,
+                    focusColor,
+                  ),
 
                   const SizedBox(height: 32),
                 ],
@@ -107,7 +129,11 @@ class WorkoutDetailPage extends StatelessWidget {
   }
 
   /// Background con foto del entrenamiento
-  Widget _buildPhotoBackground(String photoUrl, WorkoutModel currentWorkout, Color focusColor) {
+  Widget _buildPhotoBackground(
+    String photoUrl,
+    WorkoutModel currentWorkout,
+    Color focusColor,
+  ) {
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -125,10 +151,7 @@ class WorkoutDetailPage extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Colors.black.withValues(alpha: 0.7),
-              ],
+              colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
             ),
           ),
         ),
@@ -225,7 +248,12 @@ class WorkoutDetailPage extends StatelessWidget {
   }
 
   /// Card con estadísticas mejorado
-  Widget _buildStatsCard(WorkoutModel currentWorkout, ThemeData theme, bool isDark, Color focusColor) {
+  Widget _buildStatsCard(
+    WorkoutModel currentWorkout,
+    ThemeData theme,
+    bool isDark,
+    Color focusColor,
+  ) {
     final totalSets = currentWorkout.totalSets;
     final totalReps = currentWorkout.totalReps;
     final totalVolume = currentWorkout.totalVolume;
@@ -235,10 +263,7 @@ class WorkoutDetailPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? Colors.grey[850] : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: focusColor.withValues(alpha: 0.3),
-          width: 2,
-        ),
+        border: Border.all(color: focusColor.withValues(alpha: 0.3), width: 2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -318,7 +343,13 @@ class WorkoutDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildModernStatItem(String value, String label, IconData icon, Color color, bool isDark) {
+  Widget _buildModernStatItem(
+    String value,
+    String label,
+    IconData icon,
+    Color color,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -355,16 +386,18 @@ class WorkoutDetailPage extends StatelessWidget {
   }
 
   /// Card con lista de ejercicios mejorado
-  Widget _buildExercisesCard(WorkoutModel currentWorkout, ThemeData theme, bool isDark, Color focusColor) {
+  Widget _buildExercisesCard(
+    WorkoutModel currentWorkout,
+    ThemeData theme,
+    bool isDark,
+    Color focusColor,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark ? Colors.grey[850] : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: focusColor.withValues(alpha: 0.3),
-          width: 2,
-        ),
+        border: Border.all(color: focusColor.withValues(alpha: 0.3), width: 2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -387,7 +420,13 @@ class WorkoutDetailPage extends StatelessWidget {
           ...currentWorkout.exercises.asMap().entries.map((entry) {
             final index = entry.key;
             final exercise = entry.value;
-            return _buildModernExerciseItem(exercise, index + 1, theme, isDark, focusColor);
+            return _buildModernExerciseItem(
+              exercise,
+              index + 1,
+              theme,
+              isDark,
+              focusColor,
+            );
           }),
         ],
       ),
@@ -448,7 +487,10 @@ class WorkoutDetailPage extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: focusColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
@@ -473,7 +515,10 @@ class WorkoutDetailPage extends StatelessWidget {
                 final setIndex = entry.key + 1;
                 final set = entry.value;
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: isDark ? Colors.grey[700] : Colors.white,
                     borderRadius: BorderRadius.circular(8),

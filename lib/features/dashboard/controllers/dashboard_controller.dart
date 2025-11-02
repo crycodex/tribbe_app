@@ -25,6 +25,7 @@ class DashboardController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isFeedLoading = false.obs;
   final RxList<WorkoutPostModel> feedPosts = <WorkoutPostModel>[].obs;
+  final RxList<String> followingUserIds = <String>[].obs;
   StreamSubscription<List<WorkoutPostModel>>? _feedSubscription;
   StreamSubscription<StreakModel>? _streakSubscription;
 
@@ -49,7 +50,7 @@ class DashboardController extends GetxController {
   void onInit() {
     super.onInit();
     _listenToStreak(); // Escuchar cambios de racha en tiempo real
-    _listenToFeedPosts(); // Usar el stream aquí
+    _loadFollowingAndStartFeed(); // Cargar usuarios seguidos y luego el feed
   }
 
   @override
@@ -92,11 +93,42 @@ class DashboardController extends GetxController {
     }
   }
 
+  /// Cargar usuarios seguidos y luego iniciar el stream del feed
+  Future<void> _loadFollowingAndStartFeed() async {
+    try {
+      isFeedLoading.value = true;
+      final currentUserId = _authService.currentUser?.uid;
+      
+      if (currentUserId == null) {
+        debugPrint('Usuario no autenticado');
+        isFeedLoading.value = false;
+        return;
+      }
+
+      // Obtener IDs de usuarios seguidos
+      final followingIds = await _workoutService.getFollowingUserIds(currentUserId);
+      followingUserIds.value = followingIds;
+
+      debugPrint('Usuarios seguidos: ${followingIds.length}');
+
+      // Iniciar stream del feed con los usuarios seguidos
+      _listenToFeedPosts(currentUserId, followingIds);
+    } catch (e) {
+      debugPrint('Error al cargar usuarios seguidos: $e');
+      _showError('Error al cargar el feed');
+      isFeedLoading.value = false;
+    }
+  }
+
   /// Escuchar cambios en el feed de posts en tiempo real
-  void _listenToFeedPosts() {
+  void _listenToFeedPosts(String currentUserId, List<String> followingIds) {
     _feedSubscription?.cancel(); // Cancelar suscripción anterior si existe
     _feedSubscription = _workoutService
-        .getFeedPostsStream(limit: 20)
+        .getFeedPostsStream(
+          currentUserId: currentUserId,
+          followingUserIds: followingIds,
+          limit: 20,
+        )
         .listen(
           (posts) {
             feedPosts.value = posts;
@@ -127,9 +159,8 @@ class DashboardController extends GetxController {
 
   /// Refrescar feed (simplemente reinicia la escucha del stream si es necesario)
   Future<void> refreshFeed() async {
-    isFeedLoading.value = true; // Indicar que se está refrescando
-    _listenToFeedPosts(); // Reiniciar la escucha del stream
-    // Firestore se encargará de entregar los datos más recientes.
+    isFeedLoading.value = true;
+    await _loadFollowingAndStartFeed(); // Recargar usuarios seguidos y feed
   }
 
   /// Registrar un entrenamiento

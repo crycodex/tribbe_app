@@ -62,7 +62,7 @@ class WorkoutFeedWidget extends StatelessWidget {
       child: Column(
         children: [
           Icon(
-            Icons.fitness_center,
+            Icons.people_outline,
             size: 64,
             color: theme.brightness == Brightness.dark
                 ? Colors.grey[700]
@@ -70,7 +70,7 @@ class WorkoutFeedWidget extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'No hay entrenamientos aún',
+            'No hay entrenamientos en tu feed',
             style: TextStyle(
               fontSize: 16,
               color: theme.brightness == Brightness.dark
@@ -80,7 +80,7 @@ class WorkoutFeedWidget extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '¡Sé el primero en compartir tu entrenamiento!',
+            '¡Sigue a otros usuarios para ver sus entrenamientos!',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
