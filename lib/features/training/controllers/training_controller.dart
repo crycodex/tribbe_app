@@ -16,7 +16,9 @@ import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
 class TrainingController extends GetxController {
   final WorkoutService _workoutService = Get.put(WorkoutService());
   final FirebaseAuthService _authService = Get.put(FirebaseAuthService());
-  final FirebaseStorageService _storageService = Get.put(FirebaseStorageService());
+  final FirebaseStorageService _storageService = Get.put(
+    FirebaseStorageService(),
+  );
   final StreakService _streakService = Get.put(StreakService());
   final AuthController _authController = Get.put(AuthController());
 
@@ -128,10 +130,7 @@ class TrainingController extends GetxController {
   }
 
   /// Finalizar entrenamiento
-  Future<void> finishTraining({
-    String? caption,
-    File? workoutPhoto,
-  }) async {
+  Future<void> finishTraining({String? caption, File? workoutPhoto}) async {
     if (!isTraining.value) return;
 
     try {

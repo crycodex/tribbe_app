@@ -83,15 +83,15 @@ class MuscleGroupSelectorWidget extends StatelessWidget {
             color: isSelected
                 ? CupertinoColors.activeBlue
                 : (isDark
-                    ? CupertinoColors.systemGrey5
-                    : CupertinoColors.white),
+                      ? CupertinoColors.systemGrey5
+                      : CupertinoColors.white),
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: isSelected
                   ? CupertinoColors.activeBlue
                   : (isDark
-                      ? CupertinoColors.systemGrey4
-                      : CupertinoColors.systemGrey5),
+                        ? CupertinoColors.systemGrey4
+                        : CupertinoColors.systemGrey5),
               width: 1,
             ),
           ),
@@ -102,9 +102,7 @@ class MuscleGroupSelectorWidget extends StatelessWidget {
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               color: isSelected
                   ? CupertinoColors.white
-                  : (isDark
-                      ? CupertinoColors.white
-                      : CupertinoColors.black),
+                  : (isDark ? CupertinoColors.white : CupertinoColors.black),
             ),
           ),
         ),
@@ -112,4 +110,3 @@ class MuscleGroupSelectorWidget extends StatelessWidget {
     );
   }
 }
-
