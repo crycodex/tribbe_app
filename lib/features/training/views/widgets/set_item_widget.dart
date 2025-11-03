@@ -84,30 +84,7 @@ class SetItemWidget extends StatelessWidget {
             _buildIndexBadge(isEditing),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${set.weight} kg × ${set.reps} reps',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? CupertinoColors.white
-                          : CupertinoColors.black,
-                    ),
-                  ),
-                  Text(
-                    'Vol: ${(set.weight * set.reps).toStringAsFixed(0)} kg',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isDark
-                          ? CupertinoColors.systemGrey
-                          : CupertinoColors.systemGrey2,
-                    ),
-                  ),
-                ],
-              ),
+              child: _buildSetInfo(isDark),
             ),
             Row(
               children: [
@@ -128,6 +105,89 @@ class SetItemWidget extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Mostrar información del set según el tipo
+  Widget _buildSetInfo(bool isDark) {
+    if (set.isCardio) {
+      // Set de cardio: distancia + duración
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${set.distance?.toStringAsFixed(2)} km',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: isDark ? CupertinoColors.white : CupertinoColors.black,
+            ),
+          ),
+          Text(
+            'Tiempo: ${_formatDuration(set.duration ?? 0)}',
+            style: TextStyle(
+              fontSize: 11,
+              color:
+                  isDark ? CupertinoColors.systemGrey : CupertinoColors.systemGrey2,
+            ),
+          ),
+        ],
+      );
+    } else if (set.isTime) {
+      // Set de tiempo: solo duración
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _formatDuration(set.duration ?? 0),
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: isDark ? CupertinoColors.white : CupertinoColors.black,
+            ),
+          ),
+          Text(
+            'Duración',
+            style: TextStyle(
+              fontSize: 11,
+              color:
+                  isDark ? CupertinoColors.systemGrey : CupertinoColors.systemGrey2,
+            ),
+          ),
+        ],
+      );
+    } else {
+      // Set de fuerza: peso + reps
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${set.weight} kg × ${set.reps} reps',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: isDark ? CupertinoColors.white : CupertinoColors.black,
+            ),
+          ),
+          Text(
+            'Vol: ${(set.weight * set.reps).toStringAsFixed(0)} kg',
+            style: TextStyle(
+              fontSize: 11,
+              color:
+                  isDark ? CupertinoColors.systemGrey : CupertinoColors.systemGrey2,
+            ),
+          ),
+        ],
+      );
+    }
+  }
+
+  String _formatDuration(int seconds) {
+    final minutes = seconds ~/ 60;
+    final secs = seconds % 60;
+    if (minutes > 0) {
+      return '${minutes}m ${secs}s';
+    }
+    return '${secs}s';
   }
 
   Widget _buildSwipeBackground({

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/features/training/controllers/training_controller.dart';
 import 'package:tribbe_app/shared/data/exercises_data.dart';
+import 'package:tribbe_app/shared/models/exercise_model.dart';
 
 /// Widget de item de ejercicio en la lista
 class ExerciseListItemWidget extends StatelessWidget {
@@ -19,6 +20,23 @@ class ExerciseListItemWidget extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
   });
+
+  /// Obtener el template del ejercicio para conocer su tipo
+  ExerciseTemplate? get _exerciseTemplate {
+    try {
+      return ExercisesData.exercises.firstWhere(
+        (ex) => ex.name == exercise.name,
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Verificar si es ejercicio de cardio
+  bool get _isCardio => _exerciseTemplate?.isCardio ?? false;
+
+  /// Verificar si es ejercicio de tiempo
+  bool get _isTime => _exerciseTemplate?.isTime ?? false;
 
   @override
   Widget build(BuildContext context) {
@@ -301,7 +319,7 @@ class ExerciseListItemWidget extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Text(
-              '${set.weight} kg × ${set.reps} reps',
+              _formatSetInfo(set),
               style: TextStyle(
                 fontSize: 14,
                 color: isDark
@@ -315,6 +333,32 @@ class ExerciseListItemWidget extends StatelessWidget {
     }).toList();
   }
 
+  /// Formatear información del set según el tipo de ejercicio
+  String _formatSetInfo(set) {
+    if (set.isCardio) {
+      // Ejercicio de cardio: distancia + duración
+      final distance = set.distance?.toStringAsFixed(2) ?? '0.0';
+      final duration = _formatDuration(set.duration ?? 0);
+      return '$distance km • $duration';
+    } else if (set.isTime) {
+      // Ejercicio de tiempo: solo duración
+      return _formatDuration(set.duration ?? 0);
+    } else {
+      // Ejercicio de fuerza: peso + reps
+      return '${set.weight} kg × ${set.reps} reps';
+    }
+  }
+
+  /// Formatear duración en minutos y segundos
+  String _formatDuration(int seconds) {
+    final minutes = seconds ~/ 60;
+    final secs = seconds % 60;
+    if (minutes > 0) {
+      return '${minutes}m ${secs}s';
+    }
+    return '${secs}s';
+  }
+
   Widget _buildVolumeInfo() {
     return Row(
       children: [
@@ -325,7 +369,7 @@ class ExerciseListItemWidget extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         Text(
-          'Volumen total: ${exercise.totalVolume.toStringAsFixed(1)} kg',
+          _getSummaryInfo(),
           style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
@@ -334,5 +378,31 @@ class ExerciseListItemWidget extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// Obtener información de resumen según el tipo de ejercicio
+  String _getSummaryInfo() {
+    if (_isCardio) {
+      // Para cardio: distancia total
+      final totalDistance = exercise.sets.fold<double>(
+        0.0,
+        (sum, set) => sum + (set.distance ?? 0),
+      );
+      final totalDuration = exercise.sets.fold<int>(
+        0,
+        (sum, set) => sum + (set.duration ?? 0),
+      );
+      return 'Total: ${totalDistance.toStringAsFixed(2)} km • ${_formatDuration(totalDuration)}';
+    } else if (_isTime) {
+      // Para tiempo: duración total
+      final totalDuration = exercise.sets.fold<int>(
+        0,
+        (sum, set) => sum + (set.duration ?? 0),
+      );
+      return 'Tiempo total: ${_formatDuration(totalDuration)}';
+    } else {
+      // Para fuerza: volumen total
+      return 'Volumen total: ${exercise.totalVolume.toStringAsFixed(1)} kg';
+    }
   }
 }

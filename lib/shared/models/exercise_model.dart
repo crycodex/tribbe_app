@@ -6,12 +6,12 @@ class ExerciseTemplate {
   final List<String> secondaryMuscles; // Músculos secundarios
   final String equipment; // Equipamiento necesario
   final String difficulty; // Principiante, Intermedio, Avanzado
+  final String exerciseType; // Tipo: Fuerza, Cardio, Tiempo
   final String? instructions;
   final String? imageUrl;
   final List<String>? commonMistakes; // Bulleted list of common errors to avoid.
   final List<String>? proTips; // Actionable tips for better form and muscle activation.
   final String? videoUrl; // For future expansion into video tutorials.
-
 
   ExerciseTemplate({
     required this.id,
@@ -20,6 +20,7 @@ class ExerciseTemplate {
     this.secondaryMuscles = const [],
     required this.equipment,
     required this.difficulty,
+    this.exerciseType = ExerciseType.fuerza, // Por defecto es fuerza
     this.instructions,
     this.imageUrl,
     this.commonMistakes,
@@ -32,13 +33,14 @@ class ExerciseTemplate {
       id: json['id'] as String,
       name: json['name'] as String,
       muscleGroup: json['muscle_group'] as String,
-      secondaryMuscles:
-          (json['secondary_muscles'] as List<dynamic>?)
+      secondaryMuscles: (json['secondary_muscles'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
       equipment: json['equipment'] as String,
       difficulty: json['difficulty'] as String,
+      exerciseType:
+          json['exercise_type'] as String? ?? ExerciseType.fuerza,
       instructions: json['instructions'] as String?,
       imageUrl: json['image_url'] as String?,
     );
@@ -52,13 +54,24 @@ class ExerciseTemplate {
       'secondary_muscles': secondaryMuscles,
       'equipment': equipment,
       'difficulty': difficulty,
+      'exercise_type': exerciseType,
       'instructions': instructions,
       'image_url': imageUrl,
     };
   }
 
+  /// Helper para verificar si es ejercicio de cardio
+  bool get isCardio => exerciseType == ExerciseType.cardio;
+
+  /// Helper para verificar si es ejercicio de fuerza
+  bool get isStrength => exerciseType == ExerciseType.fuerza;
+
+  /// Helper para verificar si es ejercicio de tiempo
+  bool get isTime => exerciseType == ExerciseType.tiempo;
+
   @override
-  String toString() => 'ExerciseTemplate($name, $muscleGroup, $equipment)';
+  String toString() =>
+      'ExerciseTemplate($name, $muscleGroup, $equipment, $exerciseType)';
 }
 
 /// Grupos musculares
@@ -122,4 +135,13 @@ class Difficulty {
   static const String avanzado = 'Avanzado';
 
   static const List<String> all = [principiante, intermedio, avanzado];
+}
+
+/// Tipo de ejercicio
+class ExerciseType {
+  static const String fuerza = 'Fuerza'; // Peso y repeticiones
+  static const String cardio = 'Cardio'; // Distancia y duración
+  static const String tiempo = 'Tiempo'; // Solo duración (plancha, etc.)
+
+  static const List<String> all = [fuerza, cardio, tiempo];
 }

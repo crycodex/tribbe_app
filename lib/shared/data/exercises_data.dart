@@ -457,6 +457,7 @@ class ExercisesData {
       muscleGroup: MuscleGroups.abdomen,
       equipment: Equipment.pesoCorporal,
       difficulty: Difficulty.principiante,
+      exerciseType: ExerciseType.tiempo,
       instructions:
           '''1. Apoya los antebrazos y las puntas de los pies en el suelo.
 2. Mantén el cuerpo en una línea recta desde la cabeza hasta los talones.
@@ -965,10 +966,11 @@ class ExercisesData {
     // ========== MÁS EJERCICIOS DE ABDOMEN ==========
     ExerciseTemplate(
       id: 'abdomen_6',
-      name: 'Bicicleta',
+      name: 'Crunch Bicicleta',
       muscleGroup: MuscleGroups.abdomen,
       equipment: Equipment.pesoCorporal,
       difficulty: Difficulty.principiante,
+      exerciseType: ExerciseType.tiempo,
       instructions:
           '''1. Acuéstate boca arriba con las manos detrás de la cabeza.
 2. Levanta las rodillas a un ángulo de 90 grados.
@@ -983,6 +985,7 @@ class ExercisesData {
       muscleGroup: MuscleGroups.abdomen,
       equipment: Equipment.pesoCorporal,
       difficulty: Difficulty.intermedio,
+      exerciseType: ExerciseType.tiempo,
       instructions: '''1. Comienza en una posición de plancha alta.
 2. Lleva una rodilla hacia tu pecho, manteniendo el abdomen contraído.
 3. Rápidamente, alterna las piernas como si estuvieras corriendo en el lugar.
@@ -1010,6 +1013,7 @@ class ExercisesData {
       muscleGroup: MuscleGroups.abdomen,
       equipment: Equipment.pesoCorporal,
       difficulty: Difficulty.avanzado,
+      exerciseType: ExerciseType.tiempo,
       instructions:
           '''1. Siéntate en el suelo con las piernas extendidas y las manos apoyadas a los lados de las caderas.
 2. Empuja el suelo con las manos para levantar tu cuerpo y tus piernas.
@@ -1024,6 +1028,7 @@ class ExercisesData {
       muscleGroup: MuscleGroups.abdomen,
       equipment: Equipment.pesoCorporal,
       difficulty: Difficulty.principiante,
+      exerciseType: ExerciseType.tiempo,
       instructions:
           '''1. Acuéstate de lado y apoya tu peso sobre un antebrazo, con el codo directamente debajo del hombro.
 2. Levanta las caderas hasta que tu cuerpo forme una línea recta desde la cabeza hasta los pies.
@@ -1202,6 +1207,7 @@ class ExercisesData {
       muscleGroup: MuscleGroups.abdomen,
       equipment: Equipment.pesoCorporal,
       difficulty: Difficulty.intermedio,
+      exerciseType: ExerciseType.tiempo,
       instructions:
           '''1. Acuéstate boca arriba, eleva ligeramente hombros y piernas manteniendo zona lumbar pegada.
 2. Extiende brazos por encima de la cabeza sin perder la retroversión pélvica.
@@ -1209,6 +1215,127 @@ class ExercisesData {
 4. Si es difícil, flexiona rodillas o baja brazos.
 5. Evita arquear la espalda en todo momento.''',
       imageUrl: 'https://gymvisual.com/img/p/2/2/3/8/3/22383.gif',
+    ),
+
+    // ========== CARDIO ==========
+    ExerciseTemplate(
+      id: 'cardio_1',
+      name: 'Bicicleta Estática',
+      muscleGroup: MuscleGroups.piernas,
+      secondaryMuscles: [MuscleGroups.gluteos],
+      equipment: Equipment.maquina,
+      difficulty: Difficulty.principiante,
+      exerciseType: ExerciseType.cardio,
+      instructions: '''1. Ajusta el asiento a la altura adecuada.
+2. Mantén la espalda recta y los hombros relajados.
+3. Pedalea a un ritmo constante.
+4. Ajusta la resistencia según tu nivel.
+5. Mantén las rodillas alineadas con los pies.''',
+      imageUrl: 'https://gymvisual.com/img/p/1/7/4/9/3/17493.gif',
+    ),
+    ExerciseTemplate(
+      id: 'cardio_2',
+      name: 'Caminadora',
+      muscleGroup: MuscleGroups.piernas,
+      secondaryMuscles: [MuscleGroups.gluteos],
+      equipment: Equipment.maquina,
+      difficulty: Difficulty.principiante,
+      exerciseType: ExerciseType.cardio,
+      instructions: '''1. Comienza con velocidad baja.
+2. Mantén la postura erguida mirando al frente.
+3. Balancea los brazos naturalmente.
+4. Puedes ajustar la inclinación para mayor intensidad.
+5. Aumenta gradualmente velocidad y duración.''',
+      imageUrl: 'https://gymvisual.com/img/p/1/7/6/0/3/17603.gif',
+    ),
+    ExerciseTemplate(
+      id: 'cardio_3',
+      name: 'Máquina Elíptica',
+      muscleGroup: MuscleGroups.piernas,
+      secondaryMuscles: [MuscleGroups.gluteos, MuscleGroups.abdomen],
+      equipment: Equipment.maquina,
+      difficulty: Difficulty.principiante,
+      exerciseType: ExerciseType.cardio,
+      instructions: '''1. Sube a la máquina con cuidado.
+2. Agarra las manijas móviles.
+3. Realiza movimientos fluidos y controlados.
+4. Mantén el abdomen contraído.
+5. Alterna entre resistencias diferentes.''',
+    ),
+    ExerciseTemplate(
+      id: 'cardio_4',
+      name: 'Remo Ergómetro',
+      muscleGroup: MuscleGroups.espalda,
+      secondaryMuscles: [MuscleGroups.piernas, MuscleGroups.abdomen],
+      equipment: Equipment.maquina,
+      difficulty: Difficulty.intermedio,
+      exerciseType: ExerciseType.cardio,
+      instructions: '''1. Siéntate en el asiento con los pies asegurados.
+2. Agarra el maneral con ambas manos.
+3. Impulsa con las piernas primero, luego tira con los brazos.
+4. Mantén la espalda recta durante todo el movimiento.
+5. Controla la fase de retorno.''',
+    ),
+    ExerciseTemplate(
+      id: 'cardio_5',
+      name: 'Saltar la Cuerda',
+      muscleGroup: MuscleGroups.pantorrillas,
+      secondaryMuscles: [MuscleGroups.piernas],
+      equipment: Equipment.pesoCorporal,
+      difficulty: Difficulty.principiante,
+      exerciseType: ExerciseType.cardio,
+      instructions: '''1. Sujeta la cuerda con ambas manos.
+2. Salta con ambos pies simultáneamente.
+3. Mantén los saltos bajos y controlados.
+4. Gira la cuerda con las muñecas, no con los brazos.
+5. Aterriza suavemente sobre las puntas de los pies.''',
+    ),
+    ExerciseTemplate(
+      id: 'cardio_6',
+      name: 'Burpees',
+      muscleGroup: MuscleGroups.abdomen,
+      secondaryMuscles: [MuscleGroups.piernas, MuscleGroups.pecho],
+      equipment: Equipment.pesoCorporal,
+      difficulty: Difficulty.avanzado,
+      exerciseType: ExerciseType.cardio,
+      instructions: '''1. Comienza de pie.
+2. Baja a posición de cuclillas y coloca las manos en el suelo.
+3. Salta con los pies hacia atrás a plancha.
+4. Realiza una flexión (opcional).
+5. Salta para volver los pies hacia las manos y salta hacia arriba.''',
+    ),
+    ExerciseTemplate(
+      id: 'cardio_7',
+      name: 'Correr en Exteriores',
+      muscleGroup: MuscleGroups.piernas,
+      secondaryMuscles: [MuscleGroups.gluteos, MuscleGroups.pantorrillas],
+      equipment: Equipment.pesoCorporal,
+      difficulty: Difficulty.principiante,
+      exerciseType: ExerciseType.cardio,
+      instructions: '''1. Comienza con un calentamiento caminando.
+2. Mantén una postura erguida.
+3. Aterriza en la parte media del pie.
+4. Respira de manera rítmica.
+5. Aumenta gradualmente distancia e intensidad.''',
+    ),
+    ExerciseTemplate(
+      id: 'cardio_8',
+      name: 'Natación',
+      muscleGroup: MuscleGroups.espalda,
+      secondaryMuscles: [
+        MuscleGroups.pecho,
+        MuscleGroups.piernas,
+        MuscleGroups.hombros,
+      ],
+      equipment: Equipment.pesoCorporal,
+      difficulty: Difficulty.intermedio,
+      exerciseType: ExerciseType.cardio,
+      instructions:
+          '''1. Elige un estilo de nado (crol, espalda, pecho, mariposa).
+2. Mantén el cuerpo alineado horizontalmente.
+3. Coordina brazos, piernas y respiración.
+4. Mantén un ritmo constante.
+5. Descansa entre series según necesites.''',
     ),
   ];
 

@@ -5,6 +5,8 @@ import 'package:tribbe_app/features/training/models/workout_model.dart';
 import 'package:tribbe_app/features/training/models/workout_post_model.dart';
 import 'package:tribbe_app/shared/utils/workout_utils.dart';
 import 'package:tribbe_app/shared/utils/share_workout_util.dart';
+import 'package:tribbe_app/shared/data/exercises_data.dart';
+import 'package:tribbe_app/shared/models/exercise_model.dart';
 
 /// Vista de detalle unificada para entrenamientos
 class WorkoutDetailPage extends StatelessWidget {
@@ -441,6 +443,11 @@ class WorkoutDetailPage extends StatelessWidget {
     bool isDark,
     Color focusColor,
   ) {
+    // Buscar el template del ejercicio para conocer su tipo
+    final exerciseTemplate = _getExerciseTemplate(exercise.name);
+    final isCardio = exerciseTemplate?.isCardio ?? false;
+    final isTime = exerciseTemplate?.isTime ?? false;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -527,7 +534,7 @@ class WorkoutDetailPage extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    'S$setIndex: ${set.weight}kg × ${set.reps}',
+                    _formatSetText(setIndex, set, isCardio, isTime),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -541,5 +548,43 @@ class WorkoutDetailPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Obtener el template del ejercicio
+  ExerciseTemplate? _getExerciseTemplate(String exerciseName) {
+    try {
+      return ExercisesData.exercises.firstWhere(
+        (ex) => ex.name == exerciseName,
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Formatear texto del set según el tipo de ejercicio
+  String _formatSetText(int setIndex, dynamic set, bool isCardio, bool isTime) {
+    if (isCardio) {
+      // Cardio: distancia + duración
+      final distance = set.distance?.toStringAsFixed(2) ?? '0.0';
+      final duration = _formatDuration(set.duration ?? 0);
+      return 'S$setIndex: $distance km • $duration';
+    } else if (isTime) {
+      // Tiempo: solo duración
+      final duration = _formatDuration(set.duration ?? 0);
+      return 'S$setIndex: $duration';
+    } else {
+      // Fuerza: peso + reps
+      return 'S$setIndex: ${set.weight}kg × ${set.reps}';
+    }
+  }
+
+  /// Formatear duración
+  String _formatDuration(int seconds) {
+    final minutes = seconds ~/ 60;
+    final secs = seconds % 60;
+    if (minutes > 0) {
+      return '${minutes}m ${secs}s';
+    }
+    return '${secs}s';
   }
 }

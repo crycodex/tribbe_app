@@ -218,6 +218,23 @@ class ExerciseConfigPanelWidget extends StatelessWidget {
     TrainingExerciseEditorController controller,
     bool isDark,
   ) {
+    return Obx(() {
+      // Campos según el tipo de ejercicio
+      if (controller.isCardioExercise) {
+        return _buildCardioFields(controller, isDark);
+      } else if (controller.isTimeExercise) {
+        return _buildTimeFields(controller, isDark);
+      } else {
+        return _buildStrengthFields(controller, isDark);
+      }
+    });
+  }
+
+  /// Campos para ejercicios de fuerza (peso + reps)
+  Widget _buildStrengthFields(
+    TrainingExerciseEditorController controller,
+    bool isDark,
+  ) {
     return Row(
       children: [
         Expanded(
@@ -286,6 +303,154 @@ class ExerciseConfigPanelWidget extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+
+  /// Campos para ejercicios de cardio (distancia + duración)
+  Widget _buildCardioFields(
+    TrainingExerciseEditorController controller,
+    bool isDark,
+  ) {
+    return Column(
+      children: [
+        // Distancia
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Distancia (km)',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: isDark
+                    ? CupertinoColors.systemGrey
+                    : CupertinoColors.systemGrey2,
+              ),
+            ),
+            const SizedBox(height: 6),
+            CupertinoTextField(
+              controller: controller.distanceController,
+              placeholder: '0.0',
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+              ],
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark ? CupertinoColors.black : CupertinoColors.white,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              style: const TextStyle(fontSize: 18),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Duración
+        _buildDurationFields(controller, isDark),
+      ],
+    );
+  }
+
+  /// Campos para ejercicios de tiempo (solo duración)
+  Widget _buildTimeFields(
+    TrainingExerciseEditorController controller,
+    bool isDark,
+  ) {
+    return _buildDurationFields(controller, isDark);
+  }
+
+  /// Campos de duración (minutos + segundos)
+  Widget _buildDurationFields(
+    TrainingExerciseEditorController controller,
+    bool isDark,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Duración',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: isDark
+                ? CupertinoColors.systemGrey
+                : CupertinoColors.systemGrey2,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Minutos',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark
+                          ? CupertinoColors.systemGrey2
+                          : CupertinoColors.systemGrey3,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  CupertinoTextField(
+                    controller: controller.durationMinutesController,
+                    placeholder: '0',
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? CupertinoColors.black
+                          : CupertinoColors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    style: const TextStyle(fontSize: 18),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Segundos',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark
+                          ? CupertinoColors.systemGrey2
+                          : CupertinoColors.systemGrey3,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  CupertinoTextField(
+                    controller: controller.durationSecondsController,
+                    placeholder: '0',
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? CupertinoColors.black
+                          : CupertinoColors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    style: const TextStyle(fontSize: 18),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -409,7 +574,7 @@ class ExerciseConfigPanelWidget extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                'Volumen: ${controller.totalVolume.toStringAsFixed(0)} kg',
+                _getSummaryText(controller),
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -421,6 +586,42 @@ class ExerciseConfigPanelWidget extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// Obtener texto de resumen según tipo de ejercicio
+  String _getSummaryText(TrainingExerciseEditorController controller) {
+    if (controller.isCardioExercise) {
+      // Para cardio: distancia total + duración total
+      final totalDistance = controller.currentSets.fold<double>(
+        0.0,
+        (sum, set) => sum + (set.distance ?? 0),
+      );
+      final totalDuration = controller.currentSets.fold<int>(
+        0,
+        (sum, set) => sum + (set.duration ?? 0),
+      );
+      return 'Total: ${totalDistance.toStringAsFixed(2)} km • ${_formatDuration(totalDuration)}';
+    } else if (controller.isTimeExercise) {
+      // Para tiempo: duración total
+      final totalDuration = controller.currentSets.fold<int>(
+        0,
+        (sum, set) => sum + (set.duration ?? 0),
+      );
+      return 'Tiempo total: ${_formatDuration(totalDuration)}';
+    } else {
+      // Para fuerza: volumen total
+      return 'Volumen: ${controller.totalVolume.toStringAsFixed(0)} kg';
+    }
+  }
+
+  /// Formatear duración
+  String _formatDuration(int seconds) {
+    final minutes = seconds ~/ 60;
+    final secs = seconds % 60;
+    if (minutes > 0) {
+      return '${minutes}m ${secs}s';
+    }
+    return '${secs}s';
   }
 
   Widget _buildSaveButton() {
