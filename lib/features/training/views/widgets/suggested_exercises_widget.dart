@@ -2,8 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
 import 'package:tribbe_app/shared/models/exercise_model.dart';
+import 'package:tribbe_app/features/training/controllers/training_controller.dart';
 
-/// Widget de ejercicios sugeridos
+/// Widget de ejercicios sugeridos - Reactivo al filtro de grupo muscular
 class SuggestedExercisesWidget extends StatelessWidget {
   final List<ExerciseTemplate> exercises;
   final Function(ExerciseTemplate) onExerciseSelected;
@@ -16,42 +17,88 @@ class SuggestedExercisesWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<TrainingController>();
     final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
-    final suggested = exercises.take(6).toList();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Ejercicios sugeridos',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: isDark ? CupertinoColors.white : CupertinoColors.black,
+    return Obx(() {
+      // Reactivo a cambios en availableExercises
+      final suggested = controller.availableExercises.take(6).toList();
+
+      if (suggested.isEmpty) {
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Center(
+            child: Text(
+              'No hay ejercicios disponibles para este filtro',
+              style: TextStyle(
+                fontSize: 14,
+                color: isDark
+                    ? CupertinoColors.systemGrey
+                    : CupertinoColors.systemGrey2,
+              ),
+              textAlign: TextAlign.center,
             ),
           ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 120,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
+        );
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: suggested.length,
-            itemBuilder: (context, index) {
-              final exercise = suggested[index];
-              return _SuggestedExerciseCard(
-                exercise: exercise,
-                isDark: isDark,
-                onTap: () => onExerciseSelected(exercise),
-              );
-            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Ejercicios sugeridos',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color:
+                        isDark ? CupertinoColors.white : CupertinoColors.black,
+                  ),
+                ),
+                if (controller.selectedMuscleGroup.value != null)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: CupertinoColors.activeBlue,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      controller.selectedMuscleGroup.value!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: CupertinoColors.white,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ),
-      ],
-    );
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 120,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: suggested.length,
+              itemBuilder: (context, index) {
+                final exercise = suggested[index];
+                return _SuggestedExerciseCard(
+                  exercise: exercise,
+                  isDark: isDark,
+                  onTap: () => onExerciseSelected(exercise),
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    });
   }
 }
 

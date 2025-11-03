@@ -25,8 +25,10 @@ class TrainingController extends GetxController {
   final isLoading = false.obs;
   final isPaused = false.obs;
 
-  // Timer
+  // Timer basado en timestamps para funcionar en background
   final elapsedSeconds = 0.obs;
+  DateTime? _startTime;
+  int _accumulatedSeconds = 0; // Tiempo acumulado antes de pausas
   Timer? _timer;
 
   // Datos del entrenamiento actual
@@ -36,7 +38,7 @@ class TrainingController extends GetxController {
   final currentSets = <SetModel>[].obs;
 
   // Filtros de ejercicios
-  String? selectedMuscleGroup;
+  final selectedMuscleGroup = Rx<String?>(null);
   List<String>? selectedEquipment;
   final RxList<ExerciseTemplate> availableExercises = <ExerciseTemplate>[].obs;
 
@@ -59,7 +61,7 @@ class TrainingController extends GetxController {
     // Obtener parámetros de navegación
     final args = Get.arguments as Map<String, dynamic>?;
     if (args != null) {
-      selectedMuscleGroup = args['muscleGroup'] as String?;
+      selectedMuscleGroup.value = args['muscleGroup'] as String?;
       selectedEquipment = args['equipment'] as List<String>?;
     }
 
@@ -76,9 +78,15 @@ class TrainingController extends GetxController {
   /// Cargar ejercicios disponibles según filtros
   void _loadAvailableExercises() {
     availableExercises.value = ExercisesData.getFiltered(
-      muscleGroup: selectedMuscleGroup,
+      muscleGroup: selectedMuscleGroup.value,
       equipment: selectedEquipment,
     );
+  }
+
+  /// Cambiar grupo muscular y recargar ejercicios
+  void changeMuscleGroup(String? muscleGroup) {
+    selectedMuscleGroup.value = muscleGroup;
+    _loadAvailableExercises();
   }
 
   /// Iniciar entrenamiento
@@ -88,6 +96,8 @@ class TrainingController extends GetxController {
     isTraining.value = true;
     isPaused.value = false;
     elapsedSeconds.value = 0;
+    _accumulatedSeconds = 0;
+    _startTime = DateTime.now();
     exercises.clear();
 
     // Establecer enfoque si se proporciona
@@ -105,8 +115,14 @@ class TrainingController extends GetxController {
     isPaused.value = !isPaused.value;
 
     if (isPaused.value) {
+      // Al pausar, guardar el tiempo acumulado hasta ahora
+      if (_startTime != null) {
+        _accumulatedSeconds += DateTime.now().difference(_startTime!).inSeconds;
+      }
       _stopTimer();
     } else {
+      // Al reanudar, reiniciar el tiempo de inicio
+      _startTime = DateTime.now();
       _startTimer();
     }
   }
@@ -305,16 +321,18 @@ class TrainingController extends GetxController {
     focusType.value = focus;
   }
 
-  /// Iniciar timer
+  /// Iniciar timer basado en timestamps
   void _startTimer() {
     // Cancelar timer previo si existe
     _timer?.cancel();
 
     // Crear nuevo timer que actualiza cada segundo
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      // Solo incrementar si no está pausado y el entrenamiento está activo
-      if (!isPaused.value && isTraining.value) {
-        elapsedSeconds.value++;
+      // Solo actualizar si no está pausado y el entrenamiento está activo
+      if (!isPaused.value && isTraining.value && _startTime != null) {
+        // Calcular tiempo transcurrido desde el inicio + tiempo acumulado
+        final currentElapsed = DateTime.now().difference(_startTime!).inSeconds;
+        elapsedSeconds.value = _accumulatedSeconds + currentElapsed;
       }
     });
   }
@@ -330,6 +348,8 @@ class TrainingController extends GetxController {
     isTraining.value = false;
     isPaused.value = false;
     elapsedSeconds.value = 0;
+    _accumulatedSeconds = 0;
+    _startTime = null;
     exercises.clear();
     currentExerciseName.value = '';
     currentSets.clear();

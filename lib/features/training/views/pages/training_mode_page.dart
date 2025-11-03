@@ -12,6 +12,7 @@ import 'package:tribbe_app/features/training/views/widgets/suggested_exercises_w
 import 'package:tribbe_app/features/training/views/widgets/training_stats_row_widget.dart';
 import 'package:tribbe_app/features/training/views/widgets/training_timer_widget.dart';
 import 'package:tribbe_app/features/training/views/widgets/training_focus_selector_widget.dart';
+import 'package:tribbe_app/features/training/views/widgets/muscle_group_selector_widget.dart';
 
 /// Página de modo entrenamiento - Diseño Cupertino simplificado
 /// Actúa como orquestador de widgets especializados
@@ -114,6 +115,8 @@ class _TrainingModePageState extends State<TrainingModePage> {
           const TrainingTimerWidget(),
           const SizedBox(height: 16),
           const TrainingStatsRowWidget(),
+          const SizedBox(height: 16),
+          const MuscleGroupSelectorWidget(),
           const SizedBox(height: 24),
           Obx(() {
             if (editorController.hasExerciseSelected) {
