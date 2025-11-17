@@ -6,6 +6,7 @@ import 'package:tribbe_app/features/auth/controllers/auth_controller.dart';
 import 'package:tribbe_app/features/auth/models/user_model.dart';
 import 'package:tribbe_app/features/home/views/pages/home_page.dart';
 import 'package:tribbe_app/features/profile/controllers/profile_controller.dart';
+import 'package:tribbe_app/features/profile/views/pages/credit_card_customization_page.dart';
 import 'package:tribbe_app/features/profile/views/widgets/workout_grid_item.dart';
 import 'package:tribbe_app/shared/widgets/credit_card_widget.dart';
 
@@ -192,7 +193,7 @@ class ProfilePage extends StatelessWidget {
 
                           const SizedBox(height: 20),
 
-                          // Botones de acción
+                          // Botón de acción principal
                           Row(
                             children: [
                               Expanded(
@@ -222,32 +223,113 @@ class ProfilePage extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              OutlinedButton(
-                                onPressed: () {
-                                  _showCreditCard(
-                                    context,
-                                    profileController,
-                                    isDark,
-                                  );
-                                },
-                                style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
-                                  ),
-                                  side: BorderSide(
-                                    color: isDark
-                                        ? Colors.grey.shade700
-                                        : Colors.grey.shade300,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                child: const Icon(Icons.credit_card, size: 18),
-                              ),
                             ],
                           ),
+
+                          const SizedBox(height: 24),
+
+                          // Botón para expandir/colapsar tarjeta
+                          Obx(() {
+                            final isCardExpanded = profileController.isCardExpanded.value;
+                            return GestureDetector(
+                              onTap: () {
+                                profileController.toggleCardExpanded();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.08)
+                                      : Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isDark
+                                        ? Colors.white.withValues(alpha: 0.1)
+                                        : Colors.grey.shade300,
+                                    width: 1,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: isDark
+                                          ? Colors.black.withValues(alpha: 0.2)
+                                          : Colors.black.withValues(alpha: 0.03),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      isCardExpanded
+                                          ? Icons.expand_less
+                                          : Icons.expand_more,
+                                      size: 20,
+                                      color: isDark ? Colors.white : Colors.grey.shade900,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      isCardExpanded
+                                          ? 'Ocultar tarjeta'
+                                          : 'Mostrar tarjeta',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark ? Colors.white : Colors.grey.shade900,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }),
+
+                          const SizedBox(height: 16),
+
+                          // Tarjeta de crédito con botones debajo (colapsable)
+                          Obx(() {
+                            final authController = Get.find<AuthController>();
+                            final userProfile = authController.userProfile.value;
+
+                            if (userProfile == null) {
+                              return const SizedBox.shrink();
+                            }
+
+                            final user = UserModel(
+                              id: userProfile.uid,
+                              email: userProfile.email,
+                              username: userProfile.datosPersonales?.nombreUsuario ?? 'usuario',
+                            );
+
+                            return AnimatedSize(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                              child: profileController.isCardExpanded.value
+                                  ? CreditCardWidget(
+                                      user: user,
+                                      followersCount: profileController.followersCount.value,
+                                      followingCount: profileController.followingCount.value,
+                                      showShareButton: true,
+                                      showEditButton: true,
+                                      showButtonsBelow: true,
+                                      onEdit: () {
+                                        Get.to(
+                                          () => CreditCardCustomizationPage(
+                                            user: user,
+                                            followersCount: profileController.followersCount.value,
+                                            followingCount: profileController.followingCount.value,
+                                          ),
+                                        );
+                                      },
+                                    )
+                                  : const SizedBox.shrink(),
+                            );
+                          }),
 
                           const SizedBox(height: 24),
 
@@ -436,46 +518,4 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  /// Mostrar tarjeta de crédito en un diálogo
-  void _showCreditCard(
-    BuildContext context,
-    ProfileController profileController,
-    bool isDark,
-  ) {
-    final authController = Get.find<AuthController>();
-    final userProfile = authController.userProfile.value;
-
-    if (userProfile == null) {
-      Get.snackbar(
-        'Error',
-        'No se pudo cargar el perfil',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return;
-    }
-
-    // Crear UserModel para la tarjeta
-    final user = UserModel(
-      id: userProfile.uid,
-      email: userProfile.email,
-      username: userProfile.datosPersonales?.nombreUsuario ?? 'usuario',
-    );
-
-    Get.dialog(
-      Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: CreditCardWidget(
-            user: user,
-            followersCount: profileController.followersCount.value,
-            followingCount: profileController.followingCount.value,
-            showShareButton: true,
-            onTap: () => Get.back(), // Cerrar al tocar la tarjeta
-          ),
-        ),
-      ),
-      barrierDismissible: true,
-    );
-  }
 }

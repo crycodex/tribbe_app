@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 /// Modelo para el perfil completo del usuario en Firestore
 class UserProfileModel {
   UserProfileModel({
@@ -184,12 +186,19 @@ class Ubicacion {
 
 /// Preferencias del usuario
 class Preferencias {
-  Preferencias({this.tema, this.unidades, this.idioma, this.genero});
+  Preferencias({
+    this.tema,
+    this.unidades,
+    this.idioma,
+    this.genero,
+    this.cardPreferences,
+  });
 
   final String? tema;
   final Unidades? unidades;
   final String? idioma;
   final String? genero;
+  final CardPreferences? cardPreferences;
 
   factory Preferencias.fromJson(Map<String, dynamic> json) {
     return Preferencias(
@@ -199,6 +208,11 @@ class Preferencias {
           : null,
       idioma: json['idioma'] as String?,
       genero: json['genero'] as String?,
+      cardPreferences: json['card_preferences'] != null
+          ? CardPreferences.fromJson(
+              json['card_preferences'] as Map<String, dynamic>,
+            )
+          : null,
     );
   }
 
@@ -208,7 +222,135 @@ class Preferencias {
       'unidades': unidades?.toJson(),
       'idioma': idioma,
       'genero': genero,
+      'card_preferences': cardPreferences?.toJson(),
     };
+  }
+
+  Preferencias copyWith({
+    String? tema,
+    Unidades? unidades,
+    String? idioma,
+    String? genero,
+    CardPreferences? cardPreferences,
+  }) {
+    return Preferencias(
+      tema: tema ?? this.tema,
+      unidades: unidades ?? this.unidades,
+      idioma: idioma ?? this.idioma,
+      genero: genero ?? this.genero,
+      cardPreferences: cardPreferences ?? this.cardPreferences,
+    );
+  }
+}
+
+/// Preferencias de personalización de la tarjeta de crédito
+class CardPreferences {
+  CardPreferences({
+    this.gradientColors,
+    this.cardStyle,
+    this.showPattern = true,
+    this.patternOpacity = 0.02,
+  });
+
+  /// Colores del gradiente [color1, color2, color3]
+  final List<String>? gradientColors;
+  /// Estilo de la tarjeta: 'minimal', 'gradient', 'dark', 'light'
+  final String? cardStyle;
+  /// Mostrar patrón de fondo
+  final bool showPattern;
+  /// Opacidad del patrón (0.0 - 1.0)
+  final double patternOpacity;
+
+  factory CardPreferences.fromJson(Map<String, dynamic> json) {
+    return CardPreferences(
+      gradientColors: json['gradient_colors'] != null
+          ? List<String>.from(json['gradient_colors'] as List)
+          : null,
+      cardStyle: json['card_style'] as String?,
+      showPattern: json['show_pattern'] as bool? ?? true,
+      patternOpacity: (json['pattern_opacity'] as num?)?.toDouble() ?? 0.02,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'gradient_colors': gradientColors,
+      'card_style': cardStyle,
+      'show_pattern': showPattern,
+      'pattern_opacity': patternOpacity,
+    };
+  }
+
+  CardPreferences copyWith({
+    List<String>? gradientColors,
+    String? cardStyle,
+    bool? showPattern,
+    double? patternOpacity,
+  }) {
+    return CardPreferences(
+      gradientColors: gradientColors ?? this.gradientColors,
+      cardStyle: cardStyle ?? this.cardStyle,
+      showPattern: showPattern ?? this.showPattern,
+      patternOpacity: patternOpacity ?? this.patternOpacity,
+    );
+  }
+
+  /// Obtener colores por defecto según el estilo
+  List<Color> getDefaultColors(bool isDark) {
+    if (gradientColors != null && gradientColors!.length >= 3) {
+      return gradientColors!.map((c) => Color(int.parse(c))).toList();
+    }
+
+    switch (cardStyle) {
+      case 'minimal':
+        return isDark
+            ? [
+                const Color(0xFF1A1A1A),
+                const Color(0xFF2D2D2D),
+                const Color(0xFF1A1A1A),
+              ]
+            : [
+                const Color(0xFFFFFFFF),
+                const Color(0xFFF8F9FA),
+                const Color(0xFFFFFFFF),
+              ];
+      case 'gradient':
+        return isDark
+            ? [
+                const Color(0xFF1E3C72),
+                const Color(0xFF2A5298),
+                const Color(0xFF1E3C72),
+              ]
+            : [
+                const Color(0xFF667EEA),
+                const Color(0xFF764BA2),
+                const Color(0xFF667EEA),
+              ];
+      case 'dark':
+        return [
+          const Color(0xFF000000),
+          const Color(0xFF1A1A1A),
+          const Color(0xFF000000),
+        ];
+      case 'light':
+        return [
+          const Color(0xFFFFFFFF),
+          const Color(0xFFF5F5F5),
+          const Color(0xFFFFFFFF),
+        ];
+      default:
+        return isDark
+            ? [
+                const Color(0xFF1A1A1A),
+                const Color(0xFF2D2D2D),
+                const Color(0xFF1A1A1A),
+              ]
+            : [
+                const Color(0xFFFFFFFF),
+                const Color(0xFFF8F9FA),
+                const Color(0xFFFFFFFF),
+              ];
+    }
   }
 }
 

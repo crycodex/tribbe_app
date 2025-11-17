@@ -38,6 +38,9 @@ class ProfileController extends GetxController {
   final RxInt followersCount = 0.obs;
   final RxInt followingCount = 0.obs;
 
+  // Estado de la tarjeta de crédito
+  final RxBool isCardExpanded = false.obs;
+
   // Paginación de entrenamientos
   final RxInt currentPage = 0.obs;
   final RxInt workoutsPerPage = 5.obs;
@@ -493,6 +496,11 @@ class ProfileController extends GetxController {
   /// Refrescar entrenamientos
   Future<void> refreshWorkouts() async {
     await loadUserWorkouts();
+  }
+
+  /// Alternar estado de expansión de la tarjeta de crédito
+  void toggleCardExpanded() {
+    isCardExpanded.value = !isCardExpanded.value;
   }
 
   /// Estadísticas rápidas de entrenamientos

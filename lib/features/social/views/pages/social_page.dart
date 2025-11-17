@@ -47,6 +47,7 @@ class SocialPage extends StatelessWidget {
               followersCount: controller.followers.length,
               followingCount: controller.following.length,
               showShareButton: true,
+              showButtonsBelow: true,
             );
           }),
 
