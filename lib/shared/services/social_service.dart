@@ -82,15 +82,36 @@ class SocialService extends GetxService {
           'created_at': now,
         });
 
-        // 3. Incrementar contadores
+        // 3. Incrementar contadores (asegurar que no sean negativos antes)
+        final currentUserDoc = await transaction.get(
+          _firestore.collection(_usersCollection).doc(currentUserId),
+        );
+        final followedUserDoc = await transaction.get(
+          _firestore.collection(_usersCollection).doc(userIdToFollow),
+        );
+
+        final currentFollowingCount =
+            (currentUserDoc.data()?['following_count'] as int?) ?? 0;
+        final followedFollowersCount =
+            (followedUserDoc.data()?['followers_count'] as int?) ?? 0;
+
+        // Incrementar contadores, asegurando que empiecen desde 0 si son negativos
         transaction.update(
           _firestore.collection(_usersCollection).doc(currentUserId),
-          {'following_count': FieldValue.increment(1)},
+          {
+            'following_count': currentFollowingCount < 0
+                ? 1
+                : FieldValue.increment(1),
+          },
         );
 
         transaction.update(
           _firestore.collection(_usersCollection).doc(userIdToFollow),
-          {'followers_count': FieldValue.increment(1)},
+          {
+            'followers_count': followedFollowersCount < 0
+                ? 1
+                : FieldValue.increment(1),
+          },
         );
       });
 
@@ -120,6 +141,14 @@ class SocialService extends GetxService {
 
       // Usar transacción para eliminar la relación en ambas direcciones
       await _firestore.runTransaction((transaction) async {
+        // Leer valores actuales de los contadores antes de decrementar
+        final currentUserDoc = await transaction.get(
+          _firestore.collection(_usersCollection).doc(currentUserId),
+        );
+        final unfollowedUserDoc = await transaction.get(
+          _firestore.collection(_usersCollection).doc(userIdToUnfollow),
+        );
+
         // 1. Eliminar relación de following del usuario actual
         final followingRef = _firestore
             .collection(_usersCollection)
@@ -142,16 +171,36 @@ class SocialService extends GetxService {
 
         transaction.delete(followerRef);
 
-        // 3. Decrementar contadores
-        transaction.update(
-          _firestore.collection(_usersCollection).doc(currentUserId),
-          {'following_count': FieldValue.increment(-1)},
-        );
+        // 3. Decrementar contadores solo si son mayores que 0
+        final currentFollowingCount =
+            (currentUserDoc.data()?['following_count'] as int?) ?? 0;
+        if (currentFollowingCount > 0) {
+          transaction.update(
+            _firestore.collection(_usersCollection).doc(currentUserId),
+            {'following_count': FieldValue.increment(-1)},
+          );
+        } else {
+          // Si es 0 o negativo, establecer a 0
+          transaction.update(
+            _firestore.collection(_usersCollection).doc(currentUserId),
+            {'following_count': 0},
+          );
+        }
 
-        transaction.update(
-          _firestore.collection(_usersCollection).doc(userIdToUnfollow),
-          {'followers_count': FieldValue.increment(-1)},
-        );
+        final unfollowedFollowersCount =
+            (unfollowedUserDoc.data()?['followers_count'] as int?) ?? 0;
+        if (unfollowedFollowersCount > 0) {
+          transaction.update(
+            _firestore.collection(_usersCollection).doc(userIdToUnfollow),
+            {'followers_count': FieldValue.increment(-1)},
+          );
+        } else {
+          // Si es 0 o negativo, establecer a 0
+          transaction.update(
+            _firestore.collection(_usersCollection).doc(userIdToUnfollow),
+            {'followers_count': 0},
+          );
+        }
       });
 
       debugPrint('✅ SocialService: Dejó de seguir usuario exitosamente');
@@ -327,11 +376,16 @@ class SocialService extends GetxService {
           }
         }
         
+        // Asegurar que los contadores nunca sean negativos
+        final followersCount = (data['followers_count'] as int?) ?? 0;
+        final followingCount = (data['following_count'] as int?) ?? 0;
+        final friendsCount = (data['friends_count'] as int?) ?? 0;
+
         return SocialStats(
           userId: userId,
-          followersCount: data['followers_count'] as int? ?? 0,
-          followingCount: data['following_count'] as int? ?? 0,
-          friendsCount: data['friends_count'] as int? ?? 0,
+          followersCount: followersCount < 0 ? 0 : followersCount,
+          followingCount: followingCount < 0 ? 0 : followingCount,
+          friendsCount: friendsCount < 0 ? 0 : friendsCount,
           updatedAt: updatedAt,
         );
       }
@@ -370,11 +424,16 @@ class SocialService extends GetxService {
           }
         }
         
+        // Asegurar que los contadores nunca sean negativos
+        final followersCount = (data['followers_count'] as int?) ?? 0;
+        final followingCount = (data['following_count'] as int?) ?? 0;
+        final friendsCount = (data['friends_count'] as int?) ?? 0;
+
         return SocialStats(
           userId: userId,
-          followersCount: data['followers_count'] as int? ?? 0,
-          followingCount: data['following_count'] as int? ?? 0,
-          friendsCount: data['friends_count'] as int? ?? 0,
+          followersCount: followersCount < 0 ? 0 : followersCount,
+          followingCount: followingCount < 0 ? 0 : followingCount,
+          friendsCount: friendsCount < 0 ? 0 : friendsCount,
           updatedAt: updatedAt,
         );
       }
@@ -423,6 +482,14 @@ class SocialService extends GetxService {
 
       if (isFollowing || isFollowedBy) {
         await _firestore.runTransaction((transaction) async {
+          // Leer valores actuales de los contadores antes de decrementar
+          final currentUserDoc = await transaction.get(
+            _firestore.collection(_usersCollection).doc(currentUserId),
+          );
+          final blockedUserDoc = await transaction.get(
+            _firestore.collection(_usersCollection).doc(blockedUserId),
+          );
+
           // Eliminar relación de following del usuario actual
           if (isFollowing) {
             final followingRef = _firestore
@@ -434,11 +501,20 @@ class SocialService extends GetxService {
                 .doc(blockedUserId);
             transaction.delete(followingRef);
 
-            // Decrementar contador de following
-            transaction.update(
-              _firestore.collection(_usersCollection).doc(currentUserId),
-              {'following_count': FieldValue.increment(-1)},
-            );
+            // Decrementar contador de following solo si es mayor que 0
+            final currentFollowingCount =
+                (currentUserDoc.data()?['following_count'] as int?) ?? 0;
+            if (currentFollowingCount > 0) {
+              transaction.update(
+                _firestore.collection(_usersCollection).doc(currentUserId),
+                {'following_count': FieldValue.increment(-1)},
+              );
+            } else {
+              transaction.update(
+                _firestore.collection(_usersCollection).doc(currentUserId),
+                {'following_count': 0},
+              );
+            }
           }
 
           // Eliminar relación de follower del usuario bloqueado
@@ -452,11 +528,20 @@ class SocialService extends GetxService {
                 .doc(currentUserId);
             transaction.delete(followerRef);
 
-            // Decrementar contador de followers
-            transaction.update(
-              _firestore.collection(_usersCollection).doc(blockedUserId),
-              {'followers_count': FieldValue.increment(-1)},
-            );
+            // Decrementar contador de followers solo si es mayor que 0
+            final blockedFollowersCount =
+                (blockedUserDoc.data()?['followers_count'] as int?) ?? 0;
+            if (blockedFollowersCount > 0) {
+              transaction.update(
+                _firestore.collection(_usersCollection).doc(blockedUserId),
+                {'followers_count': FieldValue.increment(-1)},
+              );
+            } else {
+              transaction.update(
+                _firestore.collection(_usersCollection).doc(blockedUserId),
+                {'followers_count': 0},
+              );
+            }
           }
         });
       }
