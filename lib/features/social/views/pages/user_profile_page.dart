@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/features/social/controllers/social_controller.dart';
 import 'package:tribbe_app/features/messages/views/pages/chat_page.dart';
+import 'package:tribbe_app/features/training/models/workout_post_model.dart';
+import 'package:tribbe_app/app/routes/route_paths.dart';
 
 /// Página de perfil de usuario - Estilo Instagram Minimalista
-class UserProfilePage extends StatelessWidget {
+class UserProfilePage extends StatefulWidget {
   final String userId;
   final String username;
   final String? displayName;
@@ -19,8 +22,31 @@ class UserProfilePage extends StatelessWidget {
   });
 
   @override
+  State<UserProfilePage> createState() => _UserProfilePageState();
+}
+
+class _UserProfilePageState extends State<UserProfilePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Cargar datos del perfil cuando se abre la página
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final controller = Get.put(SocialController());
+      controller.loadUserProfile(widget.userId);
+    });
+  }
+
+  @override
+  void dispose() {
+    // Limpiar datos cuando se cierra la página
+    final controller = Get.put(SocialController());
+    controller.clearVisitedUserProfile();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final controller = Get.find<SocialController>();
+    final controller = Get.put(SocialController());
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -40,16 +66,30 @@ class UserProfilePage extends StatelessWidget {
                   onPressed: () => Get.back(),
                 ),
                 title: Text(
-                  '@$username',
+                  '@${widget.username}',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 actions: [
+                  // Menú de opciones (tres puntos) - Estilo Cupertino
+                  IconButton(
+                    icon: Icon(
+                      Icons.more_vert,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                    onPressed: () => _showCupertinoActionSheet(
+                      context,
+                      controller,
+                      widget.userId,
+                      widget.username,
+                      isDark,
+                    ),
+                  ),
                   // Botón de seguir/dejar de seguir
                   FutureBuilder<bool>(
-                    future: controller.isFollowingUser(userId),
+                    future: controller.isFollowingUser(widget.userId),
                     builder: (context, snapshot) {
                       final isFollowing = snapshot.data ?? false;
 
@@ -58,9 +98,12 @@ class UserProfilePage extends StatelessWidget {
                         child: GestureDetector(
                           onTap: () {
                             if (isFollowing) {
-                              controller.unfollowUser(userId, username);
+                              controller.unfollowUser(
+                                widget.userId,
+                                widget.username,
+                              );
                             } else {
-                              controller.followUser(userId);
+                              controller.followUser(widget.userId);
                             }
                           },
                           child: Container(
@@ -105,7 +148,7 @@ class UserProfilePage extends StatelessWidget {
           },
           body: RefreshIndicator(
             onRefresh: () async {
-              // TODO: Recargar datos del usuario
+              await controller.loadUserProfile(widget.userId);
             },
             child: CustomScrollView(
               slivers: [
@@ -126,13 +169,17 @@ class UserProfilePage extends StatelessWidget {
                               width: 90,
                               height: 90,
                               decoration: BoxDecoration(
-                                color: isDark
-                                    ? Colors.grey.shade800
-                                    : Colors.grey.shade300,
+                                color:
+                                    widget.photoUrl == null ||
+                                        widget.photoUrl!.isEmpty
+                                    ? _getAvatarColor(widget.userId, isDark)
+                                    : null,
                                 shape: BoxShape.circle,
-                                image: photoUrl != null && photoUrl!.isNotEmpty
+                                image:
+                                    widget.photoUrl != null &&
+                                        widget.photoUrl!.isNotEmpty
                                     ? DecorationImage(
-                                        image: NetworkImage(photoUrl!),
+                                        image: NetworkImage(widget.photoUrl!),
                                         fit: BoxFit.cover,
                                       )
                                     : null,
@@ -143,42 +190,56 @@ class UserProfilePage extends StatelessWidget {
                                   width: 2,
                                 ),
                               ),
-                              child: photoUrl == null || photoUrl!.isEmpty
-                                  ? Icon(
-                                      Icons.person,
-                                      size: 45,
-                                      color: isDark
-                                          ? Colors.grey.shade600
-                                          : Colors.grey.shade500,
+                              child:
+                                  widget.photoUrl == null ||
+                                      widget.photoUrl!.isEmpty
+                                  ? Center(
+                                      child: Text(
+                                        widget.username.isNotEmpty
+                                            ? widget.username[0].toUpperCase()
+                                            : 'U',
+                                        style: TextStyle(
+                                          fontSize: 36,
+                                          fontWeight: FontWeight.bold,
+                                          color: _getAvatarTextColor(
+                                            widget.userId,
+                                            isDark,
+                                          ),
+                                        ),
+                                      ),
                                     )
                                   : null,
                             ),
 
                             const SizedBox(width: 24),
 
-                            // Estadísticas (simuladas por ahora)
+                            // Estadísticas
                             Expanded(
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-                                children: [
-                                  _buildStatColumn(
-                                    context,
-                                    value: '0', // TODO: Obtener del usuario
-                                    label: 'Posts',
-                                  ),
-                                  _buildStatColumn(
-                                    context,
-                                    value: '0', // TODO: Obtener del usuario
-                                    label: 'Seguidores',
-                                  ),
-                                  _buildStatColumn(
-                                    context,
-                                    value: '0', // TODO: Obtener del usuario
-                                    label: 'Siguiendo',
-                                  ),
-                                ],
-                              ),
+                              child: Obx(() {
+                                final stats = controller.visitedUserStats.value;
+                                return Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: [
+                                    _buildStatColumn(
+                                      context,
+                                      value:
+                                          '${controller.visitedUserPosts.length}',
+                                      label: 'Posts',
+                                    ),
+                                    _buildStatColumn(
+                                      context,
+                                      value: '${stats?.followersCount ?? 0}',
+                                      label: 'Seguidores',
+                                    ),
+                                    _buildStatColumn(
+                                      context,
+                                      value: '${stats?.followingCount ?? 0}',
+                                      label: 'Siguiendo',
+                                    ),
+                                  ],
+                                );
+                              }),
                             ),
                           ],
                         ),
@@ -186,9 +247,10 @@ class UserProfilePage extends StatelessWidget {
                         const SizedBox(height: 16),
 
                         // Nombre completo
-                        if (displayName != null && displayName!.isNotEmpty)
+                        if (widget.displayName != null &&
+                            widget.displayName!.isNotEmpty)
                           Text(
-                            displayName!,
+                            widget.displayName!,
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
@@ -196,17 +258,6 @@ class UserProfilePage extends StatelessWidget {
                           ),
 
                         const SizedBox(height: 4),
-
-                        // Bio (simulada por ahora)
-                        Text(
-                          'Entusiasta del fitness y la vida saludable 💪',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isDark
-                                ? Colors.grey.shade400
-                                : Colors.grey.shade700,
-                          ),
-                        ),
 
                         const SizedBox(height: 20),
 
@@ -219,10 +270,10 @@ class UserProfilePage extends StatelessWidget {
                                   // Navegar a chat
                                   Get.to(
                                     () => ChatPage(
-                                      otherUserId: userId,
-                                      otherUsername: username,
-                                      otherUserPhotoUrl: photoUrl,
-                                      otherUserDisplayName: displayName,
+                                      otherUserId: widget.userId,
+                                      otherUsername: widget.username,
+                                      otherUserPhotoUrl: widget.photoUrl,
+                                      otherUserDisplayName: widget.displayName,
                                     ),
                                     transition: Transition.cupertino,
                                     duration: const Duration(milliseconds: 300),
@@ -301,29 +352,44 @@ class UserProfilePage extends StatelessWidget {
                 ),
 
                 // Grilla de entrenamientos del usuario
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 1,
-                        ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        // TODO: Cargar entrenamientos del usuario
-                        if (index == 0) {
-                          return _buildEmptyWorkoutCard(isDark);
-                        }
-                        return null;
-                      },
-                      childCount:
-                          1, // TODO: Cambiar por la cantidad real de entrenamientos
+                Obx(() {
+                  if (controller.isLoadingUserProfile.value) {
+                    return const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.all(32),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                    );
+                  }
+
+                  final posts = controller.visitedUserPosts;
+
+                  if (posts.isEmpty) {
+                    return SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      sliver: SliverToBoxAdapter(
+                        child: _buildEmptyWorkoutCard(isDark),
+                      ),
+                    );
+                  }
+
+                  return SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    sliver: SliverGrid(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: 1,
+                          ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final post = posts[index];
+                        return _buildWorkoutGridItem(context, post, isDark);
+                      }, childCount: posts.length),
                     ),
-                  ),
-                ),
+                  );
+                }),
 
                 // Espacio al final
                 const SliverToBoxAdapter(child: SizedBox(height: 32)),
@@ -398,5 +464,195 @@ class UserProfilePage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Mostrar Action Sheet estilo Cupertino
+  void _showCupertinoActionSheet(
+    BuildContext context,
+    SocialController controller,
+    String userId,
+    String username,
+    bool isDark,
+  ) {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+        title: Text(
+          '@$username',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+          ),
+        ),
+        actions: <CupertinoActionSheetAction>[
+          CupertinoActionSheetAction(
+            isDestructiveAction: true,
+            onPressed: () {
+              Navigator.pop(context);
+              controller.blockUser(userId, username);
+            },
+            child: const Text(
+              'Bloquear usuario',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
+            ),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          isDefaultAction: true,
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text(
+            'Cancelar',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Widget para item de la grilla de entrenamientos
+  Widget _buildWorkoutGridItem(
+    BuildContext context,
+    WorkoutPostModel post,
+    bool isDark,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        Get.toNamed(
+          RoutePaths.workoutDetail.replaceAll(':id', post.workout.id),
+          arguments: {'workoutPost': post},
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+            width: 1,
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Foto del entrenamiento o placeholder
+              if (post.workoutPhotoUrl != null &&
+                  post.workoutPhotoUrl!.isNotEmpty)
+                Image.network(
+                  post.workoutPhotoUrl!,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      color: isDark
+                          ? Colors.grey.shade900
+                          : Colors.grey.shade100,
+                      child: const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return _buildPlaceholder(isDark);
+                  },
+                )
+              else
+                _buildPlaceholder(isDark),
+              // Overlay con info del entrenamiento
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.7),
+                      ],
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.favorite, size: 14, color: Colors.white),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${post.likes.length}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Widget placeholder cuando no hay foto
+  Widget _buildPlaceholder(bool isDark) {
+    return Container(
+      color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+      child: Center(
+        child: Icon(
+          Icons.fitness_center,
+          size: 32,
+          color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+        ),
+      ),
+    );
+  }
+
+  /// Obtener color de avatar basado en el userId (consistente)
+  Color _getAvatarColor(String userId, bool isDark) {
+    // Paleta de colores vibrantes para avatares
+    final colors = isDark
+        ? [
+            const Color(0xFF6366F1), // Indigo
+            const Color(0xFF8B5CF6), // Violet
+            const Color(0xFFEC4899), // Pink
+            const Color(0xFFEF4444), // Red
+            const Color(0xFFF59E0B), // Amber
+            const Color(0xFF10B981), // Emerald
+            const Color(0xFF06B6D4), // Cyan
+            const Color(0xFF3B82F6), // Blue
+          ]
+        : [
+            const Color(0xFF6366F1), // Indigo
+            const Color(0xFF8B5CF6), // Violet
+            const Color(0xFFEC4899), // Pink
+            const Color(0xFFEF4444), // Red
+            const Color(0xFFF59E0B), // Amber
+            const Color(0xFF10B981), // Emerald
+            const Color(0xFF06B6D4), // Cyan
+            const Color(0xFF3B82F6), // Blue
+          ];
+
+    // Generar índice basado en el hash del userId
+    final hash = userId.hashCode;
+    final index = hash.abs() % colors.length;
+    return colors[index];
+  }
+
+  /// Obtener color del texto del avatar (blanco o negro según contraste)
+  Color _getAvatarTextColor(String userId, bool isDark) {
+    final bgColor = _getAvatarColor(userId, isDark);
+    // Calcular luminosidad del color de fondo
+    final luminance = bgColor.computeLuminance();
+    // Si la luminosidad es alta, usar texto oscuro, si es baja, usar texto claro
+    return luminance > 0.5 ? Colors.black87 : Colors.white;
   }
 }

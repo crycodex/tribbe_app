@@ -2,12 +2,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/shared/models/social_models.dart';
+import 'package:tribbe_app/shared/models/friendship_models.dart';
 import 'package:tribbe_app/shared/services/firebase_auth_service.dart';
+import 'package:tribbe_app/shared/services/friendship_service.dart';
 
 /// Servicio para gestionar followers/following (sistema de seguimiento)
 class SocialService extends GetxService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuthService _authService = Get.find();
+  final FriendshipService _friendshipService = Get.find();
 
   // Colecciones
   static const String _usersCollection = 'users';
@@ -23,6 +26,13 @@ class SocialService extends GetxService {
       final currentUserId = _authService.currentUser?.uid;
       if (currentUserId == null || currentUserId == userIdToFollow) {
         debugPrint('❌ SocialService: Usuario inválido');
+        return false;
+      }
+
+      // Verificar si el usuario está bloqueado
+      final isBlocked = await _friendshipService.isUserBlocked(userIdToFollow);
+      if (isBlocked) {
+        debugPrint('❌ SocialService: Usuario bloqueado');
         return false;
       }
 
@@ -214,6 +224,10 @@ class SocialService extends GetxService {
             final followerId = doc.id;
             final data = doc.data();
 
+            // Verificar si el seguidor está bloqueado
+            final isBlocked = await _friendshipService.isUserBlocked(followerId);
+            if (isBlocked) continue;
+
             // Obtener info del seguidor
             final followerDoc = await _firestore
                 .collection(_usersCollection)
@@ -261,6 +275,10 @@ class SocialService extends GetxService {
             final followingId = doc.id;
             final data = doc.data();
 
+            // Verificar si el usuario seguido está bloqueado
+            final isBlocked = await _friendshipService.isUserBlocked(followingId);
+            if (isBlocked) continue;
+
             // Obtener info del usuario seguido
             final followingDoc = await _firestore
                 .collection(_usersCollection)
@@ -299,14 +317,22 @@ class SocialService extends GetxService {
 
       if (userDoc.exists) {
         final data = userDoc.data()!;
+        DateTime? updatedAt;
+        if (data['updated_at'] != null) {
+          final updatedAtValue = data['updated_at'];
+          if (updatedAtValue is Timestamp) {
+            updatedAt = updatedAtValue.toDate();
+          } else if (updatedAtValue is String) {
+            updatedAt = DateTime.parse(updatedAtValue);
+          }
+        }
+        
         return SocialStats(
           userId: userId,
           followersCount: data['followers_count'] as int? ?? 0,
           followingCount: data['following_count'] as int? ?? 0,
           friendsCount: data['friends_count'] as int? ?? 0,
-          updatedAt: data['updated_at'] != null
-              ? (data['updated_at'] as Timestamp).toDate()
-              : null,
+          updatedAt: updatedAt,
         );
       }
 
@@ -334,14 +360,22 @@ class SocialService extends GetxService {
     ) {
       if (doc.exists) {
         final data = doc.data()!;
+        DateTime? updatedAt;
+        if (data['updated_at'] != null) {
+          final updatedAtValue = data['updated_at'];
+          if (updatedAtValue is Timestamp) {
+            updatedAt = updatedAtValue.toDate();
+          } else if (updatedAtValue is String) {
+            updatedAt = DateTime.parse(updatedAtValue);
+          }
+        }
+        
         return SocialStats(
           userId: userId,
           followersCount: data['followers_count'] as int? ?? 0,
           followingCount: data['following_count'] as int? ?? 0,
           friendsCount: data['friends_count'] as int? ?? 0,
-          updatedAt: data['updated_at'] != null
-              ? (data['updated_at'] as Timestamp).toDate()
-              : null,
+          updatedAt: updatedAt,
         );
       }
 
@@ -373,5 +407,80 @@ class SocialService extends GetxService {
     } catch (e) {
       return false;
     }
+  }
+
+  /// Bloquear usuario (elimina relaciones de seguimiento y delega a FriendshipService)
+  Future<bool> blockUser(String blockedUserId) async {
+    try {
+      final currentUserId = _authService.currentUser?.uid;
+      if (currentUserId == null || currentUserId == blockedUserId) {
+        return false;
+      }
+
+      // Primero eliminar relaciones de seguimiento si existen
+      final isFollowing = await this.isFollowing(blockedUserId);
+      final isFollowedBy = await this.isFollowedBy(blockedUserId);
+
+      if (isFollowing || isFollowedBy) {
+        await _firestore.runTransaction((transaction) async {
+          // Eliminar relación de following del usuario actual
+          if (isFollowing) {
+            final followingRef = _firestore
+                .collection(_usersCollection)
+                .doc(currentUserId)
+                .collection(_socialCollection)
+                .doc(_followingSubcollection)
+                .collection(_followingSubcollection)
+                .doc(blockedUserId);
+            transaction.delete(followingRef);
+
+            // Decrementar contador de following
+            transaction.update(
+              _firestore.collection(_usersCollection).doc(currentUserId),
+              {'following_count': FieldValue.increment(-1)},
+            );
+          }
+
+          // Eliminar relación de follower del usuario bloqueado
+          if (isFollowedBy) {
+            final followerRef = _firestore
+                .collection(_usersCollection)
+                .doc(blockedUserId)
+                .collection(_socialCollection)
+                .doc(_followersSubcollection)
+                .collection(_followersSubcollection)
+                .doc(currentUserId);
+            transaction.delete(followerRef);
+
+            // Decrementar contador de followers
+            transaction.update(
+              _firestore.collection(_usersCollection).doc(blockedUserId),
+              {'followers_count': FieldValue.increment(-1)},
+            );
+          }
+        });
+      }
+
+      // Luego bloquear el usuario (esto elimina amistades y solicitudes)
+      return await _friendshipService.blockUser(blockedUserId);
+    } catch (e) {
+      debugPrint('❌ SocialService: Error al bloquear usuario: $e');
+      return false;
+    }
+  }
+
+  /// Desbloquear usuario (delega a FriendshipService)
+  Future<bool> unblockUser(String blockedUserId) async {
+    return await _friendshipService.unblockUser(blockedUserId);
+  }
+
+  /// Verificar si un usuario está bloqueado (delega a FriendshipService)
+  Future<bool> isUserBlocked(String userId) async {
+    return await _friendshipService.isUserBlocked(userId);
+  }
+
+  /// Obtener lista de usuarios bloqueados (delega a FriendshipService)
+  Stream<List<BlockedUser>> getBlockedUsers() {
+    return _friendshipService.getBlockedUsers();
   }
 }

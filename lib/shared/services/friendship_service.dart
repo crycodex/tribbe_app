@@ -539,7 +539,7 @@ class FriendshipService extends GetxService {
           'created_at': FieldValue.serverTimestamp(),
         });
 
-        // Eliminar amistad si existe
+        // Eliminar amistad del lado del usuario que bloquea
         final userFriendshipRef = _firestore
             .collection(_usersCollection)
             .doc(userId)
@@ -550,17 +550,7 @@ class FriendshipService extends GetxService {
 
         transaction.delete(userFriendshipRef);
 
-        final friendFriendshipRef = _firestore
-            .collection(_usersCollection)
-            .doc(blockedUserId)
-            .collection(_socialCollection)
-            .doc(_friendsSubcollection)
-            .collection(_friendsSubcollection)
-            .doc(userId);
-
-        transaction.delete(friendFriendshipRef);
-
-        // Eliminar solicitudes en ambas direcciones
+        // Eliminar solicitudes del lado del usuario que bloquea
         final sentRequestRef = _firestore
             .collection(_usersCollection)
             .doc(userId)
@@ -580,28 +570,13 @@ class FriendshipService extends GetxService {
             .doc(blockedUserId);
 
         transaction.delete(receivedRequestRef);
-
-        // También eliminar del otro lado
-        final otherSentRequestRef = _firestore
-            .collection(_usersCollection)
-            .doc(blockedUserId)
-            .collection(_socialCollection)
-            .doc(_friendRequestsSentSubcollection)
-            .collection(_friendRequestsSentSubcollection)
-            .doc(userId);
-
-        transaction.delete(otherSentRequestRef);
-
-        final otherReceivedRequestRef = _firestore
-            .collection(_usersCollection)
-            .doc(blockedUserId)
-            .collection(_socialCollection)
-            .doc(_friendRequestsReceivedSubcollection)
-            .collection(_friendRequestsReceivedSubcollection)
-            .doc(userId);
-
-        transaction.delete(otherReceivedRequestRef);
       });
+
+      // Nota: No eliminamos relaciones del otro lado porque el usuario que bloquea
+      // no tiene permisos para modificar el perfil del usuario bloqueado.
+      // El bloqueo previene la interacción de todas formas, así que las relaciones
+      // del otro lado se pueden dejar (no afectan la funcionalidad) o limpiar
+      // posteriormente con una Cloud Function si es necesario.
 
       debugPrint('✅ FriendshipService: Usuario bloqueado');
       return true;

@@ -312,29 +312,63 @@ class DashboardController extends GetxController {
   // ========== UTILIDADES ==========
 
   void _showSuccess(String message) {
-    Get.snackbar(
-      '¡Éxito!',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
-    );
+    _showSafeSnackbar('¡Éxito!', message);
   }
 
   void _showError(String message) {
-    Get.snackbar(
-      'Error',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
-    );
+    _showSafeSnackbar('Error', message, backgroundColor: Colors.red);
   }
 
   void _showInfo(String message) {
-    Get.snackbar(
-      'Info',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
-    );
+    _showSafeSnackbar('Info', message, backgroundColor: Colors.blue);
+  }
+
+  /// Mostrar snackbar de forma segura (evita errores de Overlay)
+  void _showSafeSnackbar(
+    String title,
+    String message, {
+    Color? backgroundColor,
+  }) {
+    // NO usar Get.snackbar directamente para evitar errores de Overlay
+    debugPrint('✅ DashboardController: $title - $message');
+
+    // Intentar mostrar snackbar SOLO si hay contexto válido y después de un delay
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      try {
+        // Verificar si hay contexto válido
+        final context = Get.key.currentContext ?? Get.context;
+        if (context == null) {
+          debugPrint('⚠️ DashboardController: No hay contexto, omitiendo snackbar');
+          return;
+        }
+
+        // Verificar si hay Overlay disponible
+        try {
+          Overlay.of(context, rootOverlay: true);
+        } catch (e) {
+          debugPrint('⚠️ DashboardController: No hay Overlay disponible, omitiendo snackbar');
+          return;
+        }
+
+        // Si llegamos aquí, hay contexto y overlay, mostrar snackbar
+        if (Get.isSnackbarOpen) {
+          Get.closeAllSnackbars();
+        }
+
+        Get.snackbar(
+          title,
+          message,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: backgroundColor,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+        );
+      } catch (e) {
+        // Si falla, simplemente no mostrar (ya logueamos arriba)
+        debugPrint('⚠️ DashboardController: Error al mostrar snackbar (ignorado): $e');
+      }
+    });
   }
 }

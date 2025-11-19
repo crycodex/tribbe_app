@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tribbe_app/app/routes/route_paths.dart';
+import 'package:tribbe_app/features/social/views/pages/user_profile_page.dart';
 import 'package:tribbe_app/features/training/models/workout_post_model.dart';
 import 'package:tribbe_app/features/training/views/widgets/comments_bottom_sheet.dart';
 import 'package:tribbe_app/shared/utils/workout_utils.dart';
@@ -109,7 +110,7 @@ class WorkoutPostCard extends StatelessWidget {
   /// Header estilo Instagram simple
   Widget _buildInstagramHeader(bool isDark) {
     final isOwnPost = currentUserId != null && currentUserId == post.userId;
-    
+
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Row(
@@ -191,7 +192,9 @@ class WorkoutPostCard extends StatelessWidget {
                 onPressed: onLike,
                 icon: Icon(
                   isLiked ? Icons.favorite : Icons.favorite_border,
-                  color: isLiked ? Colors.red : (isDark ? Colors.white : Colors.black),
+                  color: isLiked
+                      ? Colors.red
+                      : (isDark ? Colors.white : Colors.black),
                   size: 28,
                 ),
               ),
@@ -315,11 +318,10 @@ class WorkoutPostCard extends StatelessWidget {
     );
   }
 
-
   /// Foto del entrenamiento con overlay de info (estilo Instagram con AspectRatio fijo)
   Widget _buildWorkoutPhoto() {
     final focusColor = WorkoutUtils.getFocusColor(post.workout.focus);
-    
+
     return AspectRatio(
       aspectRatio: 4 / 5, // Mismo ratio que Instagram (4:5)
       child: Stack(
@@ -337,7 +339,7 @@ class WorkoutPostCard extends StatelessWidget {
                   child: CircularProgressIndicator(
                     value: loadingProgress.expectedTotalBytes != null
                         ? loadingProgress.cumulativeBytesLoaded /
-                            loadingProgress.expectedTotalBytes!
+                              loadingProgress.expectedTotalBytes!
                         : null,
                   ),
                 ),
@@ -376,7 +378,10 @@ class WorkoutPostCard extends StatelessWidget {
                 children: [
                   // Badge del tipo de entrenamiento
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: focusColor.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(20),
@@ -403,7 +408,7 @@ class WorkoutPostCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // Ejercicios sobre la foto
                   ..._buildPhotoOverlayExercises(),
                 ],
@@ -421,40 +426,37 @@ class WorkoutPostCard extends StatelessWidget {
     final hasMore = post.workout.exercises.length > 3;
 
     return [
-      ...exercisesToShow.map((exercise) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Row(
-          children: [
-            Container(
-              width: 6,
-              height: 6,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                '${exercise.name} • ${exercise.sets.length} series',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+      ...exercisesToShow.map(
+        (exercise) => Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Row(
+            children: [
+              Container(
+                width: 6,
+                height: 6,
+                decoration: const BoxDecoration(
                   color: Colors.white,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black,
-                      blurRadius: 4,
-                    ),
-                  ],
+                  shape: BoxShape.circle,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  '${exercise.name} • ${exercise.sets.length} series',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                    shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
         ),
-      )),
+      ),
       if (hasMore)
         Padding(
           padding: const EdgeInsets.only(top: 4),
@@ -464,18 +466,12 @@ class WorkoutPostCard extends StatelessWidget {
               fontSize: 12,
               color: Colors.white70,
               fontWeight: FontWeight.w600,
-              shadows: [
-                Shadow(
-                  color: Colors.black,
-                  blurRadius: 4,
-                ),
-              ],
+              shadows: [Shadow(color: Colors.black, blurRadius: 4)],
             ),
           ),
         ),
     ];
   }
-
 
   /// Timestamp mejorado
   Widget _buildTimestamp(bool isDark) {
@@ -527,19 +523,22 @@ class WorkoutPostCard extends StatelessWidget {
 
   /// Navegar al perfil del usuario
   void _navigateToUserProfile() {
-    // Si es el perfil propio, no navegar
+    // Si es el perfil propio, navegar al perfil propio
     if (currentUserId != null && currentUserId == post.userId) {
       Get.toNamed(RoutePaths.profile);
       return;
     }
 
-    // TODO: Implementar navegación a perfil de otro usuario
-    // Por ahora solo mostramos un mensaje
-    Get.snackbar(
-      'Perfil',
-      'Ver perfil de ${post.userName}',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 1),
+    // Navegar al perfil del otro usuario
+    Get.to(
+      () => UserProfilePage(
+        userId: post.userId,
+        username: post.userName,
+        displayName: post.userName,
+        photoUrl: post.userPhotoUrl,
+      ),
+      transition: Transition.cupertino,
+      duration: const Duration(milliseconds: 300),
     );
   }
 
@@ -568,7 +567,10 @@ class WorkoutPostCard extends StatelessWidget {
 
               // Título
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
                 child: Text(
                   isOwnPost ? 'Opciones' : 'Opciones del post',
                   style: TextStyle(
@@ -675,15 +677,11 @@ class WorkoutPostCard extends StatelessWidget {
         backgroundColor: isDark ? Colors.grey[900] : Colors.white,
         title: Text(
           'Dejar de seguir',
-          style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
-          ),
+          style: TextStyle(color: isDark ? Colors.white : Colors.black),
         ),
         content: Text(
           '¿Dejar de seguir a ${post.userName}?',
-          style: TextStyle(
-            color: isDark ? Colors.grey[300] : Colors.grey[700],
-          ),
+          style: TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[700]),
         ),
         actions: [
           TextButton(
@@ -702,10 +700,7 @@ class WorkoutPostCard extends StatelessWidget {
             },
             child: const Text(
               'Dejar de seguir',
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -720,15 +715,11 @@ class WorkoutPostCard extends StatelessWidget {
         backgroundColor: isDark ? Colors.grey[900] : Colors.white,
         title: Text(
           'Eliminar entrenamiento',
-          style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
-          ),
+          style: TextStyle(color: isDark ? Colors.white : Colors.black),
         ),
         content: Text(
           '¿Estás seguro de que quieres eliminar este entrenamiento? Esta acción no se puede deshacer.',
-          style: TextStyle(
-            color: isDark ? Colors.grey[300] : Colors.grey[700],
-          ),
+          style: TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[700]),
         ),
         actions: [
           TextButton(
@@ -747,10 +738,7 @@ class WorkoutPostCard extends StatelessWidget {
             },
             child: const Text(
               'Eliminar',
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -761,38 +749,29 @@ class WorkoutPostCard extends StatelessWidget {
   /// Dejar de seguir usuario
   void _unfollowUser() {
     // TODO: Implementar lógica de dejar de seguir
-    Get.snackbar(
+    _showSafeSnackbar(
       'Dejaste de seguir',
       'Ya no verás posts de ${post.userName}',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
       backgroundColor: Colors.grey[800],
-      colorText: Colors.white,
     );
   }
 
   /// Ocultar post
   void _hidePost() {
-    Get.snackbar(
+    _showSafeSnackbar(
       'Post oculto',
       'No volverás a ver este post',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
       backgroundColor: Colors.grey[800],
-      colorText: Colors.white,
     );
     // TODO: Implementar lógica de ocultar post
   }
 
   /// Eliminar post propio
   void _deletePost() {
-    Get.snackbar(
+    _showSafeSnackbar(
       'Entrenamiento eliminado',
       'Tu entrenamiento ha sido eliminado',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
       backgroundColor: Colors.grey[800],
-      colorText: Colors.white,
     );
     // TODO: Implementar lógica de eliminar post
   }
@@ -811,12 +790,10 @@ class WorkoutPostCard extends StatelessWidget {
           TextButton(
             onPressed: () {
               Get.back();
-              Get.snackbar(
+              _showSafeSnackbar(
                 'Reporte enviado',
                 'Gracias por ayudarnos a mantener la comunidad segura',
-                snackPosition: SnackPosition.BOTTOM,
                 backgroundColor: Colors.green,
-                colorText: Colors.white,
               );
             },
             child: const Text(
@@ -827,5 +804,58 @@ class WorkoutPostCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Mostrar snackbar de forma segura (evita errores de Overlay)
+  void _showSafeSnackbar(
+    String title,
+    String message, {
+    Color? backgroundColor,
+  }) {
+    // NO usar Get.snackbar directamente para evitar errores de Overlay
+    debugPrint('✅ WorkoutPostCard: $title - $message');
+
+    // Intentar mostrar snackbar SOLO si hay contexto válido y después de un delay
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      try {
+        // Verificar si hay contexto válido
+        final context = Get.key.currentContext ?? Get.context;
+        if (context == null) {
+          debugPrint('⚠️ WorkoutPostCard: No hay contexto, omitiendo snackbar');
+          return;
+        }
+
+        // Verificar si hay Overlay disponible
+        try {
+          Overlay.of(context, rootOverlay: true);
+        } catch (e) {
+          debugPrint(
+            '⚠️ WorkoutPostCard: No hay Overlay disponible, omitiendo snackbar',
+          );
+          return;
+        }
+
+        // Si llegamos aquí, hay contexto y overlay, mostrar snackbar
+        if (Get.isSnackbarOpen) {
+          Get.closeAllSnackbars();
+        }
+
+        Get.snackbar(
+          title,
+          message,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: backgroundColor ?? Colors.grey[800],
+          colorText: Colors.white,
+          duration: const Duration(seconds: 2),
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+        );
+      } catch (e) {
+        // Si falla, simplemente no mostrar (ya logueamos arriba)
+        debugPrint(
+          '⚠️ WorkoutPostCard: Error al mostrar snackbar (ignorado): $e',
+        );
+      }
+    });
   }
 }

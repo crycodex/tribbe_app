@@ -121,6 +121,73 @@ service cloud.firestore {
           // Solo el dueño puede eliminar (dejar de seguir)
           allow delete: if isOwner(userId);
         }
+        
+        // Subcolección de Amistades
+        match /friends/{friendId} {
+          // El dueño puede ver sus amigos
+          allow read: if isOwner(userId);
+          
+          // Otros usuarios pueden leer para verificar amistades
+          allow read: if isAuthenticated();
+          
+          // Solo el dueño puede crear/eliminar amistades
+          allow create, delete: if isOwner(userId);
+          
+          // Permitir que otro usuario elimine la amistad cuando está siendo bloqueado
+          // (el userId es el dueño del perfil, friendId es el otro usuario)
+          allow delete: if isAuthenticated() && request.auth.uid == friendId;
+        }
+        
+        // Subcolección de Solicitudes Enviadas
+        match /friend_requests_sent/{receiverId} {
+          // Solo el dueño puede ver sus solicitudes enviadas
+          allow read: if isOwner(userId);
+          
+          // Solo el dueño puede crear solicitudes
+          allow create: if isOwner(userId);
+          
+          // Solo el dueño puede eliminar sus solicitudes enviadas
+          allow delete: if isOwner(userId);
+          
+          // Permitir que el receptor elimine la solicitud cuando está siendo bloqueado
+          allow delete: if isAuthenticated() && request.auth.uid == receiverId;
+          
+          // Permitir actualización solo por el dueño
+          allow update: if isOwner(userId);
+        }
+        
+        // Subcolección de Solicitudes Recibidas
+        match /friend_requests_received/{senderId} {
+          // Solo el dueño puede ver sus solicitudes recibidas
+          allow read: if isOwner(userId);
+          
+          // El remitente puede crear la solicitud en el documento del receptor
+          allow create: if isAuthenticated() && request.auth.uid == senderId;
+          
+          // El dueño puede eliminar (rechazar) solicitudes recibidas
+          allow delete: if isOwner(userId);
+          
+          // El remitente puede eliminar (cancelar) su propia solicitud
+          allow delete: if isAuthenticated() && request.auth.uid == senderId;
+          
+          // Solo el dueño puede actualizar (aceptar)
+          allow update: if isOwner(userId);
+        }
+        
+        // Subcolección de Usuarios Bloqueados
+        match /blocked_users/{blockedUserId} {
+          // Solo el dueño puede ver sus usuarios bloqueados
+          allow read: if isOwner(userId);
+          
+          // Solo el dueño puede bloquear usuarios (crear)
+          allow create: if isOwner(userId);
+          
+          // Solo el dueño puede desbloquear usuarios (eliminar)
+          allow delete: if isOwner(userId);
+          
+          // No permitir actualización
+          allow update: if false;
+        }
       }
     }
     

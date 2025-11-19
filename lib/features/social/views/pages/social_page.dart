@@ -4,6 +4,7 @@ import 'package:tribbe_app/features/social/controllers/social_controller.dart';
 import 'package:tribbe_app/features/social/views/widgets/search_tab.dart';
 import 'package:tribbe_app/features/social/views/widgets/followers_tab.dart';
 import 'package:tribbe_app/features/social/views/widgets/following_tab.dart';
+import 'package:tribbe_app/features/social/views/widgets/blocked_users_tab.dart';
 import 'package:tribbe_app/shared/widgets/credit_card_widget.dart';
 
 /// Página principal de funcionalidad social con diseño minimalista tipo tarjeta de crédito
@@ -85,6 +86,8 @@ class SocialPage extends StatelessWidget {
                       return const FollowingTab();
                     case 2:
                       return const SearchTab();
+                    case 3:
+                      return const BlockedUsersTab();
                     default:
                       return const SizedBox.shrink();
                   }
@@ -150,6 +153,16 @@ class SocialPage extends StatelessWidget {
                 null,
                 controller.currentTabIndex.value == 2,
                 () => controller.changeTab(2),
+                isDark,
+              ),
+            ),
+            Expanded(
+              child: _buildMinimalTab(
+                'Bloqueados',
+                3,
+                controller.blockedUsers.length,
+                controller.currentTabIndex.value == 3,
+                () => controller.changeTab(3),
                 isDark,
               ),
             ),
